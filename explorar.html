@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splitpool — Explorar Piscinas</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;--border:rgba(0,160,200,0.22);}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;color:var(--bluedark);overflow-x:hidden;background:#3acde8;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--teal);border-radius:5px;}
+
+/* Background igual ao index */
+.pool-bg{position:fixed;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1572331165267-854da2b021d4?w=1920&q=85') center/cover no-repeat;filter:brightness(1.05) saturate(1.1);}
+.pool-overlay{position:fixed;inset:0;z-index:1;background:rgba(160,225,245,0.12);}
+.shimmer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
+.shimmer canvas{position:absolute;inset:0;width:100%;height:100%;}
+.page{position:relative;z-index:10;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);background:rgba(255,255,255,0.72);border-bottom:1px solid rgba(0,180,210,0.18);padding:0 5%;}
+.nav-in{max-width:1240px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.nav-logo{height:52px;object-fit:contain;flex-shrink:0;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{font-size:13px;color:var(--bluedark);font-weight:600;opacity:.7;}
+.nav-btn{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;}
+.nav-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(18,85,204,0.4);}
+.nav-btn.outline{background:transparent;color:var(--bluedark);border:1.5px solid rgba(18,85,204,0.3);}
+.nav-btn.outline:hover{background:rgba(18,85,204,0.06);}
+
+/* MAIN */
+main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
+
+/* HEADER */
+.page-header{margin-bottom:2rem;}
+.page-header h1{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:900;color:var(--bluedark);letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.5);}
+.page-header p{font-size:15px;color:var(--bluedark);opacity:.65;margin-top:6px;font-weight:500;}
+
+/* FILTROS + BUSCA */
+.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2rem;}
+.search-wrap{position:relative;flex:1;min-width:220px;max-width:380px;}
+.search-wrap input{width:100%;padding:11px 16px 11px 42px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;transition:.2s;backdrop-filter:blur(8px);}
+.search-wrap input:focus{border-color:var(--blue);background:#fff;}
+.search-wrap input::placeholder{color:var(--bluedark);opacity:.4;}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none;}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;}
+.fbtn{padding:8px 16px;border-radius:8px;border:1.5px solid rgba(0,180,210,0.25);background:rgba(255,255,255,0.75);color:var(--bluedark);font-size:13px;font-weight:600;cursor:pointer;transition:.2s;font-family:inherit;backdrop-filter:blur(8px);}
+.fbtn:hover{background:rgba(255,255,255,0.95);}
+.fbtn.act{background:rgba(18,85,204,0.12);border-color:var(--blue);color:var(--blue);}
+.total-badge{margin-left:auto;font-size:13px;color:var(--bluedark);opacity:.55;font-weight:600;white-space:nowrap;}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+
+/* CARD */
+.card{background:rgba(255,255,255,0.88);border:1px solid rgba(0,180,210,0.18);border-radius:16px;padding:1.5rem;transition:.3s;cursor:pointer;box-shadow:0 2px 16px rgba(0,0,0,0.07);position:relative;overflow:hidden;}
+.card:hover{transform:translateY(-5px);box-shadow:0 12px 36px rgba(0,0,0,0.13);border-color:rgba(18,85,204,0.3);}
+.card-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:1rem;}
+.card-ico{width:56px;height:56px;border-radius:14px;overflow:hidden;flex-shrink:0;background:#f0f6ff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--blue);}
+.card-ico img{width:56px;height:56px;object-fit:cover;display:block;}
+.card-info{flex:1;}
+.card-servico{font-size:17px;font-weight:800;color:var(--bluedark);line-height:1.2;}
+.card-dono{font-size:12px;color:var(--bluedark);opacity:.45;margin-top:3px;font-weight:500;}
+.card-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:6px;}
+.badge-aberta{background:rgba(0,200,100,0.12);color:#00875A;border:1px solid rgba(0,200,100,0.25);}
+.badge-fechada{background:rgba(200,0,0,0.08);color:#991B1B;border:1px solid rgba(200,0,0,0.15);}
+.card-desc{font-size:13px;color:var(--bluedark);opacity:.6;line-height:1.6;margin-bottom:1rem;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card-footer{display:flex;align-items:center;justify-content:space-between;}
+.card-vagas{font-size:12px;color:var(--bluedark);opacity:.55;font-weight:600;}
+.vagas-bar{width:100%;height:4px;background:rgba(0,180,210,0.15);border-radius:2px;margin-top:4px;}
+.vagas-fill{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--blue));transition:.4s;}
+.card-preco{text-align:right;}
+.preco-val{font-size:22px;font-weight:900;color:var(--blue);letter-spacing:-0.5px;line-height:1;}
+.preco-label{font-size:11px;color:var(--bluedark);opacity:.4;font-weight:500;}
+.card-btn{width:100%;margin-top:1rem;padding:11px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;}
+.card-btn:hover{box-shadow:0 4px 18px rgba(18,85,204,0.4);}
+.card-btn:disabled{background:#93C5FD;cursor:not-allowed;}
+
+/* ESTADOS */
+.loading{text-align:center;padding:4rem;color:var(--bluedark);opacity:.5;}
+.loading-spinner{width:40px;height:40px;border:3px solid rgba(0,180,210,0.2);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:4rem;background:rgba(255,255,255,0.6);border-radius:16px;backdrop-filter:blur(8px);}
+.empty-ico{font-size:3rem;margin-bottom:1rem;}
+.empty h3{font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:8px;}
+.empty p{font-size:14px;color:var(--bluedark);opacity:.55;font-weight:500;}
+
+/* MODAL DETALHE */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,20,70,0.55);backdrop-filter:blur(12px);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:20px;padding:2.5rem;max-width:480px;width:100%;position:relative;animation:mIn .2s ease;box-shadow:0 30px 70px rgba(0,20,80,.2);max-height:90vh;overflow-y:auto;}
+@keyframes mIn{from{transform:scale(.94) translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
+.modal-close{position:absolute;top:16px;right:16px;background:rgba(0,0,0,.06);border:none;color:var(--bluedark);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.modal-header{display:flex;align-items:center;gap:16px;margin-bottom:1.5rem;}
+.modal-ico{width:72px;height:72px;border-radius:16px;overflow:hidden;background:#f0f6ff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:var(--blue);flex-shrink:0;}
+.modal-ico img{width:72px;height:72px;object-fit:cover;}
+.modal-title{font-size:22px;font-weight:900;color:var(--bluedark);}
+.modal-sub{font-size:13px;color:var(--bluedark);opacity:.5;margin-top:4px;font-weight:500;}
+.modal-section{margin-bottom:1.25rem;}
+.modal-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);opacity:.7;margin-bottom:6px;}
+.modal-text{font-size:14px;color:var(--bluedark);opacity:.7;line-height:1.7;font-weight:500;}
+.modal-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1.5rem;}
+.mstat{background:#f5f9ff;border-radius:10px;padding:1rem;text-align:center;}
+.mstat-v{font-size:1.5rem;font-weight:900;color:var(--blue);line-height:1;}
+.mstat-l{font-size:11px;color:var(--bluedark);opacity:.5;margin-top:4px;font-weight:600;}
+.modal-btn{width:100%;padding:14px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(18,85,204,0.4);transition:.2s;}
+.modal-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(18,85,204,0.5);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bluedark);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:2000;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none;}
+.toast.show{opacity:1;transform:none;}
+
+@media(max-width:700px){
+  main{padding:80px 4% 40px;}
+  .toolbar{gap:8px;}
+  .total-badge{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="pool-bg"></div>
+<div class="pool-overlay"></div>
+<div class="shimmer"><canvas id="wc"></canvas></div>
+
+<div class="page">
+<nav>
+  <div class="nav-in">
+    <a href="index.html"><img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="SplitPool" class="nav-logo"></a>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <button class="nav-btn outline" onclick="logout()">Sair</button>
+      <button class="nav-btn" onclick="window.location.href='criar-piscina.html'">+ Criar piscina</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>🏊 Explorar Piscinas</h1>
+    <p>Encontre vagas abertas e comece a economizar agora mesmo</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="busca" placeholder="Buscar serviço..." oninput="filtrar()">
+    </div>
+    <div class="filtros">
+      <button class="fbtn act" onclick="setCategoria('todos',this)">Todos</button>
+      <button class="fbtn" onclick="setCategoria('streaming',this)">Streaming</button>
+      <button class="fbtn" onclick="setCategoria('ia',this)">IA & Produt.</button>
+      <button class="fbtn" onclick="setCategoria('wellness',this)">Wellness</button>
+      <button class="fbtn" onclick="setCategoria('musica',this)">Música</button>
+    </div>
+    <span class="total-badge" id="total-badge"></span>
+  </div>
+
+  <div id="conteudo">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <p>Carregando piscinas...</p>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- MODAL DETALHE -->
+<div class="modal-overlay" id="modal-detalhe">
+  <div class="modal">
+    <button class="modal-close" onclick="fecharModal()">✕</button>
+    <div class="modal-header">
+      <div class="modal-ico" id="m-ico"></div>
+      <div>
+        <div class="modal-title" id="m-titulo"></div>
+        <div class="modal-sub" id="m-dono"></div>
+      </div>
+    </div>
+    <div class="modal-stats">
+      <div class="mstat"><div class="mstat-v" id="m-preco"></div><div class="mstat-l">por mês</div></div>
+      <div class="mstat"><div class="mstat-v" id="m-vagas-disp"></div><div class="mstat-l">vagas livres</div></div>
+      <div class="mstat"><div class="mstat-v" id="m-total"></div><div class="mstat-l">vagas total</div></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">Sobre esta piscina</div>
+      <div class="modal-text" id="m-desc"></div>
+    </div>
+    <button class="modal-btn" id="m-btn" onclick="entrarPiscina()">Entrar nesta piscina 🏊</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://eawfweuamtwlsilrkgoo.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
+const { createClient } = supabase
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+// Mapa de categorias por serviço
+const CATEGORIAS = {
+  'Netflix':'streaming','YouTube':'streaming','Disney+':'streaming','HBO':'streaming','Prime Video':'streaming',
+  'Spotify':'musica','Apple Music':'musica','Deezer':'musica','Tidal':'musica',
+  'Claude':'ia','ChatGPT':'ia','Notion':'ia','Microsoft 365':'ia','Duolingo':'ia','Canva':'ia',
+  'Wellhub':'wellness','Gympass':'wellness','Headspace':'wellness',
+  'iCloud':'streaming','Dropbox':'ia','Adobe':'ia'
+}
+
+// Ícones do repositório
+const ICONES = {
+  'Spotify':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Spotify_icon.png',
+  'YouTube':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/youtube_icon.png',
+  'Claude':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/claude-ai_icon.jpg',
+  'iCloud':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/icloud%20icon.jpg',
+  'Apple Music':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Apple_Music_icon.png',
+  'Microsoft 365':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/microsoft_icon.png',
+  'Duolingo':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/duolingo_icon.png',
+  'Notion':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Notion_icon.png',
+  'Wellhub':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/wellhub_gympass_icon.png',
+}
+
+let todasPiscinas = []
+let categoriaAtual = 'todos'
+let piscinaAtual = null
+
+// Verifica autenticação
+sb.auth.getSession().then(({ data }) => {
+  if (!data.session) {
+    window.location.href = 'cadastro.html'
+    return
+  }
+  const email = data.session.user.email
+  document.getElementById('nav-user').textContent = email.split('@')[0]
+  carregarPiscinas()
+})
+
+async function carregarPiscinas() {
+  const { data, error } = await sb
+    .from('piscinas')
+    .select('*')
+    .eq('status', 'aberta')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    mostrarVazio('Erro ao carregar piscinas', 'Tente recarregar a página.')
+    return
+  }
+
+  todasPiscinas = data || []
+  renderizar()
+}
+
+function getIcone(servico, icone_url) {
+  if (icone_url) return `<img src="${icone_url}" alt="${servico}" onerror="this.parentElement.textContent='${servico[0]}'"/>`
+  const url = ICONES[servico]
+  if (url) return `<img src="${url}" alt="${servico}" onerror="this.parentElement.textContent='${servico[0]}'"/>`
+  return servico[0]
+}
+
+function getCategoria(servico) {
+  for (const [k, v] of Object.entries(CATEGORIAS)) {
+    if (servico.toLowerCase().includes(k.toLowerCase())) return v
+  }
+  return 'outros'
+}
+
+function filtrar() {
+  renderizar()
+}
+
+function setCategoria(cat, el) {
+  categoriaAtual = cat
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('act'))
+  el.classList.add('act')
+  renderizar()
+}
+
+function renderizar() {
+  const busca = document.getElementById('busca').value.toLowerCase()
+  let lista = todasPiscinas.filter(p => {
+    const matchBusca = !busca || p.servico.toLowerCase().includes(busca) || (p.descricao||'').toLowerCase().includes(busca)
+    const matchCat = categoriaAtual === 'todos' || getCategoria(p.servico) === categoriaAtual
+    return matchBusca && matchCat
+  })
+
+  document.getElementById('total-badge').textContent = `${lista.length} piscina${lista.length !== 1 ? 's' : ''} encontrada${lista.length !== 1 ? 's' : ''}`
+
+  if (lista.length === 0) {
+    if (todasPiscinas.length === 0) {
+      mostrarVazio('Nenhuma piscina aberta ainda', 'Seja o primeiro a criar uma piscina e comece a ganhar!')
+    } else {
+      mostrarVazio('Nenhuma piscina encontrada', 'Tente outro filtro ou busca.')
+    }
+    return
+  }
+
+  const grid = document.createElement('div')
+  grid.className = 'grid'
+  grid.innerHTML = lista.map(p => {
+    const disponiveis = p.vagas_total - p.vagas_ocupadas
+    const pct = Math.round((p.vagas_ocupadas / p.vagas_total) * 100)
+    const esgotado = disponiveis <= 0
+    return `
+    <div class="card" onclick="abrirModal(${p.id})">
+      <div class="card-top">
+        <div class="card-ico">${getIcone(p.servico, p.icone_url)}</div>
+        <div class="card-info">
+          <div class="card-servico">${p.servico}</div>
+          <div class="card-dono">Piscina verificada</div>
+          <span class="card-badge ${esgotado ? 'badge-fechada' : 'badge-aberta'}">${esgotado ? 'Sem vagas' : `${disponiveis} vaga${disponiveis > 1 ? 's' : ''} livre${disponiveis > 1 ? 's' : ''}`}</span>
+        </div>
+        <div class="card-preco">
+          <div class="preco-val">R$${Number(p.preco_por_vaga).toFixed(2).replace('.',',')}</div>
+          <div class="preco-label">/mês</div>
+        </div>
+      </div>
+      ${p.descricao ? `<div class="card-desc">${p.descricao}</div>` : ''}
+      <div>
+        <div class="card-vagas">${p.vagas_ocupadas}/${p.vagas_total} vagas ocupadas</div>
+        <div class="vagas-bar"><div class="vagas-fill" style="width:${pct}%"></div></div>
+      </div>
+      <button class="card-btn" ${esgotado ? 'disabled' : ''} onclick="event.stopPropagation();abrirModal(${p.id})">${esgotado ? 'Sem vagas disponíveis' : 'Ver detalhes e entrar →'}</button>
+    </div>`
+  }).join('')
+
+  document.getElementById('conteudo').innerHTML = ''
+  document.getElementById('conteudo').appendChild(grid)
+}
+
+function mostrarVazio(titulo, texto) {
+  document.getElementById('conteudo').innerHTML = `
+    <div class="empty">
+      <div class="empty-ico">🏊</div>
+      <h3>${titulo}</h3>
+      <p>${texto}</p>
+    </div>`
+}
+
+function abrirModal(id) {
+  const p = todasPiscinas.find(x => x.id === id)
+  if (!p) return
+  piscinaAtual = p
+  const disponiveis = p.vagas_total - p.vagas_ocupadas
+
+  document.getElementById('m-ico').innerHTML = getIcone(p.servico, p.icone_url)
+  document.getElementById('m-titulo').textContent = p.servico
+  document.getElementById('m-dono').textContent = 'Piscina verificada pelo Splitpool'
+  document.getElementById('m-preco').textContent = `R$${Number(p.preco_por_vaga).toFixed(2).replace('.',',')}`
+  document.getElementById('m-vagas-disp').textContent = disponiveis
+  document.getElementById('m-total').textContent = p.vagas_total
+  document.getElementById('m-desc').textContent = p.descricao || 'Sem descrição adicional.'
+  document.getElementById('m-btn').disabled = disponiveis <= 0
+  document.getElementById('m-btn').textContent = disponiveis <= 0 ? 'Sem vagas disponíveis' : 'Entrar nesta piscina 🏊'
+
+  document.getElementById('modal-detalhe').classList.add('open')
+}
+
+function fecharModal() {
+  document.getElementById('modal-detalhe').classList.remove('open')
+  piscinaAtual = null
+}
+
+function entrarPiscina() {
+  if (!piscinaAtual) return
+  // Redireciona para checkout com o ID da piscina
+  window.location.href = `checkout.html?piscina=${piscinaAtual.id}`
+}
+
+async function logout() {
+  await sb.auth.signOut()
+  window.location.href = 'index.html'
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), 3000)
+}
+
+// Fecha modal clicando fora
+document.getElementById('modal-detalhe').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-detalhe')) fecharModal()
+})
+
+// Ondas canvas
+;(function(){
+  const c=document.getElementById('wc'),ctx=c.getContext('2d');
+  let W,H,t=0,lines=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;lines=[];for(let i=0;i<7;i++)lines.push({y:H*(0.08+i*0.13),amp:9+i*3,freq:0.005+i*0.002,speed:0.014+i*0.005,phase:Math.random()*Math.PI*2,alpha:0.16+i*0.025});}
+  function draw(){t+=0.012;ctx.clearRect(0,0,W,H);lines.forEach(l=>{ctx.beginPath();ctx.moveTo(0,l.y);for(let x=0;x<=W;x+=6){const y=l.y+Math.sin(x*l.freq+t*l.speed+l.phase)*l.amp+Math.sin(x*l.freq*1.8+t*l.speed*1.4)*l.amp*0.35;ctx.lineTo(x,y);}ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=`rgba(255,255,255,${l.alpha})`;ctx.fill();});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+</script>
+</body>
+</html>
