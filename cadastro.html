@@ -223,7 +223,7 @@ input::placeholder{color:#8BAAC8;}
     if (isLogin) {
       const { error } = await sb.auth.signInWithPassword({ email, password })
       if (error) showMsg(error.message, 'error')
-      else window.location.href = '/explorar'
+      else window.location.href = '/splitpool/explorar.html'
     } else {
       const { error } = await sb.auth.signUp({ email, password })
       if (error) showMsg(error.message, 'error')
@@ -237,13 +237,13 @@ input::placeholder{color:#8BAAC8;}
   async function handleGoogle() {
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/explorar' }
+      options: { redirectTo: window.location.origin + '/splitpool/explorar.html' }
     })
     if (error) showMsg(error.message, 'error')
   }
 
   sb.auth.getSession().then(({ data }) => {
-    if (data.session) window.location.href = '/explorar'
+    if (data.session) window.location.href = '/splitpool/explorar.html'
   })
 </script>
 </body>
