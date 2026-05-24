@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splitpool — Economize dividindo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;--text:#0C2461;--border:rgba(0,160,200,0.22);}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;color:var(--text);overflow-x:hidden;background:#3acde8;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--teal);border-radius:5px;}
+
+.pool-bg{position:fixed;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1572331165267-854da2b021d4?w=1920&q=85') center/cover no-repeat;filter:brightness(1.05) saturate(1.1);}
+.pool-overlay{position:fixed;inset:0;z-index:1;background:rgba(160,225,245,0.1);}
+.shimmer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
+.shimmer canvas{position:absolute;inset:0;width:100%;height:100%;}
+.page{position:relative;z-index:10;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);background:rgba(255,255,255,0.72);border-bottom:1px solid rgba(0,180,210,0.18);padding:0 5%;}
+.nav-in{max-width:1240px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.nav-logo{height:73px;object-fit:contain;flex-shrink:0;}
+.nav-links{display:flex;gap:2rem;list-style:none;}
+.nav-links a{color:var(--bluedark);text-decoration:none;font-size:14px;font-weight:600;transition:.2s;opacity:.75;}
+.nav-links a:hover{opacity:1;color:var(--blue);}
+.nav-cta{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 12px rgba(18,85,204,0.3);transition:.2s;white-space:nowrap;}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(18,85,204,0.45);}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:90px 5% 60px;position:relative;overflow:hidden;}
+
+.floaties{position:absolute;inset:0;pointer-events:none;}
+.flt{position:absolute;animation:bob 5s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-1.5deg);}50%{transform:translateY(-16px) rotate(1.5deg);}}
+
+@media(max-width:700px){
+  .nav-in{padding:0;}
+  .nav-cta{padding:8px 14px;font-size:13px;}
+  .floaties{position:relative;display:grid;grid-template-columns:repeat(4,1fr);align-items:end;gap:4px;margin-bottom:12px;width:100%;padding:0 6px;}
+  .flt{position:relative;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;animation:bob 5s ease-in-out infinite;display:flex;flex-direction:column;align-items:center;gap:3px;overflow:hidden;}
+  .flt>div{width:100%;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .flt img{width:100%!important;max-width:76px;height:auto;display:block;}
+  .flt svg{width:100%!important;max-width:76px;height:auto;}
+  .flt-label{font-size:7.5px!important;padding:3px 4px!important;border-radius:6px!important;white-space:normal!important;word-break:break-word;text-align:center;width:100%;max-width:76px;line-height:1.2;display:block;box-sizing:border-box;}
+  .flt>div>div:last-child{font-size:7.5px!important;padding:3px 4px!important;border-radius:6px!important;white-space:normal!important;word-break:break-word!important;text-align:center!important;width:100%!important;max-width:76px!important;line-height:1.2!important;box-sizing:border-box!important;}
+}
+
+.hero-center{display:flex;flex-direction:column;align-items:center;z-index:2;position:relative;}
+.hero-logo{height:auto;width:clamp(180px,30vw,320px);object-fit:contain;margin-bottom:1.25rem;background:rgba(255,255,255,0.82);padding:10px 20px;border-radius:12px;backdrop-filter:blur(10px);box-shadow:0 4px 20px rgba(0,0,0,0.1);display:block;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.72);border:1px solid rgba(0,180,210,0.4);border-radius:6px;padding:7px 16px;font-size:13px;color:var(--bluedark);margin-bottom:1.5rem;backdrop-filter:blur(8px);font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,0.08);}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+.hero h1{font-size:clamp(2rem,5vw,4.2rem);font-weight:900;line-height:1.08;letter-spacing:-1.5px;margin-bottom:1.2rem;max-width:720px;color:var(--bluedark);text-shadow:0 1px 0 rgba(255,255,255,0.6),0 2px 20px rgba(255,255,255,0.5);}
+.hero h1 .line2{display:block;font-size:clamp(1.6rem,4vw,3.4rem);}
+.hero-sub{font-size:clamp(.9rem,1.6vw,1.1rem);color:var(--bluedark);opacity:.78;max-width:500px;line-height:1.75;margin-bottom:2.25rem;font-weight:500;text-shadow:0 1px 6px rgba(255,255,255,0.5);}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.btn-p{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(18,85,204,0.4);transition:.25s;}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(18,85,204,0.5);}
+.btn-g{background:rgba(255,255,255,0.82);color:var(--bluedark);border:1.5px solid rgba(18,85,204,0.3);padding:14px 32px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;backdrop-filter:blur(8px);transition:.25s;font-family:inherit;}
+.btn-g:hover{background:#fff;border-color:var(--blue);}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:2.5rem;width:100%;max-width:640px;background:rgba(255,255,255,0.78);border:1px solid rgba(0,180,210,0.2);border-radius:12px;backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(0,0,0,0.08);overflow:hidden;}
+.stat{padding:1rem 0.75rem;border-right:1px solid rgba(0,180,210,0.18);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.stat:last-child{border:none;}
+.stat-v{font-size:1.4rem;font-weight:900;color:var(--blue);line-height:1;white-space:nowrap;}
+.stat-l{font-size:10px;color:var(--bluedark);opacity:.65;margin-top:4px;font-weight:600;line-height:1.3;text-align:center;}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr);}.stat:nth-child(2){border-right:none;}.stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid rgba(0,180,210,0.18);}}
+
+.section{padding:80px 5%;}
+.section-in{max-width:1240px;margin:0 auto;}
+.glass{background:rgba(225,245,255,0.52);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.55);border-bottom:1px solid rgba(255,255,255,0.55);}
+.stag{display:inline-block;background:rgba(18,85,204,0.08);border:1px solid rgba(18,85,204,0.2);color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 14px;border-radius:5px;margin-bottom:1.1rem;}
+.stitle{font-size:clamp(1.8rem,3.6vw,2.8rem);font-weight:900;letter-spacing:-1px;line-height:1.12;margin-bottom:.9rem;color:var(--bluedark);}
+.ssub{color:var(--bluedark);opacity:.65;font-size:1rem;line-height:1.7;max-width:500px;font-weight:500;}
+
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-top:2.5rem;}
+.step{background:rgba(255,255,255,0.82);border:1px solid rgba(0,180,210,0.18);border-radius:12px;padding:1.75rem;transition:.3s;box-shadow:0 2px 12px rgba(0,0,0,0.06);}
+.step:hover{border-color:rgba(18,85,204,.4);transform:translateY(-4px);}
+.step-n{width:42px;height:42px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--bluedark));display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;margin-bottom:1.1rem;}
+.step h3{font-size:15px;font-weight:800;margin-bottom:6px;color:var(--bluedark);}
+.step p{font-size:13.5px;color:var(--bluedark);opacity:.65;line-height:1.6;font-weight:500;}
+
+.vp{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:2.5rem;}
+@media(max-width:700px){.vp{grid-template-columns:1fr;}}
+.vpc{background:rgba(255,255,255,0.82);border:1px solid rgba(0,180,210,.18);border-radius:12px;padding:2rem;box-shadow:0 2px 16px rgba(0,0,0,.07);}
+.vpc.ft{border-color:rgba(18,85,204,.35);box-shadow:0 6px 30px rgba(18,85,204,.1);}
+.vpt{display:inline-block;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;margin-bottom:1rem;}
+.vpt.j{background:rgba(0,180,210,.1);color:var(--blue);border:1px solid rgba(0,180,210,.25);}
+.vpt.o{background:rgba(18,85,204,.1);color:var(--bluedark);border:1px solid rgba(18,85,204,.25);}
+.vpc h3{font-size:20px;font-weight:800;margin-bottom:.6rem;color:var(--bluedark);}
+.vpc>p{font-size:14px;color:var(--bluedark);opacity:.65;line-height:1.7;margin-bottom:1.3rem;font-weight:500;}
+.vf{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.vf li{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:var(--bluedark);opacity:.8;font-weight:500;}
+.vf li::before{content:'✓';color:var(--teal);font-weight:900;flex-shrink:0;margin-top:1px;}
+.vex{background:rgba(0,180,210,.06);border:1px solid rgba(0,180,210,.16);border-radius:10px;padding:1.1rem;margin-top:1.3rem;}
+.vex-t{font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.vr{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05);font-weight:600;color:var(--bluedark);}
+.vr:last-child{border:none;font-weight:800;}
+.vr span:last-child{font-weight:800;color:var(--blue);}
+
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;margin-top:2rem;}
+.svc-card{background:rgba(255,255,255,0.82);border:1px solid rgba(0,180,210,.16);border-radius:12px;padding:1.1rem 1.3rem;display:flex;align-items:center;gap:13px;transition:.3s;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.06);}
+.svc-card:hover{border-color:rgba(18,85,204,.4);transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.1);}
+.svc-ico{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.svc-ico img{width:52px;height:52px;object-fit:cover;display:block;}
+.svc-name{font-size:15px;font-weight:800;color:var(--bluedark);}
+.svc-meta{font-size:12px;color:var(--bluedark);opacity:.5;font-weight:500;}
+.svc-price{font-size:18px;font-weight:900;color:var(--blue);}
+.svc-mo{font-size:11px;color:var(--bluedark);opacity:.45;font-weight:500;}
+.frow{display:flex;gap:7px;flex-wrap:wrap;}
+.fbtn{padding:7px 15px;border-radius:6px;border:1px solid rgba(18,85,204,.2);background:rgba(255,255,255,.75);color:var(--bluedark);font-size:13px;font-weight:600;cursor:pointer;transition:.2s;font-family:inherit;}
+.fbtn.act{background:rgba(18,85,204,.12);border-color:var(--blue);color:var(--blue);}
+
+.pg{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;margin-top:2.5rem;}
+.pc{background:rgba(255,255,255,0.82);border:1px solid rgba(0,180,210,.18);border-radius:12px;padding:2rem;transition:.3s;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.pc.ft{border-color:rgba(18,85,204,.38);box-shadow:0 8px 32px rgba(18,85,204,.1);}
+.pc:hover{transform:translateY(-4px);}
+.ptag{display:inline-block;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:5px;margin-bottom:.9rem;}
+.pn{font-size:18px;font-weight:800;margin-bottom:.4rem;color:var(--bluedark);}
+.pv{font-size:2.5rem;font-weight:900;letter-spacing:-1px;color:var(--blue);line-height:1;}
+.pv span{font-size:14px;font-weight:500;color:var(--bluedark);opacity:.45;}
+.pd{font-size:13px;color:var(--bluedark);opacity:.6;margin:1rem 0 1.3rem;line-height:1.6;font-weight:500;}
+.pf{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.pf li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--bluedark);opacity:.75;font-weight:500;}
+.pf li::before{content:'✓';color:var(--teal);font-weight:900;flex-shrink:0;}
+.pbtn{width:100%;margin-top:1.75rem;padding:13px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;border:none;font-family:inherit;}
+.pb-f{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;}
+.pb-f:hover{box-shadow:0 6px 22px rgba(18,85,204,.4);}
+.pb-o{background:transparent;color:var(--blue);border:1.5px solid rgba(18,85,204,.3)!important;}
+.pb-o:hover{background:rgba(18,85,204,.06);border-color:var(--blue)!important;}
+
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-top:2.5rem;}
+.tc{background:rgba(255,255,255,.82);border:1px solid rgba(0,180,210,.16);border-radius:12px;padding:1.6rem;box-shadow:0 2px 10px rgba(0,0,0,.06);transition:.3s;}
+.tc:hover{border-color:rgba(18,85,204,.3);}
+.ts{color:var(--blue);font-size:14px;margin-bottom:10px;letter-spacing:2px;}
+.tt{font-size:14px;color:var(--bluedark);opacity:.75;line-height:1.7;margin-bottom:1.1rem;font-weight:500;}
+.ta{display:flex;align-items:center;gap:9px;}
+.tav{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0;}
+
+.cta{padding:90px 5%;text-align:center;}
+.cta h2{font-size:clamp(2rem,4.5vw,3.4rem);font-weight:900;letter-spacing:-1px;margin-bottom:1rem;color:var(--bluedark);}
+.cta p{color:var(--bluedark);opacity:.65;font-size:1rem;margin-bottom:2.25rem;font-weight:500;}
+
+footer{padding:2.5rem 5%;border-top:1px solid rgba(255,255,255,.4);background:rgba(10,48,128,0.78);backdrop-filter:blur(12px);}
+.fin{max-width:1240px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.fcopy{font-size:13px;color:rgba(255,255,255,.45);font-weight:500;}
+.flinks{display:flex;gap:1.5rem;}
+.flinks a{font-size:13px;color:rgba(255,255,255,.4);text-decoration:none;transition:.2s;font-weight:500;}
+.flinks a:hover{color:var(--teal);}
+
+.mov{position:fixed;inset:0;background:rgba(5,20,70,.6);backdrop-filter:blur(12px);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem;}
+.mov.open{display:flex;}
+.modal{background:#fff;border:1px solid rgba(0,180,210,.2);border-radius:16px;padding:2.5rem;max-width:430px;width:100%;position:relative;animation:mIn .2s ease;box-shadow:0 30px 70px rgba(0,20,80,.2);}
+@keyframes mIn{from{transform:scale(.94) translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
+.mcls{position:absolute;top:14px;right:14px;background:rgba(0,0,0,.06);border:none;color:var(--bluedark);width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.modal h2{font-size:22px;font-weight:800;margin-bottom:.4rem;color:var(--bluedark);}
+.modal .msub{color:var(--bluedark);opacity:.55;font-size:14px;margin-bottom:1.6rem;line-height:1.6;font-weight:500;}
+.modal input{width:100%;background:#f5f9ff;border:1.5px solid rgba(0,180,210,.25);color:var(--bluedark);padding:13px 15px;border-radius:8px;font-size:15px;margin-bottom:11px;font-family:inherit;outline:none;transition:.2s;font-weight:500;}
+.modal input:focus{border-color:var(--blue);}
+.modal input::placeholder{color:var(--bluedark);opacity:.35;}
+.mdiv{display:flex;align-items:center;gap:10px;margin:12px 0;color:var(--bluedark);opacity:.3;font-size:12px;font-weight:600;}
+.mdiv::before,.mdiv::after{content:'';flex:1;height:1px;background:rgba(0,0,0,.1);}
+.sbtn{width:100%;background:#f5f9ff;border:1.5px solid rgba(0,0,0,.1);color:var(--bluedark);padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:9px;transition:.2s;font-family:inherit;}
+.sbtn:hover{background:#eaf2ff;border-color:rgba(18,85,204,.3);}
+.mterms{font-size:11px;color:var(--bluedark);opacity:.38;text-align:center;margin-top:10px;line-height:1.6;font-weight:500;}
+.mterms a{color:var(--blue);opacity:1;text-decoration:none;}
+.rpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.4rem;}
+.rc{background:#f5f9ff;border:1.5px solid rgba(0,0,0,.08);border-radius:10px;padding:1.1rem;cursor:pointer;transition:.2s;text-align:center;}
+.rc:hover,.rc.act{border-color:var(--blue);background:#eaf2ff;}
+.rico{font-size:1.8rem;margin-bottom:5px;}
+.rn{font-size:13px;font-weight:700;color:var(--bluedark);}
+.rd{font-size:11px;color:var(--bluedark);opacity:.45;margin-top:3px;line-height:1.4;font-weight:500;}
+
+@media(max-width:700px){.nav-links{display:none;}.stats .stat{padding:.8rem 1rem;}.hero{padding:80px 4% 40px;}}
+</style>
+</head>
+<body>
+<div class="pool-bg"></div>
+<div class="pool-overlay"></div>
+<div class="shimmer"><canvas id="wc"></canvas></div>
+<div class="page">
+<nav>
+<div class="nav-in">
+  <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="SplitPool" class="nav-logo">
+  <ul class="nav-links">
+    <li><a href="#como">Como funciona</a></li>
+    <li><a href="#servicos">Serviços</a></li>
+    <li><a href="#parav">Para você</a></li>
+    <li><a href="#precos">Planos</a></li>
+  </ul>
+  <button class="nav-cta" onclick="openM('signup')">Começar grátis</button>
+</div>
+</nav>
+
+<section class="hero">
+  <div class="floaties">
+    <div class="flt" style="top:11%;left:30%;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;filter:drop-shadow(0 6px 12px rgba(0,40,100,0.28));">
+        <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/boia%20flamingo%20logo%20claude.png" alt="Claude" style="width:140px;height:auto;display:block;mix-blend-mode:multiply;">
+        <div class="flt-label" style="background:rgba(10,48,128,0.72);border-radius:10px;padding:3px 12px;font-family:Inter,Arial,sans-serif;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap;">Claude Pro · R$24,90/mês</div>
+      </div>
+    </div>
+    <div class="flt" style="top:8%;right:20%;animation-delay:-2.1s;animation-duration:6.1s;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Boia%20-%20pato%20de%20piscina_icone%20youtube%20boiando.png" alt="YouTube" style="width:150px;height:auto;display:block;mix-blend-mode:multiply;">
+        <div class="flt-label" style="background:rgba(10,48,128,0.72);border-radius:10px;padding:3px 12px;font-family:Inter,Arial,sans-serif;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap;">YouTube · R$12,90/mês</div>
+      </div>
+    </div>
+    <div class="flt" style="bottom:16%;left:20%;animation-delay:-3.7s;animation-duration:5.8s;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;filter:drop-shadow(0 6px 12px rgba(0,40,100,0.28));">
+        <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/boia%20melancia%20logo%20spotify.png" alt="Spotify" style="width:140px;height:auto;display:block;mix-blend-mode:multiply;">
+        <div class="flt-label" style="background:rgba(10,48,128,0.72);border-radius:10px;padding:3px 12px;font-family:Inter,Arial,sans-serif;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap;">Spotify · R$8,90/mês</div>
+      </div>
+    </div>
+    <div class="flt" style="top:45%;right:20%;animation-delay:-1.4s;animation-duration:4.9s;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;filter:drop-shadow(0 6px 12px rgba(0,40,100,0.28));">
+        <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/boia%20azul%20logo%20wellhub.png" alt="Wellhub" style="width:140px;height:auto;display:block;mix-blend-mode:multiply;">
+        <div class="flt-label" style="background:rgba(10,48,128,0.72);border-radius:10px;padding:3px 12px;font-family:Inter,Arial,sans-serif;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap;">Wellhub · R$35,90/mês</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-center">
+    <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="SplitPool" class="hero-logo">
+    <div class="hero-badge"><span class="pulse"></span> Marketplace de assinaturas compartilhadas</div>
+    <h1>Pague menos!<span class="line2">Ganhe ou economize dividindo!</span></h1>
+    <p class="hero-sub">Conectamos quem tem vagas em planos família com quem quer economizar — sem precisar conhecer ninguém. Seguro, simples e recorrente.</p>
+    <div class="hero-btns">
+      <button class="btn-p" onclick="openM('signup')">Entrar em uma piscina 🏊</button>
+      <button class="btn-g" onclick="openM('owner')">Criar minha piscina →</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-v">R$380</div><div class="stat-l">Gasto médio<br>com serviços/mês</div></div>
+      <div class="stat"><div class="stat-v">60%</div><div class="stat-l">Economia real<br>por usuário</div></div>
+      <div class="stat"><div class="stat-v">+9</div><div class="stat-l">Plataformas<br>disponíveis</div></div>
+      <div class="stat"><div class="stat-v">0%</div><div class="stat-l">Custo<br>de entrada</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="como" class="section glass">
+<div class="section-in">
+  <div style="text-align:center;margin-bottom:3rem;">
+    <span class="stag">Como funciona</span>
+    <h2 class="stitle">Simples como mergulhar<br>numa piscina</h2>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="step-n">1</div><h3>Escolha seu perfil</h3><p>Quer economizar entrando numa piscina, ou criar uma e usar seu plano praticamente de graça?</p></div>
+    <div class="step"><div class="step-n">2</div><h3>Encontre sua piscina</h3><p>Navegue pelos serviços disponíveis, veja o preço por vaga e escolha o que faz mais sentido pra você.</p></div>
+    <div class="step"><div class="step-n">3</div><h3>Pague com segurança</h3><p>PIX ou cartão. O valor fica retido e só é liberado ao dono depois que você confirmar o acesso.</p></div>
+    <div class="step"><div class="step-n">4</div><h3>Acesse e aproveite</h3><p>Receba login e senha imediatamente. Economize todo mês, de forma automática e sem complicação.</p></div>
+  </div>
+</div>
+</section>
+
+<section id="parav" class="section">
+<div class="section-in">
+  <span class="stag">Para você</span>
+  <h2 class="stitle">Do jeito que funciona<br>melhor para você</h2>
+  <div class="vp">
+    <div class="vpc">
+      <span class="vpt j">🏊 Quero economizar</span>
+      <h3>Entre numa piscina</h3>
+      <p>Acesse os mesmos serviços que você já usa pagando uma fração do preço. Sem contratos, sem fidelidade.</p>
+      <ul class="vf"><li>Acesso garantido ao serviço escolhido</li><li>Preço fixo mensal, sem surpresas</li><li>Cancelamento a qualquer momento</li><li>Proteção de pagamento com reembolso</li></ul>
+      <div class="vex">
+        <div class="vex-t">Exemplo — iCloud 2TB</div>
+        <div class="vr"><span>Plano individual</span><span>R$64,90/mês</span></div>
+        <div class="vr"><span>Você paga na piscina</span><span>R$19,99/mês</span></div>
+        <div class="vr"><span>Sua economia</span><span style="color:#00897B;">R$44,91/mês ✓</span></div>
+      </div>
+      <button class="btn-p" style="width:100%;margin-top:1.3rem;padding:13px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;" onclick="openM('signup')">Encontrar minha vaga</button>
+    </div>
+    <div class="vpc ft">
+      <span class="vpt o">🤿 Quero criar e ganhar</span>
+      <h3>Crie uma piscina</h3>
+      <p>Você já paga pelo plano. Adicione membros, receba o repasse mensalmente e praticamente use seu plano de graça — ou ainda lucre.</p>
+      <ul class="vf"><li>Crie piscinas com vagas abertas ao mercado</li><li>Repasse automático via PIX todo mês</li><li>Dashboard de receita e membros</li><li>Seus dados protegidos — mediamos tudo</li><li>Quanto mais membros, mais você ganha</li></ul>
+      <div class="vex">
+        <div class="vex-t">Exemplo — iCloud 2TB (4 membros)</div>
+        <div class="vr"><span>Custo do seu plano</span><span>R$64,90/mês</span></div>
+        <div class="vr"><span>Receita dos membros</span><span>R$79,96/mês</span></div>
+        <div class="vr"><span>Seu plano</span><span style="color:#00897B;">Praticamente de graça ✓</span></div>
+      </div>
+      <button class="btn-p" style="width:100%;margin-top:1.3rem;padding:13px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;" onclick="openM('owner')">Criar minha piscina</button>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="servicos" class="section glass">
+<div class="section-in">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1.25rem;margin-bottom:2rem;">
+    <div>
+      <span class="stag">Plataformas</span>
+      <h2 class="stitle" style="margin-bottom:0;">Piscinas abertas<br>agora mesmo</h2>
+    </div>
+    <div class="frow">
+      <button class="fbtn act" onclick="fSvc('all',this)">Todos</button>
+      <button class="fbtn" onclick="fSvc('streaming',this)">Streaming</button>
+      <button class="fbtn" onclick="fSvc('ia',this)">IA & Produt.</button>
+      <button class="fbtn" onclick="fSvc('wellness',this)">Wellness</button>
+    </div>
+  </div>
+  <div class="svc-grid" id="svc-grid"></div>
+</div>
+</section>
+
+<section id="precos" class="section">
+<div class="section-in">
+  <div style="text-align:center;margin-bottom:1rem;">
+    <span class="stag">Planos</span>
+    <h2 class="stitle">Comece de graça,<br>cresça sem limites</h2>
+    <p class="ssub" style="margin:0 auto;text-align:center;">Para economizar ou gerar renda recorrente — tem um modelo certo para você.</p>
+  </div>
+  <div class="pg">
+    <div class="pc"><div class="pn">Mergulhador</div><div class="pv">Grátis<span>/mês</span></div><div class="pd">Para quem quer apenas economizar nas assinaturas do dia a dia.</div><ul class="pf"><li>Entrar em até 3 piscinas simultâneas</li><li>Pagamento via PIX e cartão</li><li>Garantia de reembolso automático</li><li>Cancelamento a qualquer momento</li></ul><button class="pbtn pb-o" onclick="openM('signup')">Começar grátis</button></div>
+    <div class="pc ft"><div class="ptag">⭐ Para o Dono da Piscina</div><div class="pn">Dono da Piscina</div><div class="pv" style="font-size:1.5rem;letter-spacing:-.3px;">Você define o preço</div><div class="pd">Abra vagas no seu plano, preencha sua piscina e receba todo mês no PIX — o Splitpool cuida de tudo.</div><ul class="pf"><li>Piscinas ilimitadas</li><li>Você escolhe o preço por vaga</li><li>Repasse automático via PIX</li><li>Dashboard de receita e membros</li><li>Mediação de conflitos pelo Splitpool</li><li>Dados de login nunca expostos</li><li>Selo de dono verificado</li></ul><div style="background:rgba(18,85,204,.06);border:1px solid rgba(18,85,204,.15);border-radius:8px;padding:.9rem;margin-top:1.3rem;font-size:13px;color:var(--bluedark);opacity:.75;line-height:1.6;font-weight:500;">💡 <strong style="opacity:1;">Como funciona:</strong> o spread já está embutido no preço para o membro. Você recebe sua parte automaticamente.</div><button class="pbtn pb-f" onclick="openM('owner')">Criar minha piscina agora</button></div>
+    <div class="pc"><div class="pn">Empresas & Clubs</div><div class="pv" style="font-size:1.8rem;letter-spacing:-.3px;">Custom</div><div class="pd">Para OAB, sindicatos, associações e empresas que querem oferecer o benefício em escala.</div><ul class="pf"><li>Múltiplos donos e piscinas</li><li>Relatórios mensais consolidados</li><li>API de integração com HR</li><li>Taxa negociada por volume</li><li>Gerente de conta dedicado</li></ul><button class="pbtn pb-o" onclick="openM('signup')">Fale com a gente</button></div>
+  </div>
+</div>
+</section>
+
+<section class="section glass" style="padding:70px 5%;">
+<div class="section-in">
+  <div style="text-align:center;margin-bottom:2.5rem;">
+    <span class="stag">Depoimentos</span>
+    <h2 class="stitle">Quem já mergulhou<br>ama a temperatura</h2>
+  </div>
+  <div class="tg">
+    <div class="tc"><div class="ts">★★★★★</div><div class="tt">"Pago R$19,99/mês pelo iCloud 2TB. Antes pagava R$64,90 sozinha. Impossível não usar."</div><div class="ta"><div class="tav" style="background:linear-gradient(135deg,#00BCD4,#007B8A);">MF</div><div><div style="font-size:14px;font-weight:800;color:var(--bluedark);">Mariana F.</div><div style="font-size:12px;color:var(--bluedark);opacity:.5;font-weight:500;">Designer, São Paulo</div></div></div></div>
+    <div class="tc"><div class="ts">★★★★★</div><div class="tt">"Criei 3 piscinas — iCloud, Claude e YouTube. Meu plano basicamente se paga sozinho todo mês."</div><div class="ta"><div class="tav" style="background:linear-gradient(135deg,#1255CC,#0A3080);">RB</div><div><div style="font-size:14px;font-weight:800;color:var(--bluedark);">Rodrigo B.</div><div style="font-size:12px;color:var(--bluedark);opacity:.5;font-weight:500;">Dev, Belo Horizonte</div></div></div></div>
+    <div class="tc"><div class="ts">★★★★★</div><div class="tt">"Advogada sem acesso ao Wellhub da OAB. Encontrei uma piscina em 10 minutos. Incrível!"</div><div class="ta"><div class="tav" style="background:linear-gradient(135deg,#00BCD4,#1255CC);">LP</div><div><div style="font-size:14px;font-weight:800;color:var(--bluedark);">Larissa P.</div><div style="font-size:12px;color:var(--bluedark);opacity:.5;font-weight:500;">Advogada, Rio de Janeiro</div></div></div></div>
+  </div>
+</div>
+</section>
+
+<section class="cta">
+  <span class="stag">Pronto?</span>
+  <h2>A piscina está aberta.<br><span style="color:var(--teal);">Mergulhe agora.</span></h2>
+  <p>Cadastre-se em menos de 60 segundos.</p>
+  <div class="hero-btns" style="justify-content:center;">
+    <button class="btn-p" onclick="openM('signup')">Criar minha conta grátis</button>
+    <button class="btn-g" onclick="openM('owner')">Quero criar uma piscina →</button>
+  </div>
+</section>
+
+<footer>
+  <div class="fin">
+    <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="SplitPool" style="height:32px;object-fit:contain;filter:brightness(0) invert(1);">
+    <div class="fcopy">© 2025 Splitpool. Todos os direitos reservados.</div>
+    <div class="flinks"><a href="#">Termos</a><a href="#">Privacidade</a><a href="#">Suporte</a></div>
+  </div>
+</footer>
+</div>
+
+<div class="mov" id="m-signup">
+  <div class="modal">
+    <button class="mcls" onclick="closeM('signup')">✕</button>
+    <div style="font-size:2rem;margin-bottom:.4rem;">🏊</div>
+    <h2>Entrar numa piscina</h2>
+    <p class="msub">Crie sua conta e comece a economizar em minutos.</p>
+    <input type="email" placeholder="seu@email.com">
+    <button class="btn-p" style="width:100%;padding:13px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;" onclick="window.location.href='cadastro.html'">Continuar →</button>
+    <div class="mdiv">ou</div>
+    <button class="sbtn"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continuar com Google</button>
+    <div class="mterms">Ao continuar, você concorda com os <a href="#">Termos</a> e a <a href="#">Política de Privacidade</a>.</div>
+  </div>
+</div>
+<div class="mov" id="m-owner">
+  <div class="modal">
+    <button class="mcls" onclick="closeM('owner')">✕</button>
+    <div style="font-size:2rem;margin-bottom:.4rem;">🤿</div>
+    <h2>Criar uma piscina</h2>
+    <p class="msub">Qual é o seu perfil de dono?</p>
+    <div class="rpick">
+      <div class="rc act" onclick="pRole(this)"><div class="rico">👤</div><div class="rn">Pessoa física</div><div class="rd">Tenho um plano família sobrando</div></div>
+      <div class="rc" onclick="pRole(this)"><div class="rico">🏢</div><div class="rn">Empresa / Club</div><div class="rd">Ofereço benefício corporativo</div></div>
+    </div>
+    <input type="email" placeholder="seu@email.com">
+    <button class="btn-p" style="width:100%;padding:13px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;" onclick="window.location.href='cadastro.html'">Criar piscina →</button>
+    <div class="mdiv">ou</div>
+    <button class="sbtn"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continuar com Google</button>
+    <div class="mterms">Ao continuar, você concorda com os <a href="#">Termos</a> e a <a href="#">Política de Privacidade</a>.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const c=document.getElementById('wc'),ctx=c.getContext('2d');
+  let W,H,t=0,lines=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;lines=[];for(let i=0;i<7;i++)lines.push({y:H*(0.08+i*0.13),amp:9+i*3,freq:0.005+i*0.002,speed:0.014+i*0.005,phase:Math.random()*Math.PI*2,alpha:0.16+i*0.025});}
+  function draw(){t+=0.012;ctx.clearRect(0,0,W,H);lines.forEach(l=>{ctx.beginPath();ctx.moveTo(0,l.y);for(let x=0;x<=W;x+=6){const y=l.y+Math.sin(x*l.freq+t*l.speed+l.phase)*l.amp+Math.sin(x*l.freq*1.8+t*l.speed*1.4)*l.amp*0.35;ctx.lineTo(x,y);}ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=`rgba(255,255,255,${l.alpha})`;ctx.fill();});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+
+const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/';
+const SVCS=[
+  {n:"iCloud+ 2TB",m:"até 5 vagas · Apple",p:"R$19,99",cat:"streaming",img:BASE+'icloud%20icon.jpg'},
+  {n:"Spotify Family",m:"até 5 vagas · Música",p:"R$8,90",cat:"streaming",img:BASE+'Spotify_icon.png'},
+  {n:"YouTube Premium",m:"até 5 vagas · Google",p:"R$12,90",cat:"streaming",img:BASE+'youtube_icon.png'},
+  {n:"Apple Music",m:"até 5 vagas · Música",p:"R$11,90",cat:"streaming",img:BASE+'Apple_Music_icon.png'},
+  {n:"Claude.ai Pro",m:"seats avulsos · IA",p:"R$24,90",cat:"ia",img:BASE+'claude-ai_icon.jpg'},
+  {n:"Microsoft 365",m:"até 6 vagas · Office",p:"R$12,50",cat:"ia",img:BASE+'microsoft_icon.png'},
+  {n:"Duolingo Family",m:"até 6 vagas · Idiomas",p:"R$9,99",cat:"ia",img:BASE+'duolingo_icon.png'},
+  {n:"Notion Team",m:"seats avulsos · Produt.",p:"R$19,90",cat:"ia",img:BASE+'Notion_icon.png'},
+  {n:"Wellhub (Gympass)",m:"até 3 dep. · Wellness",p:"R$35,90",cat:"wellness",img:BASE+'wellhub_gympass_icon.png'},
+];
+
+function renderSvcs(f){
+  const g=document.getElementById('svc-grid');
+  const d=f==='all'?SVCS:SVCS.filter(s=>s.cat===f);
+  g.innerHTML=d.map(s=>`<div class="svc-card" onclick="openM('signup')"><div class="svc-ico"><img src="${s.img}" alt="${s.n}" style="width:52px;height:52px;object-fit:cover;border-radius:12px;display:block;" onerror="this.parentElement.innerHTML='<div style=\\'width:52px;height:52px;border-radius:12px;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:22px;\\'>${s.n[0]}</div>'"></div><div style="flex:1;"><div class="svc-name">${s.n}</div><div class="svc-meta">${s.m}</div></div><div style="text-align:right;flex-shrink:0;"><div class="svc-price">${s.p}</div><div class="svc-mo">/mês por vaga</div></div></div>`).join('');
+}
+function fSvc(f,el){document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('act'));el.classList.add('act');renderSvcs(f);}
+function openM(id){document.getElementById('m-'+id).classList.add('open');}
+function closeM(id){document.getElementById('m-'+id).classList.remove('open');}
+function pRole(el){el.closest('.rpick').querySelectorAll('.rc').forEach(c=>c.classList.remove('act'));el.classList.add('act');}
+document.querySelectorAll('.mov').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+renderSvcs('all');
+</script>
+</body>
+</html>
