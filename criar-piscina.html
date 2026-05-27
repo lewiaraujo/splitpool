@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splitpool — Criar Piscina</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;--border:rgba(0,160,200,0.22);}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;color:var(--bluedark);overflow-x:hidden;background:#3acde8;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--teal);border-radius:5px;}
+
+.pool-bg{position:fixed;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1572331165267-854da2b021d4?w=1920&q=85') center/cover no-repeat;filter:brightness(1.05) saturate(1.1);}
+.pool-overlay{position:fixed;inset:0;z-index:1;background:rgba(160,225,245,0.12);}
+.shimmer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
+.shimmer canvas{position:absolute;inset:0;width:100%;height:100%;}
+.page{position:relative;z-index:10;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);background:rgba(255,255,255,0.72);border-bottom:1px solid rgba(0,180,210,0.18);padding:0 5%;}
+.nav-in{max-width:1240px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.nav-logo{height:52px;object-fit:contain;flex-shrink:0;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{font-size:13px;color:var(--bluedark);font-weight:600;opacity:.7;}
+.nav-btn{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;}
+.nav-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(18,85,204,0.4);}
+.nav-btn.outline{background:transparent;color:var(--bluedark);border:1.5px solid rgba(18,85,204,0.3);}
+.nav-btn.outline:hover{background:rgba(18,85,204,0.06);}
+
+/* MAIN */
+main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
+
+/* HEADER */
+.page-header{margin-bottom:2rem;}
+.page-header h1{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;color:var(--bluedark);letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.5);}
+.page-header p{font-size:15px;color:var(--bluedark);opacity:.65;margin-top:6px;font-weight:500;}
+
+/* STEPS */
+.steps-nav{display:flex;align-items:center;gap:0;margin-bottom:2rem;background:rgba(255,255,255,0.7);border-radius:12px;padding:6px;backdrop-filter:blur(8px);border:1px solid rgba(0,180,210,0.2);}
+.step-btn{flex:1;padding:10px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--bluedark);opacity:.5;cursor:pointer;font-family:inherit;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.step-btn.act{background:rgba(255,255,255,0.95);opacity:1;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.step-btn.done{opacity:.7;color:var(--teal);}
+.step-num{width:22px;height:22px;border-radius:50%;background:rgba(18,85,204,0.1);color:var(--blue);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-btn.act .step-num{background:var(--blue);color:#fff;}
+.step-btn.done .step-num{background:var(--teal);color:#fff;}
+
+/* FORM CARD */
+.form-card{background:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.6);border-radius:20px;padding:2rem;box-shadow:0 8px 40px rgba(0,30,80,0.15);backdrop-filter:blur(16px);}
+
+.panel{display:none;}
+.panel.act{display:block;}
+
+/* TIPO PISCINA */
+.tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem;}
+@media(max-width:600px){.tipo-grid{grid-template-columns:1fr;}}
+.tipo-card{border:2px solid rgba(0,180,210,0.2);border-radius:14px;padding:1.5rem;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.6);}
+.tipo-card:hover{border-color:rgba(18,85,204,0.3);background:rgba(255,255,255,0.85);}
+.tipo-card.sel{border-color:var(--blue);background:#EEF4FF;}
+.tipo-ico{font-size:2rem;margin-bottom:10px;}
+.tipo-title{font-size:16px;font-weight:800;color:var(--bluedark);margin-bottom:4px;}
+.tipo-desc{font-size:13px;color:var(--bluedark);opacity:.6;line-height:1.5;font-weight:500;}
+.tipo-badge{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.badge-green{background:rgba(0,200,100,0.12);color:#00875A;border:1px solid rgba(0,200,100,0.2);}
+.badge-blue{background:rgba(18,85,204,0.1);color:var(--blue);border:1px solid rgba(18,85,204,0.2);}
+
+/* SERVIÇOS */
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem;}
+.svc-item{border:2px solid rgba(0,180,210,0.2);border-radius:12px;padding:1rem;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.6);text-align:center;}
+.svc-item:hover{border-color:rgba(18,85,204,0.3);background:rgba(255,255,255,0.85);}
+.svc-item.sel{border-color:var(--blue);background:#EEF4FF;}
+.svc-item img{width:44px;height:44px;border-radius:10px;object-fit:cover;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;}
+.svc-item-name{font-size:13px;font-weight:700;color:var(--bluedark);}
+.svc-item-price{font-size:11px;color:var(--bluedark);opacity:.5;margin-top:2px;font-weight:500;}
+
+/* FORM FIELDS */
+.field{margin-bottom:1.25rem;}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:6px;opacity:.8;}
+.field input,.field textarea,.field select{width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;transition:.2s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--blue);background:#fff;}
+.field input::placeholder,.field textarea::placeholder{color:var(--bluedark);opacity:.35;}
+.field textarea{resize:vertical;min-height:90px;}
+.field-hint{font-size:12px;color:var(--bluedark);opacity:.45;margin-top:5px;font-weight:500;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:500px){.field-row{grid-template-columns:1fr;}}
+
+/* CALCULADORA */
+.calc-box{background:rgba(18,85,204,0.06);border:1.5px solid rgba(18,85,204,0.15);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;}
+.calc-title{font-size:14px;font-weight:800;color:var(--blue);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.calc-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(18,85,204,0.1);font-size:14px;color:var(--bluedark);}
+.calc-row:last-child{border:none;font-weight:800;font-size:15px;}
+.calc-row .val{font-weight:700;}
+.calc-row .val.green{color:#00875A;}
+.calc-row .val.blue{color:var(--blue);}
+.calc-row .val.red{color:#991B1B;}
+
+/* PROGRESS BAR */
+.progress-wrap{margin-bottom:1.25rem;}
+.progress-label{display:flex;justify-content:space-between;font-size:13px;color:var(--bluedark);opacity:.7;margin-bottom:6px;font-weight:600;}
+.progress-bar{height:8px;background:rgba(0,180,210,0.15);border-radius:4px;overflow:hidden;}
+.progress-fill{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .5s ease;}
+
+/* MOTIVAÇÃO */
+.motivacao{text-align:center;padding:1rem;border-radius:10px;font-size:14px;font-weight:700;margin-bottom:1.5rem;transition:.3s;}
+.mot-0{background:rgba(0,180,210,0.08);color:var(--blue);}
+.mot-50{background:rgba(255,170,0,0.1);color:#B45309;}
+.mot-80{background:rgba(0,180,210,0.12);color:var(--blue);}
+.mot-100{background:rgba(0,200,100,0.12);color:#00875A;}
+
+/* VAGAS VISUAL */
+.vagas-visual{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.vaga-bubble{width:36px;height:36px;border-radius:50%;border:2px solid rgba(0,180,210,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;transition:.3s;background:rgba(255,255,255,0.6);}
+.vaga-bubble.ocupada{background:linear-gradient(135deg,var(--blue),var(--bluedark));border-color:var(--blue);}
+
+/* BOTÕES */
+.btn-primary{width:100%;padding:14px;border-radius:10px;font-weight:700;color:#fff;font-size:15px;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--blue),var(--bluedark));box-shadow:0 4px 18px rgba(18,85,204,0.4);transition:.2s;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(18,85,204,0.5);}
+.btn-primary:disabled{background:#93C5FD;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-secondary{width:100%;padding:13px;border-radius:10px;font-weight:700;font-size:14px;border:1.5px solid rgba(18,85,204,0.25);background:transparent;color:var(--blue);cursor:pointer;font-family:inherit;transition:.2s;margin-bottom:10px;}
+.btn-secondary:hover{background:rgba(18,85,204,0.06);}
+.btn-row{display:flex;gap:10px;}
+.btn-row .btn-primary,.btn-row .btn-secondary{flex:1;margin:0;}
+
+/* MSG */
+.msg{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;text-align:center;display:none;font-weight:600;}
+.msg.success{background:#D1FAE5;color:#065F46;}
+.msg.error{background:#FEE2E2;color:#991B1B;}
+
+/* RESUMO FINAL */
+.resumo{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem;}
+@media(max-width:500px){.resumo{grid-template-columns:1fr;}}
+.resumo-item{background:rgba(18,85,204,0.06);border-radius:10px;padding:1rem;}
+.resumo-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);opacity:.7;margin-bottom:4px;}
+.resumo-val{font-size:15px;font-weight:800;color:var(--bluedark);}
+
+@media(max-width:700px){
+  main{padding:80px 4% 40px;}
+  .steps-nav{gap:4px;}
+  .step-btn span.step-label{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="pool-bg"></div>
+<div class="pool-overlay"></div>
+<div class="shimmer"><canvas id="wc"></canvas></div>
+
+<div class="page">
+<nav>
+  <div class="nav-in">
+    <a href="index.html"><img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="SplitPool" class="nav-logo"></a>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <button class="nav-btn outline" onclick="window.location.href='explorar.html'">← Explorar</button>
+      <button class="nav-btn outline" onclick="logout()">Sair</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>🤿 Criar uma piscina</h1>
+    <p>Configure sua piscina em 3 passos e comece a receber</p>
+  </div>
+
+  <!-- STEPS NAV -->
+  <div class="steps-nav">
+    <button class="step-btn act" id="step-btn-1" onclick="goStep(1)">
+      <span class="step-num">1</span>
+      <span class="step-label">Tipo e serviço</span>
+    </button>
+    <button class="step-btn" id="step-btn-2" onclick="goStep(2)">
+      <span class="step-num">2</span>
+      <span class="step-label">Detalhes</span>
+    </button>
+    <button class="step-btn" id="step-btn-3" onclick="goStep(3)">
+      <span class="step-num">3</span>
+      <span class="step-label">Revisar e publicar</span>
+    </button>
+  </div>
+
+  <div class="form-card">
+    <div class="msg" id="msg"></div>
+
+    <!-- PASSO 1: TIPO E SERVIÇO -->
+    <div class="panel act" id="panel-1">
+      <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Qual tipo de piscina você quer criar?</h2>
+      <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Escolha como você tem acesso ao serviço que vai compartilhar.</p>
+
+      <div class="tipo-grid">
+        <div class="tipo-card" id="tipo-familia" onclick="selecionarTipo('familia')">
+          <div class="tipo-ico">🏊</div>
+          <div class="tipo-title">Plano família</div>
+          <div class="tipo-desc">Você assina e paga um plano família. Divide as vagas e recupera o custo com os membros.</div>
+          <span class="tipo-badge badge-blue">Ex: Microsoft 365, Duolingo</span>
+        </div>
+        <div class="tipo-card" id="tipo-corporativo" onclick="selecionarTipo('corporativo')">
+          <div class="tipo-ico">🏢</div>
+          <div class="tipo-title">Benefício corporativo</div>
+          <div class="tipo-desc">Sua empresa paga o benefício. Você tem vagas sobrando e quer monetizá-las.</div>
+          <span class="tipo-badge badge-green">Ex: Wellhub, TotalPass, Alura</span>
+        </div>
+      </div>
+
+      <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Qual serviço você vai compartilhar?</h2>
+      <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1rem;font-weight:500;">Escolha o serviço ou adicione manualmente.</p>
+
+      <div class="svc-grid" id="svc-grid"></div>
+
+      <div class="field">
+        <label>Ou digite o nome do serviço manualmente</label>
+        <input type="text" id="svc-manual" placeholder="Ex: Adobe Creative Cloud..." oninput="atualizarCalc()">
+      </div>
+
+      <button class="btn-primary" onclick="irPasso2()">Continuar →</button>
+    </div>
+
+    <!-- PASSO 2: DETALHES -->
+    <div class="panel" id="panel-2">
+      <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Detalhes da sua piscina</h2>
+      <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Configure as vagas. O preço por vaga é definido pelo Splitpool para garantir competitividade.</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Total de vagas disponíveis</label>
+          <input type="number" id="vagas-total" min="1" max="10" value="5" oninput="atualizarCalc()">
+          <div class="field-hint">Quantas pessoas podem entrar (sem contar você)</div>
+        </div>
+        <div class="field">
+          <label>Custo mensal do seu plano (R$)</label>
+          <input type="number" id="custo-plano" min="0" step="0.01" placeholder="Ex: 49.90" oninput="atualizarCalc()" id="custo-plano">
+          <div class="field-hint" id="custo-hint">Quanto você paga por mês pelo plano</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Descrição da piscina</label>
+        <textarea id="descricao" placeholder="Ex: Plano família do Microsoft 365 com Word, Excel, Teams e 1TB de OneDrive por pessoa. Acesso imediato após confirmação."></textarea>
+        <div class="field-hint">Seja claro sobre o que o membro vai receber. Piscinas com boa descrição preenchem 3x mais rápido.</div>
+      </div>
+
+      <!-- CALCULADORA -->
+      <div class="calc-box">
+        <div class="calc-title">🧮 Calculadora de ganhos</div>
+
+        <div class="motivacao mot-0" id="motivacao">Configure as vagas para ver sua projeção</div>
+
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>Vagas preenchidas</span>
+            <span id="prog-label">0 de 5</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="vagas-visual" id="vagas-visual"></div>
+
+        <div style="margin-top:1rem;">
+          <div class="calc-row">
+            <span>Preço por vaga (Splitpool define)</span>
+            <span class="val blue" id="calc-preco-vaga">R$0,00</span>
+          </div>
+          <div class="calc-row">
+            <span>Seu repasse por vaga preenchida</span>
+            <span class="val blue" id="calc-repasse-vaga">R$0,00</span>
+          </div>
+          <div class="calc-row" id="row-custo" style="display:none">
+            <span>Custo do seu plano</span>
+            <span class="val red" id="calc-custo">- R$0,00</span>
+          </div>
+          <div class="calc-row">
+            <span id="calc-label-resultado">Com todas as vagas preenchidas</span>
+            <span class="val green" id="calc-resultado">R$0,00/mês</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIMULADOR DE VAGAS -->
+      <div class="field">
+        <label>Simular: quantas vagas preenchidas?</label>
+        <input type="range" id="sim-vagas" min="0" max="5" value="0" step="1" oninput="simularVagas(this.value)" style="width:100%;margin-top:6px;">
+        <div class="field-hint" id="sim-label">Arraste para simular seu ganho mês a mês</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="goStep(1)">← Voltar</button>
+        <button class="btn-primary" onclick="irPasso3()">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASSO 3: REVISAR E PUBLICAR -->
+    <div class="panel" id="panel-3">
+      <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Revise e publique</h2>
+      <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Confirme os dados antes de publicar sua piscina.</p>
+
+      <div class="resumo" id="resumo-grid"></div>
+
+      <div style="background:rgba(0,200,100,0.08);border:1.5px solid rgba(0,200,100,0.2);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;">
+        <div style="font-size:14px;font-weight:800;color:#00875A;margin-bottom:8px;">✅ O que acontece após publicar</div>
+        <div style="font-size:13px;color:var(--bluedark);opacity:.7;line-height:1.8;font-weight:500;">
+          • Sua piscina aparece imediatamente no <strong>Explorar</strong><br>
+          • Membros podem entrar e pagar diretamente pela plataforma<br>
+          • Você recebe via PIX automático todo mês<br>
+          • Credenciais de acesso são gerenciadas com segurança pelo Splitpool
+        </div>
+      </div>
+
+      <div class="field">
+        <label>⚠️ Compromisso do dono</label>
+        <div style="background:rgba(255,170,0,0.08);border:1.5px solid rgba(255,170,0,0.25);border-radius:10px;padding:1rem;font-size:13px;color:var(--bluedark);opacity:.8;line-height:1.7;font-weight:500;">
+          Ao publicar, você se compromete a manter o serviço ativo pelo período contratado pelos membros. Em caso de encerramento antecipado, membros serão reembolsados proporcionalmente e você perderá o selo verificado por 30 dias.
+        </div>
+      </div>
+
+      <div class="field" style="display:flex;align-items:flex-start;gap:10px;">
+        <input type="checkbox" id="aceite" style="width:auto;margin-top:3px;flex-shrink:0;">
+        <label for="aceite" style="font-size:14px;font-weight:500;color:var(--bluedark);opacity:.8;cursor:pointer;">Li e aceito os termos acima. Meu plano está ativo e tenho as vagas disponíveis.</label>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="goStep(2)">← Voltar</button>
+        <button class="btn-primary" id="btn-publicar" onclick="publicarPiscina()">🚀 Publicar minha piscina</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://eawfweuamtwlsilrkgoo.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
+const { createClient } = supabase
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+let userId = null
+let tipoSelecionado = null
+let svcSelecionado = null
+let stepAtual = 1
+
+// Preços definidos pelo Splitpool por serviço
+const PRECOS_SPLITPOOL = {
+  'Microsoft 365': { venda: 16.90, repasse: 10.00 },
+  'Duolingo':      { venda: 12.90, repasse: 7.00  },
+  'Claude Pro':    { venda: 59.90, repasse: 35.00 },
+  'Canva Pro':     { venda: 29.90, repasse: 18.00 },
+  'Notion':        { venda: 24.90, repasse: 15.00 },
+  'Wellhub':       { venda: 69.90, repasse: 50.00 },
+  'TotalPass':     { venda: 59.90, repasse: 42.00 },
+  'default':       { venda: 19.90, repasse: 12.00 }
+}
+
+const BASE = 'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/'
+const SVCS = [
+  { nome: 'Microsoft 365', img: BASE+'microsoft_icon.png', tipo: 'familia' },
+  { nome: 'Duolingo',      img: BASE+'duolingo_icon.png',  tipo: 'familia' },
+  { nome: 'Claude Pro',    img: BASE+'claude-ai_icon.jpg', tipo: 'familia' },
+  { nome: 'Canva Pro',     img: BASE+'Notion_icon.png',    tipo: 'familia' },
+  { nome: 'Notion',        img: BASE+'Notion_icon.png',    tipo: 'familia' },
+  { nome: 'Wellhub',       img: BASE+'wellhub_gympass_icon.png', tipo: 'corporativo' },
+  { nome: 'TotalPass',     img: BASE+'wellhub_gympass_icon.png', tipo: 'corporativo' },
+]
+
+// Auth
+sb.auth.getSession().then(({ data }) => {
+  if (!data.session) { window.location.href = 'cadastro.html'; return }
+  userId = data.session.user.id
+  document.getElementById('nav-user').textContent = data.session.user.email.split('@')[0]
+  renderSvcs()
+})
+
+function renderSvcs(filtroTipo) {
+  const lista = filtroTipo ? SVCS.filter(s => s.tipo === filtroTipo) : SVCS
+  document.getElementById('svc-grid').innerHTML = lista.map(s => `
+    <div class="svc-item ${svcSelecionado === s.nome ? 'sel' : ''}" onclick="selecionarSvc('${s.nome}')">
+      <img src="${s.img}" alt="${s.nome}" onerror="this.style.display='none'">
+      <div class="svc-item-name">${s.nome}</div>
+    </div>`).join('')
+}
+
+function selecionarTipo(tipo) {
+  tipoSelecionado = tipo
+  document.getElementById('tipo-familia').classList.toggle('sel', tipo === 'familia')
+  document.getElementById('tipo-corporativo').classList.toggle('sel', tipo === 'corporativo')
+  if (tipo === 'corporativo') {
+    document.getElementById('custo-hint') && (document.getElementById('custo-hint').textContent = 'Custo zero — sua empresa paga. Deixe em 0.')
+  }
+  renderSvcs(tipo)
+}
+
+function selecionarSvc(nome) {
+  svcSelecionado = nome
+  document.getElementById('svc-manual').value = ''
+  renderSvcs(tipoSelecionado)
+  atualizarCalc()
+}
+
+function getSvcNome() {
+  return svcSelecionado || document.getElementById('svc-manual').value.trim()
+}
+
+function getPrecos() {
+  const nome = getSvcNome()
+  for (const key of Object.keys(PRECOS_SPLITPOOL)) {
+    if (key !== 'default' && nome.toLowerCase().includes(key.toLowerCase())) {
+      return PRECOS_SPLITPOOL[key]
+    }
+  }
+  return PRECOS_SPLITPOOL['default']
+}
+
+function atualizarCalc() {
+  const vagas = parseInt(document.getElementById('vagas-total')?.value || 5)
+  const custo = parseFloat(document.getElementById('custo-plano')?.value || 0)
+  const tipo = tipoSelecionado
+  const precos = getPrecos()
+  const simVagas = parseInt(document.getElementById('sim-vagas')?.value || 0)
+
+  // Atualiza range max
+  if (document.getElementById('sim-vagas')) {
+    document.getElementById('sim-vagas').max = vagas
+    if (simVagas > vagas) document.getElementById('sim-vagas').value = vagas
+  }
+
+  // Vagas visual
+  const vv = document.getElementById('vagas-visual')
+  if (vv) {
+    let html = ''
+    for (let i = 0; i < vagas; i++) {
+      html += `<div class="vaga-bubble ${i < simVagas ? 'ocupada' : ''}">🏊</div>`
+    }
+    vv.innerHTML = html
+  }
+
+  // Progress
+  const pct = vagas > 0 ? Math.round((simVagas / vagas) * 100) : 0
+  if (document.getElementById('prog-fill')) document.getElementById('prog-fill').style.width = pct + '%'
+  if (document.getElementById('prog-label')) document.getElementById('prog-label').textContent = `${simVagas} de ${vagas}`
+
+  // Calc
+  const repasse = precos.repasse * simVagas
+  const lucro = tipo === 'corporativo' ? repasse : repasse - custo
+  const lucroFull = tipo === 'corporativo' ? precos.repasse * vagas : (precos.repasse * vagas) - custo
+
+  if (document.getElementById('calc-preco-vaga')) {
+    document.getElementById('calc-preco-vaga').textContent = `R$${precos.venda.toFixed(2).replace('.',',')}`
+    document.getElementById('calc-repasse-vaga').textContent = `R$${precos.repasse.toFixed(2).replace('.',',')}`
+    const rowCusto = document.getElementById('row-custo')
+    if (rowCusto) rowCusto.style.display = tipo === 'corporativo' ? 'none' : 'flex'
+    if (document.getElementById('calc-custo')) document.getElementById('calc-custo').textContent = `- R$${custo.toFixed(2).replace('.',',')}`
+    const res = document.getElementById('calc-resultado')
+    const lbl = document.getElementById('calc-label-resultado')
+    if (res && lbl) {
+      lbl.textContent = simVagas === vagas ? 'Piscina cheia — seu ganho' : `Com ${simVagas} de ${vagas} vagas`
+      res.textContent = `R$${Math.max(0, lucro).toFixed(2).replace('.',',')}/mês`
+      res.className = 'val ' + (lucro >= 0 ? 'green' : 'red')
+    }
+  }
+
+  // Motivação
+  const mot = document.getElementById('motivacao')
+  if (mot) {
+    const faltam = vagas - simVagas
+    if (simVagas === 0) {
+      mot.textContent = 'Publique sua piscina e comece a receber! 🚀'
+      mot.className = 'motivacao mot-0'
+    } else if (lucro < 0) {
+      mot.textContent = `Faltam ${faltam} membro${faltam>1?'s':''} para você zerar o custo 🎯`
+      mot.className = 'motivacao mot-50'
+    } else if (simVagas < vagas) {
+      mot.textContent = `Cada nova vaga = +R$${precos.repasse.toFixed(2).replace('.',',')} no seu bolso 🔥`
+      mot.className = 'motivacao mot-80'
+    } else {
+      mot.textContent = `Piscina cheia! Você lucra R$${lucroFull.toFixed(2).replace('.',',')}/mês 🎉`
+      mot.className = 'motivacao mot-100'
+    }
+  }
+}
+
+function simularVagas(val) {
+  document.getElementById('sim-label').textContent = `Simulando ${val} membro${val>1?'s':''} preenchidos`
+  atualizarCalc()
+}
+
+function goStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById(`panel-${i}`).classList.toggle('act', i === n)
+    const btn = document.getElementById(`step-btn-${i}`)
+    btn.classList.remove('act', 'done')
+    if (i === n) btn.classList.add('act')
+    else if (i < n) btn.classList.add('done')
+  }
+  stepAtual = n
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function irPasso2() {
+  if (!getSvcNome()) { showMsg('Selecione ou digite o serviço que vai compartilhar.', 'error'); return }
+  if (!tipoSelecionado) { showMsg('Selecione o tipo de piscina.', 'error'); return }
+  hideMsg()
+  atualizarCalc()
+  goStep(2)
+}
+
+function irPasso3() {
+  const vagas = parseInt(document.getElementById('vagas-total').value)
+  const desc = document.getElementById('descricao').value.trim()
+  if (!vagas || vagas < 1) { showMsg('Informe o número de vagas.', 'error'); return }
+  if (!desc) { showMsg('Adicione uma descrição para sua piscina.', 'error'); return }
+  hideMsg()
+  renderResumo()
+  goStep(3)
+}
+
+function renderResumo() {
+  const nome = getSvcNome()
+  const vagas = document.getElementById('vagas-total').value
+  const custo = document.getElementById('custo-plano').value || '0'
+  const precos = getPrecos()
+  const lucroFull = tipoSelecionado === 'corporativo'
+    ? precos.repasse * parseInt(vagas)
+    : (precos.repasse * parseInt(vagas)) - parseFloat(custo)
+
+  document.getElementById('resumo-grid').innerHTML = `
+    <div class="resumo-item"><div class="resumo-label">Serviço</div><div class="resumo-val">${nome}</div></div>
+    <div class="resumo-item"><div class="resumo-label">Tipo</div><div class="resumo-val">${tipoSelecionado === 'corporativo' ? 'Benefício corporativo' : 'Plano família'}</div></div>
+    <div class="resumo-item"><div class="resumo-label">Vagas ofertadas</div><div class="resumo-val">${vagas} vagas</div></div>
+    <div class="resumo-item"><div class="resumo-label">Preço por vaga</div><div class="resumo-val">R$${precos.venda.toFixed(2).replace('.',',')}/mês</div></div>
+    <div class="resumo-item"><div class="resumo-label">Repasse por vaga</div><div class="resumo-val">R$${precos.repasse.toFixed(2).replace('.',',')}/mês</div></div>
+    <div class="resumo-item" style="border:1.5px solid rgba(0,200,100,0.3);background:rgba(0,200,100,0.08);">
+      <div class="resumo-label" style="color:#00875A;">Ganho com piscina cheia</div>
+      <div class="resumo-val" style="color:#00875A;">R$${Math.max(0,lucroFull).toFixed(2).replace('.',',')}/mês</div>
+    </div>`
+}
+
+async function publicarPiscina() {
+  if (!document.getElementById('aceite').checked) {
+    showMsg('Você precisa aceitar os termos para publicar.', 'error')
+    return
+  }
+  const btn = document.getElementById('btn-publicar')
+  btn.disabled = true
+  btn.textContent = 'Publicando...'
+  hideMsg()
+
+  const nome = getSvcNome()
+  const vagas = parseInt(document.getElementById('vagas-total').value)
+  const desc = document.getElementById('descricao').value.trim()
+  const custo = parseFloat(document.getElementById('custo-plano').value || 0)
+  const precos = getPrecos()
+
+  const { error } = await sb.from('piscinas').insert({
+    dono_id: userId,
+    servico: nome,
+    descricao: desc,
+    vagas_total: vagas,
+    vagas_ocupadas: 0,
+    preco_por_vaga: precos.venda,
+    status: 'aberta',
+    icone_url: null
+  })
+
+  if (error) {
+    showMsg('Erro ao publicar: ' + error.message, 'error')
+    btn.disabled = false
+    btn.textContent = '🚀 Publicar minha piscina'
+    return
+  }
+
+  showMsg('✅ Piscina publicada com sucesso! Redirecionando...', 'success')
+  setTimeout(() => { window.location.href = 'explorar.html' }, 2000)
+}
+
+function showMsg(txt, tipo) {
+  const el = document.getElementById('msg')
+  el.textContent = txt
+  el.className = 'msg ' + tipo
+  el.style.display = 'block'
+}
+function hideMsg() { document.getElementById('msg').style.display = 'none' }
+
+async function logout() {
+  await sb.auth.signOut()
+  window.location.href = 'index.html'
+}
+
+// Ondas canvas
+;(function(){
+  const c=document.getElementById('wc'),ctx=c.getContext('2d');
+  let W,H,t=0,lines=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;lines=[];for(let i=0;i<7;i++)lines.push({y:H*(0.08+i*0.13),amp:9+i*3,freq:0.005+i*0.002,speed:0.014+i*0.005,phase:Math.random()*Math.PI*2,alpha:0.16+i*0.025});}
+  function draw(){t+=0.012;ctx.clearRect(0,0,W,H);lines.forEach(l=>{ctx.beginPath();ctx.moveTo(0,l.y);for(let x=0;x<=W;x+=6){const y=l.y+Math.sin(x*l.freq+t*l.speed+l.phase)*l.amp+Math.sin(x*l.freq*1.8+t*l.speed*1.4)*l.amp*0.35;ctx.lineTo(x,y);}ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=`rgba(255,255,255,${l.alpha})`;ctx.fill();});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+</script>
+</body>
+</html>
