@@ -8,85 +8,61 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;}
+:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;--green:#00875A;}
 body{font-family:'Inter',sans-serif;color:var(--bluedark);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;position:relative;overflow:hidden;}
-
 .pool-bg{position:fixed;inset:0;z-index:0;background-image:url('bg_waves.PNG');background-size:cover;background-position:center bottom;background-repeat:no-repeat;}
 .pool-overlay{position:fixed;inset:0;z-index:1;background:linear-gradient(180deg,rgba(180,235,245,0.18) 0%,rgba(0,160,200,0.10) 60%,rgba(0,120,170,0.22) 100%);}
-
 .page{position:relative;z-index:10;width:100%;max-width:680px;}
-
-/* Logo */
 .logo-wrap{display:flex;justify-content:center;margin-bottom:1.5rem;}
 .logo-wrap img{height:65px;object-fit:contain;background:rgba(255,255,255,0.9);padding:8px 22px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);}
-
-/* Card principal */
-.card{background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-radius:24px;padding:2.5rem;box-shadow:0 8px 40px rgba(0,30,80,0.18);border:1px solid rgba(255,255,255,0.6);}
-
+.card{background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-radius:24px;padding:2.5rem;box-shadow:0 8px 40px rgba(0,30,80,0.18);border:1px solid rgba(255,255,255,0.6);animation:fadeUp .4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
 .card-title{font-size:24px;font-weight:900;text-align:center;color:var(--bluedark);margin-bottom:6px;letter-spacing:-.5px;}
 .card-sub{text-align:center;font-size:15px;color:var(--bluedark);opacity:.6;margin-bottom:2rem;font-weight:500;line-height:1.6;}
-
-/* Grid de perfis */
 .perfil-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:2rem;}
 @media(max-width:500px){.perfil-grid{grid-template-columns:1fr;}}
-
 .perfil-card{border:2.5px solid rgba(0,180,210,0.2);border-radius:18px;padding:1.75rem 1.5rem;cursor:pointer;transition:.25s;background:rgba(255,255,255,0.7);text-align:center;position:relative;overflow:hidden;}
-.perfil-card::before{content:'';position:absolute;inset:0;opacity:0;transition:.25s;}
 .perfil-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,0.12);}
-.perfil-card.joiner:hover,.perfil-card.joiner.sel{border-color:#00C8D7;background:rgba(0,200,215,0.06);}
-.perfil-card.owner:hover,.perfil-card.owner.sel{border-color:var(--blue);background:#EEF4FF;}
-.perfil-card.sel{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,0.12);}
 
+/* Joiner — azul */
+.perfil-card.joiner:hover,.perfil-card.joiner.sel{border-color:var(--teal);background:rgba(0,200,215,0.06);}
+/* Owner — verde */
+.perfil-card.owner:hover,.perfil-card.owner.sel{border-color:#00A878;background:rgba(0,168,120,0.06);}
+
+.perfil-card.sel{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,0.12);}
 .perfil-ico{font-size:3rem;margin-bottom:1rem;display:block;}
 .perfil-title{font-size:18px;font-weight:900;color:var(--bluedark);margin-bottom:6px;}
 .perfil-desc{font-size:13px;color:var(--bluedark);opacity:.6;line-height:1.6;font-weight:500;margin-bottom:1rem;}
-
 .perfil-beneficios{list-style:none;text-align:left;display:flex;flex-direction:column;gap:6px;}
 .perfil-beneficios li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--bluedark);opacity:.75;font-weight:500;}
 .perfil-beneficios li::before{content:'✓';font-weight:900;flex-shrink:0;margin-top:1px;}
 .perfil-card.joiner .perfil-beneficios li::before{color:var(--teal);}
-.perfil-card.owner .perfil-beneficios li::before{color:var(--blue);}
-
+.perfil-card.owner .perfil-beneficios li::before{color:#00A878;}
 .perfil-tag{display:inline-block;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:1rem;}
 .tag-teal{background:rgba(0,200,215,0.12);color:#007B8A;border:1px solid rgba(0,200,215,0.3);}
-.tag-blue{background:rgba(18,85,204,0.1);color:var(--blue);border:1px solid rgba(18,85,204,0.2);}
-
-.sel-check{position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:0;transition:.2s;}
+.tag-green{background:rgba(0,168,120,0.12);color:#00664A;border:1px solid rgba(0,168,120,0.3);}
+.sel-check{position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:0;transition:.2s;color:#fff;}
 .perfil-card.joiner.sel .sel-check{background:var(--teal);opacity:1;}
-.perfil-card.owner.sel .sel-check{background:var(--blue);opacity:1;}
-
-/* Botão */
+.perfil-card.owner.sel .sel-check{background:#00A878;opacity:1;}
 .btn-primary{width:100%;padding:15px;border-radius:12px;font-weight:800;color:#fff;font-size:16px;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--blue),var(--bluedark));box-shadow:0 4px 18px rgba(18,85,204,0.4);transition:.2s;letter-spacing:-.2px;}
 .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(18,85,204,0.5);}
 .btn-primary:disabled{background:#93C5FD;cursor:not-allowed;transform:none;box-shadow:none;}
-
-/* Nota inferior */
 .nota{text-align:center;font-size:13px;color:var(--bluedark);opacity:.45;margin-top:1.25rem;font-weight:500;}
 .nota a{color:var(--blue);opacity:1;text-decoration:none;font-weight:700;}
 .nota a:hover{text-decoration:underline;}
-
-/* Animação de entrada */
-@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
-.card{animation:fadeUp .4s ease;}
 </style>
 </head>
 <body>
-
 <div class="pool-bg"></div>
 <div class="pool-overlay"></div>
-
 <div class="page">
   <div class="logo-wrap">
     <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="SplitPool">
   </div>
-
   <div class="card">
     <div class="card-title">Como você quer usar o Splitpool?</div>
     <div class="card-sub">Escolha seu perfil para personalizar sua experiência.<br>Você pode mudar isso a qualquer momento.</div>
-
     <div class="perfil-grid">
-
-      <!-- JOINER -->
       <div class="perfil-card joiner" id="card-joiner" onclick="selecionar('joiner')">
         <div class="sel-check" id="check-joiner">✓</div>
         <span class="perfil-ico">🏊</span>
@@ -100,86 +76,52 @@ body{font-family:'Inter',sans-serif;color:var(--bluedark);min-height:100vh;displ
           <li>Acesso imediato após confirmação</li>
         </ul>
       </div>
-
-      <!-- OWNER -->
       <div class="perfil-card owner" id="card-owner" onclick="selecionar('owner')">
         <div class="sel-check" id="check-owner">✓</div>
         <span class="perfil-ico">🤿</span>
-        <span class="perfil-tag tag-blue">Quero ganhar</span>
+        <span class="perfil-tag tag-green">Quero ofertar vagas</span>
         <div class="perfil-title">Criar uma piscina</div>
-        <div class="perfil-desc">Você tem vagas sobrando num plano família ou benefício corporativo? Monetize agora.</div>
+        <div class="perfil-desc">Tem vagas sobrando num plano família ou benefício corporativo? Coloque-as para trabalhar.</div>
         <ul class="perfil-beneficios">
-          <li>Recupere o custo do seu plano</li>
-          <li>Renda extra todo mês via PIX</li>
+          <li>Possibilidade de recuperar o custo do plano</li>
           <li>Splitpool gerencia tudo pra você</li>
           <li>Custo zero para benefícios corporativos</li>
+          <li>Recebimentos via PIX quando houver membros</li>
         </ul>
       </div>
-
     </div>
-
-    <button class="btn-primary" id="btn-continuar" onclick="continuar()" disabled>
-      Continuar →
-    </button>
-
+    <button class="btn-primary" id="btn-continuar" onclick="continuar()" disabled>Continuar →</button>
     <div class="nota">
-      Pode fazer os dois! Você pode <a href="#" onclick="irAmbos()">entrar e criar piscinas</a> com a mesma conta.
+      Pode fazer os dois! Você pode <a href="#" onclick="irAmbos(event)">entrar e criar piscinas</a> com a mesma conta.
     </div>
   </div>
 </div>
-
 <script>
-const SUPABASE_URL = 'https://eawfweuamtwlsilrkgoo.supabase.co'
-const SUPABASE_KEY = 'sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
-const { createClient } = supabase
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
-
-let perfilSelecionado = null
-
-// Verifica autenticação
-sb.auth.getSession().then(({ data }) => {
-  if (!data.session) {
-    window.location.href = 'cadastro.html'
-  }
-})
-
-function selecionar(perfil) {
-  perfilSelecionado = perfil
-
-  // Visual
-  document.getElementById('card-joiner').classList.toggle('sel', perfil === 'joiner')
-  document.getElementById('card-owner').classList.toggle('sel', perfil === 'owner')
-
-  // Botão
-  const btn = document.getElementById('btn-continuar')
-  btn.disabled = false
-  btn.textContent = perfil === 'joiner' ? 'Explorar piscinas →' : 'Criar minha piscina →'
+const SUPABASE_URL='https://eawfweuamtwlsilrkgoo.supabase.co'
+const SUPABASE_KEY='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
+const {createClient}=supabase
+const sb=createClient(SUPABASE_URL,SUPABASE_KEY)
+let perfilSelecionado=null
+sb.auth.getSession().then(({data})=>{if(!data.session)window.location.href='cadastro.html'})
+function selecionar(perfil){
+  perfilSelecionado=perfil
+  document.getElementById('card-joiner').classList.toggle('sel',perfil==='joiner')
+  document.getElementById('card-owner').classList.toggle('sel',perfil==='owner')
+  const btn=document.getElementById('btn-continuar')
+  btn.disabled=false
+  btn.textContent=perfil==='joiner'?'Explorar piscinas →':'Criar minha piscina →'
 }
-
-function continuar() {
-  if (!perfilSelecionado) return
-
-  // Salva preferência localmente
-  localStorage.setItem('splitpool_perfil', perfilSelecionado)
-
-  if (perfilSelecionado === 'joiner') {
-    window.location.href = 'explorar.html'
-  } else {
-    window.location.href = 'criar-piscina.html'
-  }
+function continuar(){
+  if(!perfilSelecionado) return
+  localStorage.setItem('splitpool_perfil',perfilSelecionado)
+  window.location.href=perfilSelecionado==='joiner'?'explorar.html':'criar-piscina.html'
 }
-
-function irAmbos() {
-  // Se quer fazer os dois, manda para explorar
-  // e salva que é ambos
-  localStorage.setItem('splitpool_perfil', 'ambos')
-  window.location.href = 'explorar.html'
+function irAmbos(e){
+  e.preventDefault()
+  localStorage.setItem('splitpool_perfil','ambos')
+  window.location.href='explorar.html'
 }
-
-// Atalho teclado — Enter confirma
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && perfilSelecionado) continuar()
-})
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&perfilSelecionado)continuar()})
 </script>
 </body>
 </html>

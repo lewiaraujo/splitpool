@@ -315,7 +315,7 @@ footer{padding:2.5rem 5%;border-top:1px solid rgba(255,255,255,.4);background:rg
   </div>
   <div class="pg">
     <div class="pc"><div class="pn">Mergulhador</div><div class="pv">Grátis<span>/mês</span></div><div class="pd">Para quem quer apenas economizar nas assinaturas do dia a dia.</div><ul class="pf"><li>Entrar em até 3 piscinas simultâneas</li><li>Pagamento via PIX e cartão</li><li>Garantia de reembolso automático</li><li>Cancelamento a qualquer momento</li></ul><button class="pbtn pb-o" onclick="openM('signup')">Começar grátis</button></div>
-    <div class="pc ft"><div class="ptag">⭐ Para o Dono da Piscina</div><div class="pn">Dono da Piscina</div><div class="pv" style="font-size:1.5rem;letter-spacing:-.3px;">Você define o preço</div><div class="pd">Abra vagas no seu plano, preencha sua piscina e receba todo mês no PIX — o Splitpool cuida de tudo.</div><ul class="pf"><li>Piscinas ilimitadas</li><li>Você escolhe o preço por vaga</li><li>Repasse automático via PIX</li><li>Dashboard de receita e membros</li><li>Mediação de conflitos pelo Splitpool</li><li>Dados de login nunca expostos</li><li>Selo de dono verificado</li></ul><div style="background:rgba(18,85,204,.06);border:1px solid rgba(18,85,204,.15);border-radius:8px;padding:.9rem;margin-top:1.3rem;font-size:13px;color:var(--bluedark);opacity:.75;line-height:1.6;font-weight:500;">💡 <strong style="opacity:1;">Como funciona:</strong> o spread já está embutido no preço para o membro. Você recebe sua parte automaticamente.</div><button class="pbtn pb-f" onclick="openM('owner')">Criar minha piscina agora</button></div>
+    <div class="pc ft"><div class="ptag">⭐ Para o Dono da Piscina</div><div class="pn">Dono da Piscina</div><div class="pv" style="font-size:1.5rem;letter-spacing:-.3px;">Crie uma piscina e tenha chances de lucrar</div><div class="pd">Abra vagas no seu plano, preencha sua piscina e ainda por cima tenha chances de receber todo mês no PIX — o Splitpool cuida de tudo.</div><ul class="pf"><li>Piscinas ilimitadas</li><li>Repasse automático via PIX</li><li>Dashboard de receita e membros</li><li>Mediação de conflitos pelo Splitpool</li><li>Dados de login nunca expostos</li><li>Selo de dono verificado</li></ul><div style="background:rgba(18,85,204,.06);border:1px solid rgba(18,85,204,.15);border-radius:8px;padding:.9rem;margin-top:1.3rem;font-size:13px;color:var(--bluedark);opacity:.75;line-height:1.6;font-weight:500;">💡 <strong style="opacity:1;">Como funciona:</strong> o spread já está embutido no preço para o membro. Você recebe sua parte automaticamente.</div><button class="pbtn pb-f" onclick="openM('owner')">Criar minha piscina agora</button></div>
     <div class="pc"><div class="pn">Empresas & Clubs</div><div class="pv" style="font-size:1.8rem;letter-spacing:-.3px;">Custom</div><div class="pd">Para OAB, sindicatos, associações e empresas que querem oferecer o benefício em escala.</div><ul class="pf"><li>Múltiplos donos e piscinas</li><li>Relatórios mensais consolidados</li><li>API de integração com HR</li><li>Taxa negociada por volume</li><li>Gerente de conta dedicado</li></ul><button class="pbtn pb-o" onclick="openM('signup')">Fale com a gente</button></div>
   </div>
 </div>
@@ -396,15 +396,15 @@ footer{padding:2.5rem 5%;border-top:1px solid rgba(255,255,255,.4);background:rg
 
 const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/';
 const SVCS=[
-  {n:"iCloud+ 2TB",m:"até 5 vagas · Apple",p:"R$19,99",cat:"streaming",img:BASE+'icloud%20icon.jpg'},
-  {n:"Spotify Family",m:"até 5 vagas · Música",p:"R$8,90",cat:"streaming",img:BASE+'Spotify_icon.png'},
-  {n:"YouTube Premium",m:"até 5 vagas · Google",p:"R$12,90",cat:"streaming",img:BASE+'youtube_icon.png'},
-  {n:"Apple Music",m:"até 5 vagas · Música",p:"R$11,90",cat:"streaming",img:BASE+'Apple_Music_icon.png'},
-  {n:"Claude.ai Pro",m:"seats avulsos · IA",p:"R$24,90",cat:"ia",img:BASE+'claude-ai_icon.jpg'},
-  {n:"Microsoft 365",m:"até 6 vagas · Office",p:"R$12,50",cat:"ia",img:BASE+'microsoft_icon.png'},
-  {n:"Duolingo Family",m:"até 6 vagas · Idiomas",p:"R$9,99",cat:"ia",img:BASE+'duolingo_icon.png'},
-  {n:"Notion Team",m:"seats avulsos · Produt.",p:"R$19,90",cat:"ia",img:BASE+'Notion_icon.png'},
-  {n:"Wellhub (Gympass)",m:"até 3 dep. · Wellness",p:"R$35,90",cat:"wellness",img:BASE+'wellhub_gympass_icon.png'},
+  {n:"Microsoft 365 Family",m:"até 5 vagas · Word, Excel, OneDrive 1TB",p:"R$19,90",cat:"ia",img:BASE+'microsoft_icon.png'},
+  {n:"Duolingo Super Família",m:"até 5 vagas · Idiomas sem limites",p:"R$9,90",cat:"ia",img:BASE+'duolingo_icon.png'},
+  {n:"Duolingo Max Família",m:"até 5 vagas · IA + Idiomas",p:"R$19,90",cat:"ia",img:BASE+'duolingo_icon.png'},
+  {n:"Canva Teams",m:"até 4 vagas · Design Pro completo",p:"R$14,90",cat:"ia",img:BASE+'Notion_icon.png'},
+  {n:"Claude Pro",m:"seats avulsos · IA avançada",p:"R$59,90",cat:"ia",img:BASE+'claude-ai_icon.jpg'},
+  {n:"Notion Team",m:"seats avulsos · Produtividade",p:"R$29,90",cat:"ia",img:BASE+'Notion_icon.png'},
+  {n:"Wellhub",m:"vagas corporativas · Fitness premium",p:"A partir de R$51,99",cat:"wellness",img:BASE+'wellhub_gympass_icon.png'},
+  {n:"TotalPass",m:"vagas corporativas · 35k+ academias",p:"R$59,90",cat:"wellness",img:BASE+'wellhub_gympass_icon.png'},
+  {n:"Alura",m:"vagas corporativas · Educação tech",p:"R$39,90",cat:"ia",img:BASE+'claude-ai_icon.jpg'},
 ];
 
 function renderSvcs(f){

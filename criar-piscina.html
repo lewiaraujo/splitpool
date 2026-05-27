@@ -8,7 +8,7 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;--border:rgba(0,160,200,0.22);}
+:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;}
 html{scroll-behavior:smooth;}
 body{font-family:'Inter',sans-serif;color:var(--bluedark);overflow-x:hidden;background:#3acde8;}
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--teal);border-radius:5px;}
@@ -29,8 +29,8 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 .page-header{margin-bottom:2rem;}
 .page-header h1{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;color:var(--bluedark);letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.5);}
 .page-header p{font-size:15px;color:var(--bluedark);opacity:.65;margin-top:6px;font-weight:500;}
-.steps-nav{display:flex;align-items:center;margin-bottom:2rem;background:rgba(255,255,255,0.7);border-radius:12px;padding:6px;backdrop-filter:blur(8px);border:1px solid rgba(0,180,210,0.2);}
-.step-btn{flex:1;padding:10px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--bluedark);opacity:.5;cursor:pointer;font-family:inherit;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.steps-nav{display:flex;margin-bottom:2rem;background:rgba(255,255,255,0.7);border-radius:12px;padding:6px;backdrop-filter:blur(8px);border:1px solid rgba(0,180,210,0.2);}
+.step-btn{flex:1;padding:10px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--bluedark);opacity:.5;cursor:default;font-family:inherit;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
 .step-btn.act{background:rgba(255,255,255,0.95);opacity:1;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
 .step-btn.done{opacity:.7;color:var(--teal);}
 .step-num{width:22px;height:22px;border-radius:50%;background:rgba(18,85,204,0.1);color:var(--blue);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -59,13 +59,15 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 .svc-item-sub{font-size:11px;color:var(--bluedark);opacity:.5;margin-top:2px;font-weight:500;}
 .field{margin-bottom:1.25rem;}
 .field label{display:block;font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:6px;opacity:.8;}
-.field input,.field textarea,.field select{width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;transition:.2s;}
-.field input:focus,.field textarea:focus{border-color:var(--blue);background:#fff;}
-.field input::placeholder,.field textarea::placeholder{color:var(--bluedark);opacity:.35;}
-.field textarea{resize:vertical;min-height:90px;}
+.field select,.field input[type=number]{width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;transition:.2s;cursor:pointer;}
+.field select:focus,.field input:focus{border-color:var(--blue);background:#fff;}
 .field-hint{font-size:12px;color:var(--bluedark);opacity:.45;margin-top:5px;font-weight:500;}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 @media(max-width:500px){.field-row{grid-template-columns:1fr;}}
+
+/* Descrição auto */
+.desc-auto{background:rgba(0,180,210,0.06);border:1.5px solid rgba(0,180,210,0.2);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:14px;color:var(--bluedark);line-height:1.7;font-weight:500;font-style:italic;}
+.desc-label{font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:8px;opacity:.8;display:flex;align-items:center;gap:6px;}
 
 /* WELLHUB */
 .wellhub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:1.5rem;}
@@ -135,19 +137,16 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
     </div>
   </div>
 </nav>
-
 <main>
   <div class="page-header">
     <h1>🤿 Criar uma piscina</h1>
-    <p>Configure sua piscina em 3 passos e comece a receber</p>
+    <p>Configure sua piscina em 3 passos e comece a ofertar vagas</p>
   </div>
-
   <div class="steps-nav">
     <button class="step-btn act" id="step-btn-1"><span class="step-num">1</span><span class="step-label">Tipo e serviço</span></button>
     <button class="step-btn" id="step-btn-2"><span class="step-num">2</span><span class="step-label">Detalhes</span></button>
     <button class="step-btn" id="step-btn-3"><span class="step-num">3</span><span class="step-label">Revisar e publicar</span></button>
   </div>
-
   <div class="form-card">
     <div class="msg" id="msg"></div>
 
@@ -159,53 +158,50 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         <div class="tipo-card" id="tipo-familia" onclick="selecionarTipo('familia')">
           <div class="tipo-ico">🏊</div>
           <div class="tipo-title">Plano família</div>
-          <div class="tipo-desc">Você assina e paga um plano família. Divide as vagas e recupera o custo com os membros.</div>
+          <div class="tipo-desc">Você assina e paga um plano família. Divide as vagas e pode recuperar o custo com os membros.</div>
           <span class="tipo-badge badge-blue">Microsoft 365, Duolingo, Canva</span>
         </div>
         <div class="tipo-card" id="tipo-corporativo" onclick="selecionarTipo('corporativo')">
           <div class="tipo-ico">🏢</div>
           <div class="tipo-title">Benefício corporativo</div>
-          <div class="tipo-desc">Sua empresa paga. Você tem vagas sobrando e quer monetizá-las — custo zero pra você.</div>
+          <div class="tipo-desc">Sua empresa paga. Você tem vagas sobrando e quer ofertar — custo zero pra você.</div>
           <span class="tipo-badge badge-green">Wellhub, TotalPass, Alura</span>
         </div>
       </div>
-
       <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Qual serviço você vai compartilhar?</h2>
-      <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1rem;font-weight:500;">Selecione um serviço ou digite manualmente.</p>
+      <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1rem;font-weight:500;">Selecione o serviço disponível.</p>
       <div class="svc-grid" id="svc-grid"></div>
-      <div class="field">
-        <label>Ou digite manualmente</label>
-        <input type="text" id="svc-manual" placeholder="Ex: Adobe Creative Cloud..." oninput="svcSelecionado=null;renderSvcs()">
-      </div>
       <button class="btn-primary" onclick="irPasso2()">Continuar →</button>
     </div>
 
     <!-- PASSO 2 -->
     <div class="panel" id="panel-2">
-
       <!-- FAMÍLIA -->
       <div id="panel-2-familia">
         <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Detalhes da piscina</h2>
-        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Configure as vagas e confira quanto você vai receber.</p>
+        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Configure as vagas e confira quanto você pode receber.</p>
         <div class="info-box" id="info-preco-svc"></div>
         <div class="field-row">
           <div class="field">
             <label>Total de vagas disponíveis</label>
-            <input type="number" id="vagas-total" min="1" max="10" value="5" oninput="recalcularCalc();gerarDescricao()">
+            <select id="vagas-total" onchange="recalcularCalc();gerarDescricao()">
+            </select>
+            <div class="field-hint" id="vagas-hint"></div>
           </div>
           <div class="field">
-            <label>Custo mensal do seu plano (R$)</label>
-            <input type="number" id="custo-plano" min="0" step="0.01" placeholder="Ex: 60.00" oninput="recalcularCalc()">
-            <div class="field-hint">Quanto você paga por mês pelo plano família</div>
+            <label>Plano que você assina</label>
+            <select id="plano-select" onchange="selecionarPlano()">
+            </select>
+            <div class="field-hint" id="plano-hint"></div>
           </div>
         </div>
-        <div class="field">
-          <label>Descrição da piscina <span style="font-size:11px;color:var(--teal);font-weight:600;margin-left:6px;">✨ gerada automaticamente</span></label>
-          <textarea id="descricao" rows="4"></textarea>
-          <div class="field-hint">Edite à vontade. Uma boa descrição preenche a piscina 3x mais rápido.</div>
+        <!-- Descrição automática -->
+        <div>
+          <div class="desc-label">📋 Descrição gerada automaticamente <span style="font-size:11px;color:var(--teal);font-weight:600;">✨</span></div>
+          <div class="desc-auto" id="desc-auto">Selecione o serviço e as vagas para gerar a descrição.</div>
         </div>
         <div class="calc-box">
-          <div class="calc-title">🧮 Sua projeção de ganhos</div>
+          <div class="calc-title">🧮 Sua projeção de recebimentos</div>
           <div class="motivacao mot-0" id="motivacao">Configure as vagas para ver sua projeção</div>
           <div class="progress-wrap">
             <div class="progress-label"><span>Simulação de vagas preenchidas</span><span id="prog-label">0 de 5</span></div>
@@ -221,44 +217,43 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         <div class="field">
           <label>Simular vagas preenchidas</label>
           <input type="range" id="sim-vagas" min="0" max="5" value="0" step="1" oninput="simularVagas(this.value)" style="width:100%;margin-top:6px;">
-          <div class="field-hint" id="sim-label">Arraste para simular seu ganho mês a mês</div>
+          <div class="field-hint" id="sim-label">Arraste para simular seu recebimento mês a mês</div>
         </div>
       </div>
 
       <!-- WELLHUB -->
       <div id="panel-2-wellhub" style="display:none;">
         <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Wellhub — Configure sua piscina</h2>
-        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:.75rem;font-weight:500;">Sua empresa paga. Você oferta vagas de dependente e recebe por cada vaga ativada.</p>
+        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:.75rem;font-weight:500;">Sua empresa paga. Você oferta vagas de dependente.</p>
         <div class="info-box">
-          <strong>Como funciona:</strong> o membro escolhe qual plano Wellhub quer ao entrar. O Splitpool cuida do pagamento e do acesso. Você recebe seu valor por vaga ativada, independente do plano escolhido pelo membro.
+          <strong>Como funciona:</strong> o membro escolhe qual plano Wellhub quer ao entrar. O Splitpool cuida do pagamento e do acesso. Você recebe por cada vaga ativada, independente do plano escolhido pelo membro.
         </div>
         <p style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:10px;opacity:.8;">Selecione quais planos você permite:</p>
         <div class="wellhub-grid" id="wellhub-grid"></div>
-        <div class="field-row" style="margin-top:.5rem;">
-          <div class="field">
-            <label>Número de vagas disponíveis</label>
-            <input type="number" id="wh-vagas" min="1" max="5" value="2" oninput="atualizarCalcWH();gerarDescricaoWH()">
-            <div class="field-hint">Quantas vagas de dependente você tem disponíveis</div>
-          </div>
-          <div class="field">
-            <label>Seu ganho por vaga ativada</label>
-            <input type="text" id="wh-repasse-display" value="R$8,00 a R$35,00/mês" readonly style="background:rgba(0,200,100,0.06);border-color:rgba(0,200,100,0.3);color:#00875A;font-weight:700;">
-            <div class="field-hint">Varia conforme o plano escolhido pelo membro</div>
-          </div>
-        </div>
         <div class="field">
-          <label>Descrição da piscina <span style="font-size:11px;color:var(--teal);font-weight:600;margin-left:6px;">✨ gerada automaticamente</span></label>
-          <textarea id="wh-descricao" rows="4"></textarea>
-          <div class="field-hint">Edite à vontade.</div>
+          <label>Número de vagas disponíveis</label>
+          <select id="wh-vagas" onchange="atualizarCalcWH();gerarDescricaoWH()">
+            <option value="1">1 vaga</option>
+            <option value="2" selected>2 vagas</option>
+            <option value="3">3 vagas</option>
+            <option value="4">4 vagas</option>
+            <option value="5">5 vagas</option>
+          </select>
+          <div class="field-hint">Quantas vagas de dependente você tem disponíveis</div>
+        </div>
+        <!-- Descrição automática Wellhub -->
+        <div>
+          <div class="desc-label">📋 Descrição gerada automaticamente <span style="font-size:11px;color:var(--teal);font-weight:600;">✨</span></div>
+          <div class="desc-auto" id="wh-desc-auto">Selecione os planos e vagas para gerar a descrição.</div>
         </div>
         <div class="calc-box">
-          <div class="calc-title">🧮 Sua projeção de ganhos — Wellhub</div>
-          <div class="motivacao mot-100">Custo zero para você — tudo que receber é renda pura 💰</div>
+          <div class="calc-title">🧮 Sua projeção de recebimentos — Wellhub</div>
+          <div class="motivacao mot-100">Custo zero para você — todo recebimento é renda adicional 💰</div>
           <div class="calc-row"><span>Vagas disponíveis</span><span class="val blue" id="wh-calc-vagas">2</span></div>
-          <div class="calc-row"><span>Ganho mínimo (planos básicos)</span><span class="val blue" id="wh-calc-min">R$16,00/mês</span></div>
-          <div class="calc-row"><span>Ganho máximo (planos premium)</span><span class="val blue" id="wh-calc-max">R$70,00/mês</span></div>
+          <div class="calc-row"><span>Recebimento mínimo (planos básicos)</span><span class="val blue" id="wh-calc-min">R$16,00/mês</span></div>
+          <div class="calc-row"><span>Recebimento máximo (planos premium)</span><span class="val blue" id="wh-calc-max">R$70,00/mês</span></div>
           <div class="calc-row"><span>Seu custo mensal</span><span class="val green">R$0,00 — empresa paga ✓</span></div>
-          <div class="calc-row"><span>Renda líquida estimada</span><span class="val green" id="wh-calc-lucro">R$16–70/mês</span></div>
+          <div class="calc-row"><span>Recebimento líquido estimado</span><span class="val green" id="wh-calc-lucro">R$16–70/mês</span></div>
         </div>
       </div>
 
@@ -278,7 +273,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         <div style="font-size:13px;color:var(--bluedark);opacity:.7;line-height:1.8;font-weight:500;">
           • Sua piscina aparece imediatamente no <strong>Explorar</strong><br>
           • Membros entram, pagam e recebem acesso via Splitpool<br>
-          • Você recebe via PIX automático todo mês<br>
+          • Você recebe via PIX quando houver membros ativos<br>
           • O Splitpool gerencia pagamentos, credenciais e suporte
         </div>
       </div>
@@ -303,65 +298,91 @@ const SUPABASE_URL='https://eawfweuamtwlsilrkgoo.supabase.co'
 const SUPABASE_KEY='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
 const {createClient}=supabase
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY)
-let userId=null,tipoSelecionado=null,svcSelecionado=null
+let userId=null,nomeUsuario='',tipoSelecionado=null,svcSelecionado=null,planoAtual=null
 
 const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/'
+
+// Base de dados completa dos serviços com planos oficiais
 const SVCS_FAMILIA=[
-  {nome:'Microsoft 365',sub:'Family · até 6 pessoas',img:BASE+'microsoft_icon.png',precoVenda:19.90,repasse:12.00,vagasPadrao:5,custoPlano:60.00},
-  {nome:'Duolingo Super',sub:'Família · até 6 pessoas',img:BASE+'duolingo_icon.png',precoVenda:9.90,repasse:6.00,vagasPadrao:5,custoPlano:27.91},
-  {nome:'Duolingo Max',sub:'Família · até 6 pessoas',img:BASE+'duolingo_icon.png',precoVenda:19.90,repasse:12.00,vagasPadrao:5,custoPlano:49.99},
-  {nome:'Canva Teams',sub:'Teams · até 5 pessoas',img:BASE+'Notion_icon.png',precoVenda:14.90,repasse:9.00,vagasPadrao:4,custoPlano:39.17},
-  {nome:'Notion Team',sub:'Seats avulsos',img:BASE+'Notion_icon.png',precoVenda:29.90,repasse:18.00,vagasPadrao:3,custoPlano:0},
-  {nome:'Claude Pro',sub:'Team seats',img:BASE+'claude-ai_icon.jpg',precoVenda:59.90,repasse:38.00,vagasPadrao:2,custoPlano:0},
+  {
+    nome:'Microsoft 365',sub:'Family · até 6 pessoas',img:BASE+'microsoft_icon.png',
+    precoVenda:19.90,repasse:12.00,
+    planos:[
+      {nome:'Family Mensal',custo:60.00,vagas:5,desc:'Word, Excel, PowerPoint, Teams, OneDrive 1TB/pessoa'},
+      {nome:'Family Anual',custo:42.42,vagas:5,desc:'Mesmo conteúdo do mensal com desconto anual (R$509/ano)'},
+    ]
+  },
+  {
+    nome:'Duolingo Super',sub:'Família · até 6 pessoas',img:BASE+'duolingo_icon.png',
+    precoVenda:9.90,repasse:6.00,
+    planos:[
+      {nome:'Super Família Mensal',custo:27.91,vagas:5,desc:'Sem anúncios, vidas ilimitadas, modo offline'},
+      {nome:'Super Família Anual',custo:27.91,vagas:5,desc:'R$334,90/ano — mesmo conteúdo com desconto'},
+    ]
+  },
+  {
+    nome:'Duolingo Max',sub:'Família · até 6 pessoas',img:BASE+'duolingo_icon.png',
+    precoVenda:19.90,repasse:12.00,
+    planos:[
+      {nome:'Max Família Mensal',custo:49.99,vagas:5,desc:'Super + IA para correção de pronúncia e conversação'},
+      {nome:'Max Família Anual',custo:49.99,vagas:5,desc:'R$599,90/ano — mesmo conteúdo com desconto'},
+    ]
+  },
+  {
+    nome:'Canva Teams',sub:'Teams · até 5 pessoas',img:BASE+'Notion_icon.png',
+    precoVenda:14.90,repasse:9.00,
+    planos:[
+      {nome:'Teams Anual',custo:39.17,vagas:4,desc:'Pro completo + Brand Kit + colaboração em equipe (R$470/ano)'},
+    ]
+  },
+  {
+    nome:'Notion Team',sub:'Seats avulsos',img:BASE+'Notion_icon.png',
+    precoVenda:29.90,repasse:18.00,
+    planos:[
+      {nome:'Team (por seat)',custo:0,vagas:3,desc:'Páginas ilimitadas, histórico de versões, convidados ilimitados'},
+    ]
+  },
+  {
+    nome:'Claude Pro',sub:'Team seats',img:BASE+'claude-ai_icon.jpg',
+    precoVenda:59.90,repasse:38.00,
+    planos:[
+      {nome:'Pro Team (por seat)',custo:0,vagas:2,desc:'Mensagens estendidas, projetos, análise de documentos, prioridade'},
+    ]
+  },
 ]
 const SVCS_CORP=[
   {nome:'Wellhub',sub:'Benefício corporativo',img:BASE+'wellhub_gympass_icon.png',especial:'wellhub'},
-  {nome:'TotalPass',sub:'Benefício corporativo',img:BASE+'wellhub_gympass_icon.png',precoVenda:59.90,repasse:42.00,vagasPadrao:2,custoPlano:0},
-  {nome:'Alura',sub:'Educação corporativa',img:BASE+'claude-ai_icon.jpg',precoVenda:39.90,repasse:25.00,vagasPadrao:2,custoPlano:0},
+  {
+    nome:'TotalPass',sub:'Benefício corporativo',img:BASE+'wellhub_gympass_icon.png',
+    precoVenda:59.90,repasse:42.00,
+    planos:[{nome:'Corporativo (vaga de dependente)',custo:0,vagas:2,desc:'Acesso a 35.000+ academias e estúdios no Brasil'}]
+  },
+  {
+    nome:'Alura',sub:'Educação corporativa',img:BASE+'claude-ai_icon.jpg',
+    precoVenda:39.90,repasse:25.00,
+    planos:[{nome:'Corporativo (vaga de dependente)',custo:0,vagas:2,desc:'1.500+ cursos de tecnologia, certificados e formações'}]
+  },
 ]
 const WH_PLANOS=[
-  {nome:'Starter',preco:39.99,repasse:8.00,academias:'6.000+ academias',popular:false},
-  {nome:'Basic',preco:69.99,repasse:8.00,academias:'SmartFit e CrossFit',popular:false},
-  {nome:'Basic+',preco:99.99,repasse:9.00,academias:'Pratique Fitness e mais',popular:true},
-  {nome:'Silver',preco:149.99,repasse:14.00,academias:'Pure Pilates, TemBici',popular:false},
-  {nome:'Silver+',preco:199.99,repasse:18.00,academias:'Bluefit, Selfit',popular:false},
-  {nome:'Gold',preco:319.99,repasse:29.00,academias:"Spin'n Soul, premium",popular:false},
+  {nome:'Starter',preco:39.99,repasse:8.00,academias:'6.000+ academias parceiras',popular:false},
+  {nome:'Basic',preco:69.99,repasse:8.00,academias:'SmartFit, CrossFit e parceiros',popular:false},
+  {nome:'Basic+',preco:99.99,repasse:9.00,academias:'Pratique Fitness e mais academias',popular:true},
+  {nome:'Silver',preco:149.99,repasse:14.00,academias:'Pure Pilates, TemBici e parceiros',popular:false},
+  {nome:'Silver+',preco:199.99,repasse:18.00,academias:'Bluefit, Selfit e academias premium',popular:false},
+  {nome:'Gold',preco:319.99,repasse:29.00,academias:"Spin'n Soul e academias top",popular:false},
   {nome:'Gold+',preco:439.99,repasse:35.00,academias:'Cia Athletica, Bodytech',popular:false},
-  {nome:'Platinum',preco:599.99,repasse:35.00,academias:'Competition, premium',popular:false},
+  {nome:'Platinum',preco:599.99,repasse:35.00,academias:'Competition e clubes premium',popular:false},
   {nome:'Diamond',preco:699.99,repasse:35.00,academias:'Buddha Spha, Care Club',popular:false},
-  {nome:'Diamond+',preco:779.99,repasse:35.00,academias:'Reebok, Tennis & Beach',popular:false},
+  {nome:'Diamond+',preco:779.99,repasse:35.00,academias:'Reebok, Tennis & Beach Club',popular:false},
 ]
 let whPlanosSel=new Set(['Starter','Basic','Basic+','Silver'])
-
-// DESCRIÇÕES AUTO-GERADAS
-const DESCRICOES={
-  'Microsoft 365':'Plano Microsoft 365 Family com {V} vagas disponíveis. Inclui Word, Excel, PowerPoint, Teams, OneDrive com 1TB por pessoa e Copilot AI integrado. Cada membro recebe acesso individual com seu próprio login. Ativação imediata via convite por e-mail após confirmação do pagamento.',
-  'Duolingo Super':'Plano Super Duolingo Família com {V} vagas disponíveis. Inclui aprendizado sem anúncios, vidas ilimitadas, modo offline e prática personalizada para mais de 30 idiomas. Cada membro tem sua conta individual com progresso independente. Acesso liberado em até 24h após confirmação.',
-  'Duolingo Max':'Plano Duolingo Max Família com {V} vagas disponíveis. Inclui todos os recursos do Super + Inteligência Artificial para correção de pronúncia e conversação com personagens. Conta individual para cada membro. Acesso liberado em até 24h após confirmação.',
-  'Canva Teams':'Workspace Canva Teams com {V} vagas disponíveis. Inclui todos os recursos Pro: remoção de fundo, redimensionamento mágico, Brand Kit, 100 milhões de assets premium e colaboração em equipe. Cada membro tem acesso ao workspace compartilhado. Convite enviado por e-mail.',
-  'Notion Team':'Workspace Notion Team com {V} vagas disponíveis. Inclui páginas ilimitadas, blocos ilimitados, convidados ilimitados e histórico de versões. Ideal para times remotos e gestão de projetos. Acesso via convite por e-mail em até 24h.',
-  'Claude Pro':'Seat Claude Pro com {V} vagas disponíveis. Inclui acesso ao Claude com mensagens estendidas, projetos, análise de documentos e prioridade de acesso. Cada membro tem sua conta individual. Ativação imediata após confirmação do pagamento.',
-  'TotalPass':'Vaga TotalPass via benefício corporativo. Acesso a mais de 35.000 academias, estúdios fitness e serviços de bem-estar em todo o Brasil. Cada membro tem login individual no app. Acesso liberado em até 24h após confirmação.',
-  'Alura':'Vaga Alura para Empresas via benefício corporativo. Acesso à plataforma completa de educação em tecnologia com mais de 1.500 cursos, formações e certificados. Cada membro tem conta individual. Acesso liberado em até 24h após confirmação.',
-  'default':'Piscina com {V} vagas disponíveis. Acesso imediato após confirmação do pagamento. Em caso de dúvidas, entre em contato pelo suporte do Splitpool.',
-}
-function gerarDescricao(){
-  const svc=getSvc()
-  if(!svc) return
-  const vagas=document.getElementById('vagas-total')?.value||5
-  const template=DESCRICOES[svc.nome]||DESCRICOES['default']
-  document.getElementById('descricao').value=template.replace('{V}',vagas)
-}
-function gerarDescricaoWH(){
-  const vagas=document.getElementById('wh-vagas')?.value||2
-  const planos=Array.from(whPlanosSel).join(', ')
-  document.getElementById('wh-descricao').value=`Ofereço ${vagas} vaga${vagas>1?'s':''} de dependente Wellhub via benefício corporativo. O membro escolhe o plano que preferir (${planos||'Starter ao Diamond+'}) e paga diretamente pela plataforma. Sua empresa paga meu plano, então você aproveita um benefício de academia premium sem custo adicional. Acesso liberado em até 24h após confirmação.`
-}
 
 sb.auth.getSession().then(({data})=>{
   if(!data.session){window.location.href='cadastro.html';return}
   userId=data.session.user.id
-  document.getElementById('nav-user').textContent=data.session.user.email.split('@')[0]
+  const email=data.session.user.email
+  nomeUsuario=email.split('@')[0].charAt(0).toUpperCase()+email.split('@')[0].slice(1)
+  document.getElementById('nav-user').textContent=email.split('@')[0]
   renderSvcs()
 })
 
@@ -380,7 +401,7 @@ function renderWellhubGrid(){
   document.getElementById('wellhub-grid').innerHTML=WH_PLANOS.map(p=>`
     <div class="wh-card ${whPlanosSel.has(p.nome)?'sel':''} ${p.popular?'popular':''}" onclick="toggleWHPlano('${p.nome}',this)">
       <div class="wh-plan">${p.nome}</div>
-      <div class="wh-price-official">R$${p.preco.toFixed(2).replace('.',',')} /mês</div>
+      <div class="wh-price-official">R$${p.preco.toFixed(2).replace('.',',')} /mês (Wellhub)</div>
       <div class="wh-price-final">R$${(p.preco+(p.repasse*1.3)).toFixed(2).replace('.',',')}<span style="font-size:11px;font-weight:500;opacity:.6">/mês</span></div>
       <div class="wh-repasse">Você recebe R$${p.repasse.toFixed(2).replace('.',',')}/vaga</div>
       <div class="wh-academias">${p.academias}</div>
@@ -408,6 +429,14 @@ function atualizarCalcWH(){
   }
 }
 
+function gerarDescricaoWH(){
+  const vagas=document.getElementById('wh-vagas')?.value||2
+  const planos=Array.from(whPlanosSel)
+  const planosStr=planos.length>0?planos.join(', '):'Starter ao Diamond+'
+  const el=document.getElementById('wh-desc-auto')
+  if(el) el.textContent=`${nomeUsuario}, dono desta piscina Wellhub, oferece ${vagas} vaga${vagas>1?'s':''} de dependente via benefício corporativo. O membro pode escolher entre os planos ${planosStr}. Acesso liberado em até 24h após confirmação do pagamento.`
+}
+
 function selecionarTipo(tipo){
   tipoSelecionado=tipo
   document.getElementById('tipo-familia').classList.toggle('sel',tipo==='familia')
@@ -418,22 +447,71 @@ function selecionarTipo(tipo){
 function selecionarSvc(nome){
   const todos=[...SVCS_FAMILIA,...SVCS_CORP]
   svcSelecionado=todos.find(s=>s.nome===nome)
-  document.getElementById('svc-manual').value=''
   renderSvcs()
 }
 
-function getSvc(){
-  if(svcSelecionado) return svcSelecionado
-  const m=document.getElementById('svc-manual').value.trim()
-  if(m) return{nome:m,precoVenda:19.90,repasse:12.00,vagasPadrao:3,custoPlano:0}
-  return null
+function getSvc(){return svcSelecionado}
+
+function popularSelects(){
+  const svc=getSvc()
+  if(!svc||!svc.planos) return
+
+  // Select de planos
+  const planoSel=document.getElementById('plano-select')
+  planoSel.innerHTML=svc.planos.map((p,i)=>`<option value="${i}">${p.nome} — R$${p.custo>0?p.custo.toFixed(2).replace('.',','):'0,00'}/mês — ${p.desc}</option>`).join('')
+  planoAtual=svc.planos[0]
+  document.getElementById('plano-hint').textContent=planoAtual.desc
+
+  // Select de vagas
+  const vagasSel=document.getElementById('vagas-total')
+  const maxVagas=planoAtual.vagas
+  vagasSel.innerHTML=Array.from({length:maxVagas},(_,i)=>`<option value="${i+1}" ${i+1===maxVagas?'selected':''}>${i+1} vaga${i+1>1?'s':''}</option>`).join('')
+  document.getElementById('vagas-hint').textContent=`Máximo de ${maxVagas} vagas para este plano`
+
+  // Slider
+  document.getElementById('sim-vagas').max=maxVagas
+  document.getElementById('sim-vagas').value=0
+
+  // Info box
+  document.getElementById('info-preco-svc').innerHTML=`<strong>${svc.nome}</strong> — Você recebe <strong style="color:#00875A">R$${svc.repasse.toFixed(2).replace('.',',')}</strong> por vaga preenchida por mês.`
+
+  recalcularCalc()
+  gerarDescricao()
+}
+
+function selecionarPlano(){
+  const svc=getSvc()
+  if(!svc) return
+  const idx=parseInt(document.getElementById('plano-select').value)
+  planoAtual=svc.planos[idx]
+  document.getElementById('plano-hint').textContent=planoAtual.desc
+  // Atualiza vagas
+  const maxVagas=planoAtual.vagas
+  const vagasSel=document.getElementById('vagas-total')
+  vagasSel.innerHTML=Array.from({length:maxVagas},(_,i)=>`<option value="${i+1}" ${i+1===maxVagas?'selected':''}>${i+1} vaga${i+1>1?'s':''}</option>`).join('')
+  document.getElementById('vagas-hint').textContent=`Máximo de ${maxVagas} vagas para este plano`
+  document.getElementById('sim-vagas').max=maxVagas
+  recalcularCalc()
+  gerarDescricao()
+}
+
+function gerarDescricao(){
+  const svc=getSvc()
+  if(!svc) return
+  const vagas=document.getElementById('vagas-total')?.value||svc.planos?.[0]?.vagas||3
+  const plano=planoAtual||svc.planos?.[0]
+  const el=document.getElementById('desc-auto')
+  if(!el) return
+  const descPlano=plano?.desc||''
+  const tipo=tipoSelecionado==='corporativo'?'via benefício corporativo':'no plano família'
+  el.textContent=`${nomeUsuario}, dono desta piscina, oferece ${vagas} vaga${vagas>1?'s':''} ${tipo} do ${svc.nome}. ${descPlano}. Acesso liberado em até 24h após a confirmação do pagamento. Vem mergulhar! 🏊`
 }
 
 function recalcularCalc(){
   const svc=getSvc()
   if(!svc) return
-  const vagas=parseInt(document.getElementById('vagas-total')?.value||5)
-  const custo=parseFloat(document.getElementById('custo-plano')?.value||0)
+  const vagas=parseInt(document.getElementById('vagas-total')?.value||3)
+  const custo=planoAtual?.custo||0
   const simVagas=parseInt(document.getElementById('sim-vagas')?.value||0)
   if(document.getElementById('sim-vagas')) document.getElementById('sim-vagas').max=vagas
   const vv=document.getElementById('vagas-visual')
@@ -448,7 +526,7 @@ function recalcularCalc(){
     document.getElementById('calc-repasse-vaga').textContent=`R$${svc.repasse.toFixed(2).replace('.',',')}/vaga`
     document.getElementById('row-custo').style.display=tipoSelecionado==='corporativo'?'none':'flex'
     document.getElementById('calc-custo').textContent=`- R$${custo.toFixed(2).replace('.',',')}`
-    document.getElementById('calc-label-resultado').textContent=simVagas===vagas?'Piscina cheia — seu ganho':`Com ${simVagas} de ${vagas} vagas`
+    document.getElementById('calc-label-resultado').textContent=simVagas===vagas?'Piscina cheia — seu recebimento':`Com ${simVagas} de ${vagas} vagas`
     const res=document.getElementById('calc-resultado')
     res.textContent=`R$${Math.max(0,lucro).toFixed(2).replace('.',',')}/mês`
     res.className='val '+(lucro>=0?'green':'red')
@@ -456,10 +534,10 @@ function recalcularCalc(){
   const mot=document.getElementById('motivacao')
   if(mot){
     const faltam=vagas-simVagas
-    if(simVagas===0){mot.textContent='Publique e comece a receber! 🚀';mot.className='motivacao mot-0'}
-    else if(lucro<0){mot.textContent=`Faltam ${faltam} membro${faltam>1?'s':''} para zerar seu custo 🎯`;mot.className='motivacao mot-50'}
-    else if(simVagas<vagas){mot.textContent=`Cada nova vaga = +R$${svc.repasse.toFixed(2).replace('.',',')} no seu bolso 🔥`;mot.className='motivacao mot-80'}
-    else{mot.textContent=`Piscina cheia! Você ganha R$${lucroFull.toFixed(2).replace('.',',')}/mês 🎉`;mot.className='motivacao mot-100'}
+    if(simVagas===0){mot.textContent='Publique e comece a ofertar vagas! 🚀';mot.className='motivacao mot-0'}
+    else if(lucro<0){mot.textContent=`Faltam ${faltam} membro${faltam>1?'s':''} para cobrir o custo do plano 🎯`;mot.className='motivacao mot-50'}
+    else if(simVagas<vagas){mot.textContent=`Cada nova vaga preenchida = +R$${svc.repasse.toFixed(2).replace('.',',')} 🔥`;mot.className='motivacao mot-80'}
+    else{mot.textContent=`Piscina cheia! Recebimento estimado: R$${Math.max(0,lucroFull).toFixed(2).replace('.',',')}/mês 🎉`;mot.className='motivacao mot-100'}
   }
 }
 
@@ -481,33 +559,21 @@ function goStep(n){
 
 function irPasso2(){
   const svc=getSvc()
-  if(!svc){showMsg('Selecione ou digite o serviço.','error');return}
+  if(!svc){showMsg('Selecione o serviço.','error');return}
   if(!tipoSelecionado){showMsg('Selecione o tipo de piscina.','error');return}
   hideMsg()
   const isWH=svc.especial==='wellhub'
   document.getElementById('panel-2-familia').style.display=isWH?'none':'block'
   document.getElementById('panel-2-wellhub').style.display=isWH?'block':'none'
   if(isWH){renderWellhubGrid();atualizarCalcWH();gerarDescricaoWH()}
-  else{
-    const info=document.getElementById('info-preco-svc')
-    info.innerHTML=`<strong>${svc.nome}</strong> — Você recebe <strong style="color:#00875A">R$${svc.repasse.toFixed(2).replace('.',',')}</strong> por vaga preenchida por mês.`
-    if(svc.vagasPadrao) document.getElementById('vagas-total').value=svc.vagasPadrao
-    if(svc.custoPlano>0) document.getElementById('custo-plano').value=svc.custoPlano
-    if(document.getElementById('sim-vagas')) document.getElementById('sim-vagas').max=svc.vagasPadrao||5
-    gerarDescricao()
-    recalcularCalc()
-  }
+  else{popularSelects()}
   goStep(2)
 }
 
 function irPasso3(){
   const svc=getSvc()
   const isWH=svc?.especial==='wellhub'
-  if(!isWH&&!document.getElementById('descricao').value.trim()){showMsg('Adicione uma descrição.','error');return}
-  if(isWH){
-    if(whPlanosSel.size===0){showMsg('Selecione pelo menos um plano Wellhub.','error');return}
-    if(!document.getElementById('wh-descricao').value.trim()){showMsg('Adicione uma descrição.','error');return}
-  }
+  if(isWH&&whPlanosSel.size===0){showMsg('Selecione pelo menos um plano Wellhub.','error');return}
   hideMsg()
   renderResumo()
   goStep(3)
@@ -517,14 +583,17 @@ function renderResumo(){
   const svc=getSvc()
   const isWH=svc?.especial==='wellhub'
   const vagas=isWH?document.getElementById('wh-vagas').value:document.getElementById('vagas-total').value
+  const custo=planoAtual?.custo||0
   const ganho=isWH?`R$${(parseInt(vagas)*8).toFixed(0)}–R$${(parseInt(vagas)*35).toFixed(0)}/mês`:
-    (()=>{const c=parseFloat(document.getElementById('custo-plano').value||0);const v=parseInt(vagas);const l=tipoSelecionado==='corporativo'?svc.repasse*v:(svc.repasse*v)-c;return`R$${Math.max(0,l).toFixed(2).replace('.',',')}/mês`})()
+    (()=>{const v=parseInt(vagas);const l=tipoSelecionado==='corporativo'?svc.repasse*v:(svc.repasse*v)-custo;return`R$${Math.max(0,l).toFixed(2).replace('.',',')}/mês (estimado)`})()
+  const planoNome=planoAtual?.nome||'—'
   document.getElementById('resumo-grid').innerHTML=`
     <div class="resumo-item"><div class="resumo-label">Serviço</div><div class="resumo-val">${svc.nome}</div></div>
     <div class="resumo-item"><div class="resumo-label">Tipo</div><div class="resumo-val">${tipoSelecionado==='corporativo'?'Benefício corporativo':'Plano família'}</div></div>
+    ${!isWH?`<div class="resumo-item"><div class="resumo-label">Plano</div><div class="resumo-val" style="font-size:13px;">${planoNome}</div></div>`:''}
     <div class="resumo-item"><div class="resumo-label">Vagas ofertadas</div><div class="resumo-val">${vagas} vaga${vagas>1?'s':''}</div></div>
     ${isWH?`<div class="resumo-item"><div class="resumo-label">Planos permitidos</div><div class="resumo-val" style="font-size:12px;">${Array.from(whPlanosSel).join(', ')}</div></div>`:''}
-    <div class="resumo-item" style="border:1.5px solid rgba(0,200,100,0.3);background:rgba(0,200,100,0.08);"><div class="resumo-label" style="color:#00875A;">Seu ganho estimado</div><div class="resumo-val" style="color:#00875A;">${ganho}</div></div>`
+    <div class="resumo-item" style="border:1.5px solid rgba(0,200,100,0.3);background:rgba(0,200,100,0.08);"><div class="resumo-label" style="color:#00875A;">Recebimento estimado</div><div class="resumo-val" style="color:#00875A;">${ganho}</div></div>`
 }
 
 async function publicarPiscina(){
@@ -535,7 +604,7 @@ async function publicarPiscina(){
   const svc=getSvc()
   const isWH=svc?.especial==='wellhub'
   const vagas=parseInt(isWH?document.getElementById('wh-vagas').value:document.getElementById('vagas-total').value)
-  const desc=isWH?document.getElementById('wh-descricao').value.trim():document.getElementById('descricao').value.trim()
+  const desc=isWH?document.getElementById('wh-desc-auto').textContent:document.getElementById('desc-auto').textContent
   const {error}=await sb.from('piscinas').insert({
     dono_id:userId,servico:svc.nome,descricao:desc,
     vagas_total:vagas,vagas_ocupadas:0,
