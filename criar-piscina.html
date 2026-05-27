@@ -12,13 +12,11 @@
 html{scroll-behavior:smooth;}
 body{font-family:'Inter',sans-serif;color:var(--bluedark);overflow-x:hidden;background:#3acde8;}
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--teal);border-radius:5px;}
-
 .pool-bg{position:fixed;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1572331165267-854da2b021d4?w=1920&q=85') center/cover no-repeat;filter:brightness(1.05) saturate(1.1);}
 .pool-overlay{position:fixed;inset:0;z-index:1;background:rgba(160,225,245,0.12);}
 .shimmer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
 .shimmer canvas{position:absolute;inset:0;width:100%;height:100%;}
 .page{position:relative;z-index:10;}
-
 nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);background:rgba(255,255,255,0.72);border-bottom:1px solid rgba(0,180,210,0.18);padding:0 5%;}
 .nav-in{max-width:1240px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
 .nav-logo{height:52px;object-fit:contain;flex-shrink:0;}
@@ -27,26 +25,20 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .nav-btn{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;}
 .nav-btn.outline{background:transparent;color:var(--bluedark);border:1.5px solid rgba(18,85,204,0.3);}
 .nav-btn.outline:hover{background:rgba(18,85,204,0.06);}
-
 main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
-
 .page-header{margin-bottom:2rem;}
 .page-header h1{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;color:var(--bluedark);letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.5);}
 .page-header p{font-size:15px;color:var(--bluedark);opacity:.65;margin-top:6px;font-weight:500;}
-
-.steps-nav{display:flex;align-items:center;gap:0;margin-bottom:2rem;background:rgba(255,255,255,0.7);border-radius:12px;padding:6px;backdrop-filter:blur(8px);border:1px solid rgba(0,180,210,0.2);}
+.steps-nav{display:flex;align-items:center;margin-bottom:2rem;background:rgba(255,255,255,0.7);border-radius:12px;padding:6px;backdrop-filter:blur(8px);border:1px solid rgba(0,180,210,0.2);}
 .step-btn{flex:1;padding:10px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--bluedark);opacity:.5;cursor:pointer;font-family:inherit;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
 .step-btn.act{background:rgba(255,255,255,0.95);opacity:1;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
 .step-btn.done{opacity:.7;color:var(--teal);}
 .step-num{width:22px;height:22px;border-radius:50%;background:rgba(18,85,204,0.1);color:var(--blue);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .step-btn.act .step-num{background:var(--blue);color:#fff;}
 .step-btn.done .step-num{background:var(--teal);color:#fff;}
-
 .form-card{background:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.6);border-radius:20px;padding:2rem;box-shadow:0 8px 40px rgba(0,30,80,0.15);backdrop-filter:blur(16px);}
-
 .panel{display:none;}
 .panel.act{display:block;}
-
 .tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem;}
 @media(max-width:600px){.tipo-grid{grid-template-columns:1fr;}}
 .tipo-card{border:2px solid rgba(0,180,210,0.2);border-radius:14px;padding:1.5rem;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.6);}
@@ -58,27 +50,24 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 .tipo-badge{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
 .badge-green{background:rgba(0,200,100,0.12);color:#00875A;border:1px solid rgba(0,200,100,0.2);}
 .badge-blue{background:rgba(18,85,204,0.1);color:var(--blue);border:1px solid rgba(18,85,204,0.2);}
-.badge-amber{background:rgba(255,170,0,0.1);color:#B45309;border:1px solid rgba(255,170,0,0.25);}
-
 .svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem;}
 .svc-item{border:2px solid rgba(0,180,210,0.2);border-radius:12px;padding:.9rem;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.6);text-align:center;}
 .svc-item:hover{border-color:rgba(18,85,204,0.3);background:rgba(255,255,255,0.85);}
 .svc-item.sel{border-color:var(--blue);background:#EEF4FF;}
 .svc-item img{width:40px;height:40px;border-radius:8px;object-fit:cover;margin:0 auto 6px;display:block;}
 .svc-item-name{font-size:12px;font-weight:700;color:var(--bluedark);}
-.svc-item-price{font-size:11px;color:var(--blue);margin-top:2px;font-weight:700;}
-
+.svc-item-sub{font-size:11px;color:var(--bluedark);opacity:.5;margin-top:2px;font-weight:500;}
 .field{margin-bottom:1.25rem;}
 .field label{display:block;font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:6px;opacity:.8;}
 .field input,.field textarea,.field select{width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;transition:.2s;}
-.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--blue);background:#fff;}
+.field input:focus,.field textarea:focus{border-color:var(--blue);background:#fff;}
 .field input::placeholder,.field textarea::placeholder{color:var(--bluedark);opacity:.35;}
 .field textarea{resize:vertical;min-height:90px;}
 .field-hint{font-size:12px;color:var(--bluedark);opacity:.45;margin-top:5px;font-weight:500;}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 @media(max-width:500px){.field-row{grid-template-columns:1fr;}}
 
-/* WELLHUB PLANOS */
+/* WELLHUB */
 .wellhub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:1.5rem;}
 .wh-card{border:2px solid rgba(0,180,210,0.2);border-radius:12px;padding:1rem;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.6);position:relative;}
 .wh-card:hover{border-color:rgba(18,85,204,0.3);background:rgba(255,255,255,0.85);}
@@ -87,65 +76,54 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 .wh-plan{font-size:15px;font-weight:800;color:var(--bluedark);}
 .wh-price-official{font-size:12px;color:var(--bluedark);opacity:.5;margin-top:2px;font-weight:500;text-decoration:line-through;}
 .wh-price-final{font-size:18px;font-weight:900;color:var(--blue);margin-top:4px;}
-.wh-price-sub{font-size:11px;color:var(--bluedark);opacity:.5;font-weight:500;}
-.wh-spread{font-size:11px;font-weight:700;color:#00875A;margin-top:6px;}
-.wh-academias{font-size:11px;color:var(--bluedark);opacity:.55;margin-top:4px;font-weight:500;}
+.wh-repasse{font-size:12px;font-weight:700;color:#00875A;margin-top:6px;background:rgba(0,200,100,0.1);border-radius:6px;padding:3px 8px;display:inline-block;}
+.wh-academias{font-size:11px;color:var(--bluedark);opacity:.55;margin-top:6px;font-weight:500;}
 
 /* CALC */
 .calc-box{background:rgba(18,85,204,0.06);border:1.5px solid rgba(18,85,204,0.15);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;}
-.calc-title{font-size:14px;font-weight:800;color:var(--blue);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.calc-title{font-size:14px;font-weight:800;color:var(--blue);margin-bottom:1rem;}
 .calc-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(18,85,204,0.1);font-size:14px;color:var(--bluedark);}
 .calc-row:last-child{border:none;font-weight:800;font-size:15px;}
 .val{font-weight:700;}
 .val.green{color:#00875A;}
 .val.blue{color:var(--blue);}
 .val.red{color:#991B1B;}
-
-.motivacao{text-align:center;padding:1rem;border-radius:10px;font-size:14px;font-weight:700;margin-bottom:1.5rem;transition:.3s;}
+.motivacao{text-align:center;padding:1rem;border-radius:10px;font-size:14px;font-weight:700;margin-bottom:1.25rem;transition:.3s;}
 .mot-0{background:rgba(0,180,210,0.08);color:var(--blue);}
 .mot-50{background:rgba(255,170,0,0.1);color:#B45309;}
 .mot-80{background:rgba(0,180,210,0.12);color:var(--blue);}
 .mot-100{background:rgba(0,200,100,0.12);color:#00875A;}
-
 .progress-wrap{margin-bottom:1rem;}
 .progress-label{display:flex;justify-content:space-between;font-size:13px;color:var(--bluedark);opacity:.7;margin-bottom:6px;font-weight:600;}
 .progress-bar{height:8px;background:rgba(0,180,210,0.15);border-radius:4px;overflow:hidden;}
 .progress-fill{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .5s ease;}
-
 .vagas-visual{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
 .vaga-bubble{width:34px;height:34px;border-radius:50%;border:2px solid rgba(0,180,210,0.3);display:flex;align-items:center;justify-content:center;font-size:13px;transition:.3s;background:rgba(255,255,255,0.6);}
 .vaga-bubble.ocupada{background:linear-gradient(135deg,var(--blue),var(--bluedark));border-color:var(--blue);}
-
+.info-box{background:rgba(0,180,210,0.06);border:1px solid rgba(0,180,210,0.2);border-radius:10px;padding:1rem;margin-bottom:1rem;font-size:13px;color:var(--bluedark);line-height:1.7;font-weight:500;}
+.info-box strong{color:var(--blue);}
 .btn-primary{width:100%;padding:14px;border-radius:10px;font-weight:700;color:#fff;font-size:15px;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--blue),var(--bluedark));box-shadow:0 4px 18px rgba(18,85,204,0.4);transition:.2s;}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(18,85,204,0.5);}
+.btn-primary:hover{transform:translateY(-1px);}
 .btn-primary:disabled{background:#93C5FD;cursor:not-allowed;transform:none;box-shadow:none;}
 .btn-secondary{width:100%;padding:13px;border-radius:10px;font-weight:700;font-size:14px;border:1.5px solid rgba(18,85,204,0.25);background:transparent;color:var(--blue);cursor:pointer;font-family:inherit;transition:.2s;}
 .btn-secondary:hover{background:rgba(18,85,204,0.06);}
 .btn-row{display:flex;gap:10px;}
 .btn-row .btn-primary,.btn-row .btn-secondary{flex:1;margin:0;}
-
 .msg{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;text-align:center;display:none;font-weight:600;}
 .msg.success{background:#D1FAE5;color:#065F46;}
 .msg.error{background:#FEE2E2;color:#991B1B;}
-
 .resumo{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem;}
 @media(max-width:500px){.resumo{grid-template-columns:1fr;}}
 .resumo-item{background:rgba(18,85,204,0.06);border-radius:10px;padding:1rem;}
 .resumo-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);opacity:.7;margin-bottom:4px;}
 .resumo-val{font-size:15px;font-weight:800;color:var(--bluedark);}
-
-.info-box{background:rgba(0,180,210,0.06);border:1px solid rgba(0,180,210,0.2);border-radius:10px;padding:1rem;margin-bottom:1rem;font-size:13px;color:var(--bluedark);line-height:1.7;font-weight:500;}
-.info-box strong{color:var(--blue);}
-
-@media(max-width:700px){main{padding:80px 4% 40px;}.steps-nav{gap:4px;}.step-btn .step-label{display:none;}}
+@media(max-width:700px){main{padding:80px 4% 40px;}.step-btn .step-label{display:none;}}
 </style>
 </head>
 <body>
-
 <div class="pool-bg"></div>
 <div class="pool-overlay"></div>
 <div class="shimmer"><canvas id="wc"></canvas></div>
-
 <div class="page">
 <nav>
   <div class="nav-in">
@@ -165,15 +143,9 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
   </div>
 
   <div class="steps-nav">
-    <button class="step-btn act" id="step-btn-1" onclick="goStep(1)">
-      <span class="step-num">1</span><span class="step-label">Tipo e serviço</span>
-    </button>
-    <button class="step-btn" id="step-btn-2" onclick="goStep(2)">
-      <span class="step-num">2</span><span class="step-label">Detalhes</span>
-    </button>
-    <button class="step-btn" id="step-btn-3" onclick="goStep(3)">
-      <span class="step-num">3</span><span class="step-label">Revisar e publicar</span>
-    </button>
+    <button class="step-btn act" id="step-btn-1"><span class="step-num">1</span><span class="step-label">Tipo e serviço</span></button>
+    <button class="step-btn" id="step-btn-2"><span class="step-num">2</span><span class="step-label">Detalhes</span></button>
+    <button class="step-btn" id="step-btn-3"><span class="step-num">3</span><span class="step-label">Revisar e publicar</span></button>
   </div>
 
   <div class="form-card">
@@ -183,7 +155,6 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
     <div class="panel act" id="panel-1">
       <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Qual tipo de piscina você quer criar?</h2>
       <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Escolha como você tem acesso ao serviço que vai compartilhar.</p>
-
       <div class="tipo-grid">
         <div class="tipo-card" id="tipo-familia" onclick="selecionarTipo('familia')">
           <div class="tipo-ico">🏊</div>
@@ -194,51 +165,45 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         <div class="tipo-card" id="tipo-corporativo" onclick="selecionarTipo('corporativo')">
           <div class="tipo-ico">🏢</div>
           <div class="tipo-title">Benefício corporativo</div>
-          <div class="tipo-desc">Sua empresa paga o benefício. Você tem vagas sobrando e quer monetizá-las — custo zero pra você.</div>
+          <div class="tipo-desc">Sua empresa paga. Você tem vagas sobrando e quer monetizá-las — custo zero pra você.</div>
           <span class="tipo-badge badge-green">Wellhub, TotalPass, Alura</span>
         </div>
       </div>
 
       <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Qual serviço você vai compartilhar?</h2>
       <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1rem;font-weight:500;">Selecione um serviço ou digite manualmente.</p>
-
       <div class="svc-grid" id="svc-grid"></div>
-
       <div class="field">
         <label>Ou digite manualmente</label>
-        <input type="text" id="svc-manual" placeholder="Ex: Adobe Creative Cloud..." oninput="svcSelecionado=null;atualizarCalc()">
+        <input type="text" id="svc-manual" placeholder="Ex: Adobe Creative Cloud..." oninput="svcSelecionado=null;renderSvcs()">
       </div>
-
       <button class="btn-primary" onclick="irPasso2()">Continuar →</button>
     </div>
 
     <!-- PASSO 2 -->
     <div class="panel" id="panel-2">
+
+      <!-- FAMÍLIA -->
       <div id="panel-2-familia">
         <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Detalhes da piscina</h2>
-        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Configure as vagas. O Splitpool define os preços para garantir competitividade no mercado.</p>
-
+        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Configure as vagas e confira quanto você vai receber.</p>
         <div class="info-box" id="info-preco-svc"></div>
-
         <div class="field-row">
           <div class="field">
             <label>Total de vagas disponíveis</label>
-            <input type="number" id="vagas-total" min="1" max="10" value="5" oninput="atualizarCalc()">
-            <div class="field-hint">Quantas pessoas podem entrar (sem contar você)</div>
+            <input type="number" id="vagas-total" min="1" max="10" value="5" oninput="recalcularCalc();gerarDescricao()">
           </div>
           <div class="field">
             <label>Custo mensal do seu plano (R$)</label>
-            <input type="number" id="custo-plano" min="0" step="0.01" placeholder="Ex: 60.00" oninput="atualizarCalc()">
+            <input type="number" id="custo-plano" min="0" step="0.01" placeholder="Ex: 60.00" oninput="recalcularCalc()">
             <div class="field-hint">Quanto você paga por mês pelo plano família</div>
           </div>
         </div>
-
         <div class="field">
-          <label>Descrição da piscina</label>
-          <textarea id="descricao" placeholder="Descreva o que o membro vai receber, como funciona o acesso e qualquer detalhe importante..."></textarea>
-          <div class="field-hint">Piscinas com boa descrição preenchem 3x mais rápido.</div>
+          <label>Descrição da piscina <span style="font-size:11px;color:var(--teal);font-weight:600;margin-left:6px;">✨ gerada automaticamente</span></label>
+          <textarea id="descricao" rows="4"></textarea>
+          <div class="field-hint">Edite à vontade. Uma boa descrição preenche a piscina 3x mais rápido.</div>
         </div>
-
         <div class="calc-box">
           <div class="calc-title">🧮 Sua projeção de ganhos</div>
           <div class="motivacao mot-0" id="motivacao">Configure as vagas para ver sua projeção</div>
@@ -248,13 +213,11 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
           </div>
           <div class="vagas-visual" id="vagas-visual"></div>
           <div style="margin-top:1rem;">
-            <div class="calc-row"><span>Preço por vaga (Splitpool define)</span><span class="val blue" id="calc-preco-vaga">—</span></div>
-            <div class="calc-row"><span>Seu repasse por vaga preenchida</span><span class="val blue" id="calc-repasse-vaga">—</span></div>
+            <div class="calc-row"><span>Você recebe por vaga preenchida</span><span class="val blue" id="calc-repasse-vaga">—</span></div>
             <div class="calc-row" id="row-custo"><span>Custo do seu plano família</span><span class="val red" id="calc-custo">—</span></div>
             <div class="calc-row"><span id="calc-label-resultado">Com todas as vagas preenchidas</span><span class="val green" id="calc-resultado">—</span></div>
           </div>
         </div>
-
         <div class="field">
           <label>Simular vagas preenchidas</label>
           <input type="range" id="sim-vagas" min="0" max="5" value="0" step="1" oninput="simularVagas(this.value)" style="width:100%;margin-top:6px;">
@@ -262,44 +225,40 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         </div>
       </div>
 
-      <!-- WELLHUB ESPECIAL -->
+      <!-- WELLHUB -->
       <div id="panel-2-wellhub" style="display:none;">
-        <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Wellhub — Escolha os planos que você oferece</h2>
-        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:.75rem;font-weight:500;">Sua empresa paga o plano. Você oferece a vaga de dependente. O membro paga o plano Wellhub + taxa de intermediação Splitpool.</p>
-
+        <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Wellhub — Configure sua piscina</h2>
+        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:.75rem;font-weight:500;">Sua empresa paga. Você oferta vagas de dependente e recebe por cada vaga ativada.</p>
         <div class="info-box">
-          <strong>Como funciona:</strong> o membro escolhe qual plano Wellhub quer na hora de entrar. Você recebe uma taxa fixa por vaga ativada, independente do plano escolhido. O Splitpool cobra o valor total (plano + spread) e repassa ao Wellhub via seu cartão cadastrado.
+          <strong>Como funciona:</strong> o membro escolhe qual plano Wellhub quer ao entrar. O Splitpool cuida do pagamento e do acesso. Você recebe seu valor por vaga ativada, independente do plano escolhido pelo membro.
         </div>
-
-        <p style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:10px;opacity:.8;">Selecione quais planos você permite para suas vagas:</p>
+        <p style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:10px;opacity:.8;">Selecione quais planos você permite:</p>
         <div class="wellhub-grid" id="wellhub-grid"></div>
-
         <div class="field-row" style="margin-top:.5rem;">
           <div class="field">
             <label>Número de vagas disponíveis</label>
-            <input type="number" id="wh-vagas" min="1" max="5" value="2" oninput="atualizarCalcWH()">
+            <input type="number" id="wh-vagas" min="1" max="5" value="2" oninput="atualizarCalcWH();gerarDescricaoWH()">
             <div class="field-hint">Quantas vagas de dependente você tem disponíveis</div>
           </div>
           <div class="field">
-            <label>Sua renda por vaga ativada</label>
-            <input type="text" id="wh-repasse-display" value="R$10,00 a R$35,00/mês" readonly style="background:rgba(0,200,100,0.06);border-color:rgba(0,200,100,0.3);color:#00875A;font-weight:700;">
+            <label>Seu ganho por vaga ativada</label>
+            <input type="text" id="wh-repasse-display" value="R$8,00 a R$35,00/mês" readonly style="background:rgba(0,200,100,0.06);border-color:rgba(0,200,100,0.3);color:#00875A;font-weight:700;">
             <div class="field-hint">Varia conforme o plano escolhido pelo membro</div>
           </div>
         </div>
-
         <div class="field">
-          <label>Descrição da piscina</label>
-          <textarea id="wh-descricao" placeholder="Ex: Tenho 2 vagas de dependente Wellhub da empresa. O membro escolhe o plano que quiser e paga diretamente. Acesso imediato após confirmação."></textarea>
+          <label>Descrição da piscina <span style="font-size:11px;color:var(--teal);font-weight:600;margin-left:6px;">✨ gerada automaticamente</span></label>
+          <textarea id="wh-descricao" rows="4"></textarea>
+          <div class="field-hint">Edite à vontade.</div>
         </div>
-
         <div class="calc-box">
           <div class="calc-title">🧮 Sua projeção de ganhos — Wellhub</div>
-          <div class="motivacao mot-100" id="wh-motivacao">Com custo zero, tudo que você receber é lucro puro 💰</div>
+          <div class="motivacao mot-100">Custo zero para você — tudo que receber é renda pura 💰</div>
           <div class="calc-row"><span>Vagas disponíveis</span><span class="val blue" id="wh-calc-vagas">2</span></div>
-          <div class="calc-row"><span>Repasse mínimo (planos básicos)</span><span class="val blue" id="wh-calc-min">R$20,00/mês</span></div>
-          <div class="calc-row"><span>Repasse máximo (planos premium)</span><span class="val blue" id="wh-calc-max">R$70,00/mês</span></div>
-          <div class="calc-row"><span>Seu custo</span><span class="val green">R$0,00 — empresa paga ✓</span></div>
-          <div class="calc-row"><span>Lucro líquido estimado</span><span class="val green" id="wh-calc-lucro">R$20–70/mês</span></div>
+          <div class="calc-row"><span>Ganho mínimo (planos básicos)</span><span class="val blue" id="wh-calc-min">R$16,00/mês</span></div>
+          <div class="calc-row"><span>Ganho máximo (planos premium)</span><span class="val blue" id="wh-calc-max">R$70,00/mês</span></div>
+          <div class="calc-row"><span>Seu custo mensal</span><span class="val green">R$0,00 — empresa paga ✓</span></div>
+          <div class="calc-row"><span>Renda líquida estimada</span><span class="val green" id="wh-calc-lucro">R$16–70/mês</span></div>
         </div>
       </div>
 
@@ -319,12 +278,12 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         <div style="font-size:13px;color:var(--bluedark);opacity:.7;line-height:1.8;font-weight:500;">
           • Sua piscina aparece imediatamente no <strong>Explorar</strong><br>
           • Membros entram, pagam e recebem acesso via Splitpool<br>
-          • Você recebe seu repasse via PIX automático todo mês<br>
+          • Você recebe via PIX automático todo mês<br>
           • O Splitpool gerencia pagamentos, credenciais e suporte
         </div>
       </div>
       <div style="background:rgba(255,170,0,0.08);border:1.5px solid rgba(255,170,0,0.2);border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:13px;color:var(--bluedark);opacity:.8;line-height:1.7;font-weight:500;">
-        ⚠️ Ao publicar, você se compromete a manter o serviço ativo pelo período contratado. Encerramento antecipado sem aviso de 7 dias gera reembolso proporcional aos membros e suspensão temporária do selo verificado.
+        ⚠️ Ao publicar, você se compromete a manter o serviço ativo. Encerramento sem aviso de 7 dias gera reembolso proporcional aos membros e suspensão temporária do selo verificado.
       </div>
       <div class="field" style="display:flex;align-items:flex-start;gap:10px;margin-bottom:1.5rem;">
         <input type="checkbox" id="aceite" style="width:auto;margin-top:3px;flex-shrink:0;">
@@ -340,257 +299,251 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 </div>
 
 <script>
-const SUPABASE_URL = 'https://eawfweuamtwlsilrkgoo.supabase.co'
-const SUPABASE_KEY = 'sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
-const { createClient } = supabase
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+const SUPABASE_URL='https://eawfweuamtwlsilrkgoo.supabase.co'
+const SUPABASE_KEY='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
+const {createClient}=supabase
+const sb=createClient(SUPABASE_URL,SUPABASE_KEY)
+let userId=null,tipoSelecionado=null,svcSelecionado=null
 
-let userId = null, tipoSelecionado = null, svcSelecionado = null
-
-// Dados de serviços com preços reais 2026
-const BASE = 'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/'
-const SVCS_FAMILIA = [
-  { nome: 'Microsoft 365', sub: 'Family — 6 pessoas', img: BASE+'microsoft_icon.png', precoVenda: 19.90, repasse: 12.00, vagasPadrao: 5, custoPlano: 60.00 },
-  { nome: 'Duolingo Super', sub: 'Família — 6 pessoas', img: BASE+'duolingo_icon.png', precoVenda: 9.90, repasse: 6.00, vagasPadrao: 5, custoPlano: 27.91 },
-  { nome: 'Duolingo Max', sub: 'Família — 6 pessoas', img: BASE+'duolingo_icon.png', precoVenda: 19.90, repasse: 12.00, vagasPadrao: 5, custoPlano: 49.99 },
-  { nome: 'Canva Teams', sub: 'Teams — 5 pessoas', img: BASE+'Notion_icon.png', precoVenda: 14.90, repasse: 9.00, vagasPadrao: 4, custoPlano: 39.17 },
-  { nome: 'Notion Team', sub: 'Seats avulsos', img: BASE+'Notion_icon.png', precoVenda: 29.90, repasse: 18.00, vagasPadrao: 3, custoPlano: 0 },
-  { nome: 'Claude Pro', sub: 'Team seats', img: BASE+'claude-ai_icon.jpg', precoVenda: 59.90, repasse: 38.00, vagasPadrao: 2, custoPlano: 0 },
+const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/'
+const SVCS_FAMILIA=[
+  {nome:'Microsoft 365',sub:'Family · até 6 pessoas',img:BASE+'microsoft_icon.png',precoVenda:19.90,repasse:12.00,vagasPadrao:5,custoPlano:60.00},
+  {nome:'Duolingo Super',sub:'Família · até 6 pessoas',img:BASE+'duolingo_icon.png',precoVenda:9.90,repasse:6.00,vagasPadrao:5,custoPlano:27.91},
+  {nome:'Duolingo Max',sub:'Família · até 6 pessoas',img:BASE+'duolingo_icon.png',precoVenda:19.90,repasse:12.00,vagasPadrao:5,custoPlano:49.99},
+  {nome:'Canva Teams',sub:'Teams · até 5 pessoas',img:BASE+'Notion_icon.png',precoVenda:14.90,repasse:9.00,vagasPadrao:4,custoPlano:39.17},
+  {nome:'Notion Team',sub:'Seats avulsos',img:BASE+'Notion_icon.png',precoVenda:29.90,repasse:18.00,vagasPadrao:3,custoPlano:0},
+  {nome:'Claude Pro',sub:'Team seats',img:BASE+'claude-ai_icon.jpg',precoVenda:59.90,repasse:38.00,vagasPadrao:2,custoPlano:0},
 ]
-const SVCS_CORP = [
-  { nome: 'Wellhub', sub: 'Benefício corporativo', img: BASE+'wellhub_gympass_icon.png', especial: 'wellhub' },
-  { nome: 'TotalPass', sub: 'Benefício corporativo', img: BASE+'wellhub_gympass_icon.png', precoVenda: 59.90, repasse: 42.00, vagasPadrao: 2, custoPlano: 0 },
-  { nome: 'Alura', sub: 'Educação corporativa', img: BASE+'claude-ai_icon.jpg', precoVenda: 39.90, repasse: 25.00, vagasPadrao: 2, custoPlano: 0 },
+const SVCS_CORP=[
+  {nome:'Wellhub',sub:'Benefício corporativo',img:BASE+'wellhub_gympass_icon.png',especial:'wellhub'},
+  {nome:'TotalPass',sub:'Benefício corporativo',img:BASE+'wellhub_gympass_icon.png',precoVenda:59.90,repasse:42.00,vagasPadrao:2,custoPlano:0},
+  {nome:'Alura',sub:'Educação corporativa',img:BASE+'claude-ai_icon.jpg',precoVenda:39.90,repasse:25.00,vagasPadrao:2,custoPlano:0},
 ]
-
-// Wellhub planos reais 2026
-const WH_PLANOS = [
-  { nome: 'Starter', preco: 39.99, spread: 12.00, repasse: 8.00, academias: '6.000+ academias', popular: false },
-  { nome: 'Basic', preco: 69.99, spread: 12.00, repasse: 8.00, academias: 'SmartFit e CrossFit', popular: false },
-  { nome: 'Basic+', preco: 99.99, spread: 13.00, repasse: 9.00, academias: 'Pratique Fitness e mais', popular: true },
-  { nome: 'Silver', preco: 149.99, spread: 20.00, repasse: 14.00, academias: 'Pure Pilates, TemBici', popular: false },
-  { nome: 'Silver+', preco: 199.99, spread: 26.00, repasse: 18.00, academias: 'Bluefit, Selfit', popular: false },
-  { nome: 'Gold', preco: 319.99, spread: 42.00, repasse: 29.00, academias: 'Spin\'n Soul, premium', popular: false },
-  { nome: 'Gold+', preco: 439.99, spread: 50.00, repasse: 35.00, academias: 'Cia Athletica, Bodytech', popular: false },
-  { nome: 'Platinum', preco: 599.99, spread: 50.00, repasse: 35.00, academias: 'Competition, premium', popular: false },
-  { nome: 'Diamond', preco: 699.99, spread: 50.00, repasse: 35.00, academias: 'Buddha Spha, Care Club', popular: false },
-  { nome: 'Diamond+', preco: 779.99, spread: 50.00, repasse: 35.00, academias: 'Reebok, Tennis & Beach', popular: false },
+const WH_PLANOS=[
+  {nome:'Starter',preco:39.99,repasse:8.00,academias:'6.000+ academias',popular:false},
+  {nome:'Basic',preco:69.99,repasse:8.00,academias:'SmartFit e CrossFit',popular:false},
+  {nome:'Basic+',preco:99.99,repasse:9.00,academias:'Pratique Fitness e mais',popular:true},
+  {nome:'Silver',preco:149.99,repasse:14.00,academias:'Pure Pilates, TemBici',popular:false},
+  {nome:'Silver+',preco:199.99,repasse:18.00,academias:'Bluefit, Selfit',popular:false},
+  {nome:'Gold',preco:319.99,repasse:29.00,academias:"Spin'n Soul, premium",popular:false},
+  {nome:'Gold+',preco:439.99,repasse:35.00,academias:'Cia Athletica, Bodytech',popular:false},
+  {nome:'Platinum',preco:599.99,repasse:35.00,academias:'Competition, premium',popular:false},
+  {nome:'Diamond',preco:699.99,repasse:35.00,academias:'Buddha Spha, Care Club',popular:false},
+  {nome:'Diamond+',preco:779.99,repasse:35.00,academias:'Reebok, Tennis & Beach',popular:false},
 ]
-let whPlanosSelecionados = new Set(['Starter','Basic','Basic+','Silver'])
+let whPlanosSel=new Set(['Starter','Basic','Basic+','Silver'])
 
-sb.auth.getSession().then(({ data }) => {
-  if (!data.session) { window.location.href = 'cadastro.html'; return }
-  userId = data.session.user.id
-  document.getElementById('nav-user').textContent = data.session.user.email.split('@')[0]
+// DESCRIÇÕES AUTO-GERADAS
+const DESCRICOES={
+  'Microsoft 365':'Plano Microsoft 365 Family com {V} vagas disponíveis. Inclui Word, Excel, PowerPoint, Teams, OneDrive com 1TB por pessoa e Copilot AI integrado. Cada membro recebe acesso individual com seu próprio login. Ativação imediata via convite por e-mail após confirmação do pagamento.',
+  'Duolingo Super':'Plano Super Duolingo Família com {V} vagas disponíveis. Inclui aprendizado sem anúncios, vidas ilimitadas, modo offline e prática personalizada para mais de 30 idiomas. Cada membro tem sua conta individual com progresso independente. Acesso liberado em até 24h após confirmação.',
+  'Duolingo Max':'Plano Duolingo Max Família com {V} vagas disponíveis. Inclui todos os recursos do Super + Inteligência Artificial para correção de pronúncia e conversação com personagens. Conta individual para cada membro. Acesso liberado em até 24h após confirmação.',
+  'Canva Teams':'Workspace Canva Teams com {V} vagas disponíveis. Inclui todos os recursos Pro: remoção de fundo, redimensionamento mágico, Brand Kit, 100 milhões de assets premium e colaboração em equipe. Cada membro tem acesso ao workspace compartilhado. Convite enviado por e-mail.',
+  'Notion Team':'Workspace Notion Team com {V} vagas disponíveis. Inclui páginas ilimitadas, blocos ilimitados, convidados ilimitados e histórico de versões. Ideal para times remotos e gestão de projetos. Acesso via convite por e-mail em até 24h.',
+  'Claude Pro':'Seat Claude Pro com {V} vagas disponíveis. Inclui acesso ao Claude com mensagens estendidas, projetos, análise de documentos e prioridade de acesso. Cada membro tem sua conta individual. Ativação imediata após confirmação do pagamento.',
+  'TotalPass':'Vaga TotalPass via benefício corporativo. Acesso a mais de 35.000 academias, estúdios fitness e serviços de bem-estar em todo o Brasil. Cada membro tem login individual no app. Acesso liberado em até 24h após confirmação.',
+  'Alura':'Vaga Alura para Empresas via benefício corporativo. Acesso à plataforma completa de educação em tecnologia com mais de 1.500 cursos, formações e certificados. Cada membro tem conta individual. Acesso liberado em até 24h após confirmação.',
+  'default':'Piscina com {V} vagas disponíveis. Acesso imediato após confirmação do pagamento. Em caso de dúvidas, entre em contato pelo suporte do Splitpool.',
+}
+function gerarDescricao(){
+  const svc=getSvc()
+  if(!svc) return
+  const vagas=document.getElementById('vagas-total')?.value||5
+  const template=DESCRICOES[svc.nome]||DESCRICOES['default']
+  document.getElementById('descricao').value=template.replace('{V}',vagas)
+}
+function gerarDescricaoWH(){
+  const vagas=document.getElementById('wh-vagas')?.value||2
+  const planos=Array.from(whPlanosSel).join(', ')
+  document.getElementById('wh-descricao').value=`Ofereço ${vagas} vaga${vagas>1?'s':''} de dependente Wellhub via benefício corporativo. O membro escolhe o plano que preferir (${planos||'Starter ao Diamond+'}) e paga diretamente pela plataforma. Sua empresa paga meu plano, então você aproveita um benefício de academia premium sem custo adicional. Acesso liberado em até 24h após confirmação.`
+}
+
+sb.auth.getSession().then(({data})=>{
+  if(!data.session){window.location.href='cadastro.html';return}
+  userId=data.session.user.id
+  document.getElementById('nav-user').textContent=data.session.user.email.split('@')[0]
   renderSvcs()
 })
 
-function renderSvcs() {
-  const tipo = tipoSelecionado
-  const lista = tipo === 'corporativo' ? SVCS_CORP : tipo === 'familia' ? SVCS_FAMILIA : [...SVCS_FAMILIA, ...SVCS_CORP]
-  document.getElementById('svc-grid').innerHTML = lista.map(s => `
-    <div class="svc-item ${svcSelecionado?.nome === s.nome ? 'sel' : ''}" onclick="selecionarSvc('${s.nome}')">
+function renderSvcs(){
+  const tipo=tipoSelecionado
+  const lista=tipo==='corporativo'?SVCS_CORP:tipo==='familia'?SVCS_FAMILIA:[...SVCS_FAMILIA,...SVCS_CORP]
+  document.getElementById('svc-grid').innerHTML=lista.map(s=>`
+    <div class="svc-item ${svcSelecionado?.nome===s.nome?'sel':''}" onclick="selecionarSvc('${s.nome}')">
       <img src="${s.img}" alt="${s.nome}" onerror="this.style.display='none'">
       <div class="svc-item-name">${s.nome}</div>
-      <div class="svc-item-price">${s.especial ? 'Corporativo' : s.custoPlano > 0 ? `R$${s.precoVenda.toFixed(2).replace('.',',')}/vaga` : `R$${s.precoVenda.toFixed(2).replace('.',',')}/seat`}</div>
+      <div class="svc-item-sub">${s.sub}</div>
     </div>`).join('')
 }
 
-function renderWellhubGrid() {
-  document.getElementById('wellhub-grid').innerHTML = WH_PLANOS.map(p => `
-    <div class="wh-card ${whPlanosSelecionados.has(p.nome) ? 'sel' : ''} ${p.popular ? 'popular' : ''}" onclick="toggleWHPlano('${p.nome}',this)">
+function renderWellhubGrid(){
+  document.getElementById('wellhub-grid').innerHTML=WH_PLANOS.map(p=>`
+    <div class="wh-card ${whPlanosSel.has(p.nome)?'sel':''} ${p.popular?'popular':''}" onclick="toggleWHPlano('${p.nome}',this)">
       <div class="wh-plan">${p.nome}</div>
-      <div class="wh-price-official">R$${p.preco.toFixed(2).replace('.',',')} (Wellhub)</div>
-      <div class="wh-price-final">R$${(p.preco + p.spread).toFixed(2).replace('.',',')}<span style="font-size:11px;font-weight:500;opacity:.6">/mês</span></div>
-      <div class="wh-spread">+R$${p.spread.toFixed(2).replace('.',',')} taxa Splitpool</div>
+      <div class="wh-price-official">R$${p.preco.toFixed(2).replace('.',',')} /mês</div>
+      <div class="wh-price-final">R$${(p.preco+(p.repasse*1.3)).toFixed(2).replace('.',',')}<span style="font-size:11px;font-weight:500;opacity:.6">/mês</span></div>
+      <div class="wh-repasse">Você recebe R$${p.repasse.toFixed(2).replace('.',',')}/vaga</div>
       <div class="wh-academias">${p.academias}</div>
     </div>`).join('')
 }
 
-function toggleWHPlano(nome, el) {
-  if (whPlanosSelecionados.has(nome)) { whPlanosSelecionados.delete(nome) } 
-  else { whPlanosSelecionados.add(nome) }
+function toggleWHPlano(nome,el){
+  whPlanosSel.has(nome)?whPlanosSel.delete(nome):whPlanosSel.add(nome)
   el.classList.toggle('sel')
   atualizarCalcWH()
+  gerarDescricaoWH()
 }
 
-function atualizarCalcWH() {
-  const vagas = parseInt(document.getElementById('wh-vagas')?.value || 2)
-  const selecionados = WH_PLANOS.filter(p => whPlanosSelecionados.has(p.nome))
-  if (!selecionados.length) return
-  const minRepasse = Math.min(...selecionados.map(p => p.repasse)) * vagas
-  const maxRepasse = Math.max(...selecionados.map(p => p.repasse)) * vagas
-  if (document.getElementById('wh-calc-vagas')) {
-    document.getElementById('wh-calc-vagas').textContent = vagas
-    document.getElementById('wh-calc-min').textContent = `R$${minRepasse.toFixed(2).replace('.',',')}/mês`
-    document.getElementById('wh-calc-max').textContent = `R$${maxRepasse.toFixed(2).replace('.',',')}/mês`
-    document.getElementById('wh-calc-lucro').textContent = `R$${minRepasse.toFixed(0)}–${maxRepasse.toFixed(0)}/mês`
+function atualizarCalcWH(){
+  const vagas=parseInt(document.getElementById('wh-vagas')?.value||2)
+  const sel=WH_PLANOS.filter(p=>whPlanosSel.has(p.nome))
+  if(!sel.length) return
+  const minR=Math.min(...sel.map(p=>p.repasse))*vagas
+  const maxR=Math.max(...sel.map(p=>p.repasse))*vagas
+  if(document.getElementById('wh-calc-vagas')){
+    document.getElementById('wh-calc-vagas').textContent=vagas
+    document.getElementById('wh-calc-min').textContent=`R$${minR.toFixed(2).replace('.',',')}/mês`
+    document.getElementById('wh-calc-max').textContent=`R$${maxR.toFixed(2).replace('.',',')}/mês`
+    document.getElementById('wh-calc-lucro').textContent=`R$${minR.toFixed(0)}–R$${maxR.toFixed(0)}/mês`
   }
 }
 
-function selecionarTipo(tipo) {
-  tipoSelecionado = tipo
-  document.getElementById('tipo-familia').classList.toggle('sel', tipo === 'familia')
-  document.getElementById('tipo-corporativo').classList.toggle('sel', tipo === 'corporativo')
+function selecionarTipo(tipo){
+  tipoSelecionado=tipo
+  document.getElementById('tipo-familia').classList.toggle('sel',tipo==='familia')
+  document.getElementById('tipo-corporativo').classList.toggle('sel',tipo==='corporativo')
   renderSvcs()
 }
 
-function selecionarSvc(nome) {
-  const todasSvcs = [...SVCS_FAMILIA, ...SVCS_CORP]
-  svcSelecionado = todasSvcs.find(s => s.nome === nome)
-  document.getElementById('svc-manual').value = ''
+function selecionarSvc(nome){
+  const todos=[...SVCS_FAMILIA,...SVCS_CORP]
+  svcSelecionado=todos.find(s=>s.nome===nome)
+  document.getElementById('svc-manual').value=''
   renderSvcs()
-  atualizarCalc()
 }
 
-function getSvc() {
-  if (svcSelecionado) return svcSelecionado
-  const manual = document.getElementById('svc-manual').value.trim()
-  if (manual) return { nome: manual, precoVenda: 19.90, repasse: 12.00, vagasPadrao: 3, custoPlano: 0 }
+function getSvc(){
+  if(svcSelecionado) return svcSelecionado
+  const m=document.getElementById('svc-manual').value.trim()
+  if(m) return{nome:m,precoVenda:19.90,repasse:12.00,vagasPadrao:3,custoPlano:0}
   return null
 }
 
-function atualizarCalc() {
-  const svc = getSvc()
-  if (!svc) return
-  const info = document.getElementById('info-preco-svc')
-  if (info && svc.precoVenda) {
-    info.innerHTML = `<strong>${svc.nome}</strong> — Preço por vaga definido pelo Splitpool: <strong style="color:var(--blue)">R$${svc.precoVenda.toFixed(2).replace('.',',')}/mês</strong>. Repasse para você: <strong style="color:#00875A">R$${svc.repasse.toFixed(2).replace('.',',')}/vaga preenchida</strong>.`
-    info.style.display = 'block'
+function recalcularCalc(){
+  const svc=getSvc()
+  if(!svc) return
+  const vagas=parseInt(document.getElementById('vagas-total')?.value||5)
+  const custo=parseFloat(document.getElementById('custo-plano')?.value||0)
+  const simVagas=parseInt(document.getElementById('sim-vagas')?.value||0)
+  if(document.getElementById('sim-vagas')) document.getElementById('sim-vagas').max=vagas
+  const vv=document.getElementById('vagas-visual')
+  if(vv) vv.innerHTML=Array.from({length:vagas},(_,i)=>`<div class="vaga-bubble ${i<simVagas?'ocupada':''}">🏊</div>`).join('')
+  const pct=vagas>0?Math.round((simVagas/vagas)*100):0
+  if(document.getElementById('prog-fill')) document.getElementById('prog-fill').style.width=pct+'%'
+  if(document.getElementById('prog-label')) document.getElementById('prog-label').textContent=`${simVagas} de ${vagas}`
+  const repasse=svc.repasse*simVagas
+  const lucro=tipoSelecionado==='corporativo'?repasse:repasse-custo
+  const lucroFull=tipoSelecionado==='corporativo'?svc.repasse*vagas:(svc.repasse*vagas)-custo
+  if(document.getElementById('calc-repasse-vaga')){
+    document.getElementById('calc-repasse-vaga').textContent=`R$${svc.repasse.toFixed(2).replace('.',',')}/vaga`
+    document.getElementById('row-custo').style.display=tipoSelecionado==='corporativo'?'none':'flex'
+    document.getElementById('calc-custo').textContent=`- R$${custo.toFixed(2).replace('.',',')}`
+    document.getElementById('calc-label-resultado').textContent=simVagas===vagas?'Piscina cheia — seu ganho':`Com ${simVagas} de ${vagas} vagas`
+    const res=document.getElementById('calc-resultado')
+    res.textContent=`R$${Math.max(0,lucro).toFixed(2).replace('.',',')}/mês`
+    res.className='val '+(lucro>=0?'green':'red')
   }
-  if (svc.vagasPadrao) {
-    document.getElementById('vagas-total').value = svc.vagasPadrao
-    if (document.getElementById('sim-vagas')) document.getElementById('sim-vagas').max = svc.vagasPadrao
+  const mot=document.getElementById('motivacao')
+  if(mot){
+    const faltam=vagas-simVagas
+    if(simVagas===0){mot.textContent='Publique e comece a receber! 🚀';mot.className='motivacao mot-0'}
+    else if(lucro<0){mot.textContent=`Faltam ${faltam} membro${faltam>1?'s':''} para zerar seu custo 🎯`;mot.className='motivacao mot-50'}
+    else if(simVagas<vagas){mot.textContent=`Cada nova vaga = +R$${svc.repasse.toFixed(2).replace('.',',')} no seu bolso 🔥`;mot.className='motivacao mot-80'}
+    else{mot.textContent=`Piscina cheia! Você ganha R$${lucroFull.toFixed(2).replace('.',',')}/mês 🎉`;mot.className='motivacao mot-100'}
   }
-  if (svc.custoPlano > 0 && document.getElementById('custo-plano')) {
-    document.getElementById('custo-plano').value = svc.custoPlano
-  }
+}
+
+function simularVagas(val){
+  document.getElementById('sim-label').textContent=`Simulando ${val} membro${val>1?'s':''} preenchidos`
   recalcularCalc()
 }
 
-function recalcularCalc() {
-  const svc = getSvc()
-  if (!svc) return
-  const vagas = parseInt(document.getElementById('vagas-total')?.value || 5)
-  const custo = parseFloat(document.getElementById('custo-plano')?.value || 0)
-  const simVagas = parseInt(document.getElementById('sim-vagas')?.value || 0)
-  if (document.getElementById('sim-vagas')) document.getElementById('sim-vagas').max = vagas
-
-  const vv = document.getElementById('vagas-visual')
-  if (vv) { vv.innerHTML = Array.from({length:vagas},(_, i) => `<div class="vaga-bubble ${i<simVagas?'ocupada':''}">🏊</div>`).join('') }
-  const pct = vagas > 0 ? Math.round((simVagas/vagas)*100) : 0
-  if (document.getElementById('prog-fill')) document.getElementById('prog-fill').style.width = pct+'%'
-  if (document.getElementById('prog-label')) document.getElementById('prog-label').textContent = `${simVagas} de ${vagas}`
-  const repasse = svc.repasse * simVagas
-  const lucro = tipoSelecionado === 'corporativo' ? repasse : repasse - custo
-  const lucroFull = tipoSelecionado === 'corporativo' ? svc.repasse * vagas : (svc.repasse * vagas) - custo
-  if (document.getElementById('calc-preco-vaga')) {
-    document.getElementById('calc-preco-vaga').textContent = `R$${svc.precoVenda.toFixed(2).replace('.',',')}/mês`
-    document.getElementById('calc-repasse-vaga').textContent = `R$${svc.repasse.toFixed(2).replace('.',',')}/vaga`
-    document.getElementById('row-custo').style.display = tipoSelecionado === 'corporativo' ? 'none' : 'flex'
-    document.getElementById('calc-custo').textContent = `- R$${custo.toFixed(2).replace('.',',')}`
-    document.getElementById('calc-label-resultado').textContent = simVagas === vagas ? 'Piscina cheia — seu ganho' : `Com ${simVagas} de ${vagas} vagas`
-    const res = document.getElementById('calc-resultado')
-    res.textContent = `R$${Math.max(0,lucro).toFixed(2).replace('.',',')}/mês`
-    res.className = 'val ' + (lucro >= 0 ? 'green' : 'red')
-  }
-  const mot = document.getElementById('motivacao')
-  if (mot) {
-    const faltam = vagas - simVagas
-    if (simVagas === 0) { mot.textContent = 'Publique e comece a receber! 🚀'; mot.className = 'motivacao mot-0' }
-    else if (lucro < 0) { mot.textContent = `Faltam ${faltam} membro${faltam>1?'s':''} para zerar seu custo 🎯`; mot.className = 'motivacao mot-50' }
-    else if (simVagas < vagas) { mot.textContent = `Cada nova vaga = +R$${svc.repasse.toFixed(2).replace('.',',')} no seu bolso 🔥`; mot.className = 'motivacao mot-80' }
-    else { mot.textContent = `Piscina cheia! Você ganha R$${lucroFull.toFixed(2).replace('.',',')}/mês 🎉`; mot.className = 'motivacao mot-100' }
-  }
-}
-
-function simularVagas(val) {
-  document.getElementById('sim-label').textContent = `Simulando ${val} membro${val>1?'s':''} preenchidos`
-  recalcularCalc()
-}
-
-function goStep(n) {
-  for (let i=1;i<=3;i++) {
+function goStep(n){
+  for(let i=1;i<=3;i++){
     document.getElementById(`panel-${i}`).classList.toggle('act',i===n)
-    const btn = document.getElementById(`step-btn-${i}`)
+    const btn=document.getElementById(`step-btn-${i}`)
     btn.classList.remove('act','done')
-    if (i===n) btn.classList.add('act')
-    else if (i<n) btn.classList.add('done')
+    if(i===n) btn.classList.add('act')
+    else if(i<n) btn.classList.add('done')
   }
   window.scrollTo({top:0,behavior:'smooth'})
 }
 
-function irPasso2() {
-  const svc = getSvc()
-  if (!svc) { showMsg('Selecione ou digite o serviço.','error'); return }
-  if (!tipoSelecionado) { showMsg('Selecione o tipo de piscina.','error'); return }
+function irPasso2(){
+  const svc=getSvc()
+  if(!svc){showMsg('Selecione ou digite o serviço.','error');return}
+  if(!tipoSelecionado){showMsg('Selecione o tipo de piscina.','error');return}
   hideMsg()
-  const isWellhub = svc.especial === 'wellhub'
-  document.getElementById('panel-2-familia').style.display = isWellhub ? 'none' : 'block'
-  document.getElementById('panel-2-wellhub').style.display = isWellhub ? 'block' : 'none'
-  if (isWellhub) { renderWellhubGrid(); atualizarCalcWH() }
-  else { atualizarCalc() }
+  const isWH=svc.especial==='wellhub'
+  document.getElementById('panel-2-familia').style.display=isWH?'none':'block'
+  document.getElementById('panel-2-wellhub').style.display=isWH?'block':'none'
+  if(isWH){renderWellhubGrid();atualizarCalcWH();gerarDescricaoWH()}
+  else{
+    const info=document.getElementById('info-preco-svc')
+    info.innerHTML=`<strong>${svc.nome}</strong> — Você recebe <strong style="color:#00875A">R$${svc.repasse.toFixed(2).replace('.',',')}</strong> por vaga preenchida por mês.`
+    if(svc.vagasPadrao) document.getElementById('vagas-total').value=svc.vagasPadrao
+    if(svc.custoPlano>0) document.getElementById('custo-plano').value=svc.custoPlano
+    if(document.getElementById('sim-vagas')) document.getElementById('sim-vagas').max=svc.vagasPadrao||5
+    gerarDescricao()
+    recalcularCalc()
+  }
   goStep(2)
 }
 
-function irPasso3() {
-  const svc = getSvc()
-  const isWellhub = svc?.especial === 'wellhub'
-  if (!isWellhub) {
-    const desc = document.getElementById('descricao').value.trim()
-    if (!desc) { showMsg('Adicione uma descrição.','error'); return }
-  } else {
-    if (whPlanosSelecionados.size === 0) { showMsg('Selecione pelo menos um plano Wellhub.','error'); return }
-    const desc = document.getElementById('wh-descricao').value.trim()
-    if (!desc) { showMsg('Adicione uma descrição.','error'); return }
+function irPasso3(){
+  const svc=getSvc()
+  const isWH=svc?.especial==='wellhub'
+  if(!isWH&&!document.getElementById('descricao').value.trim()){showMsg('Adicione uma descrição.','error');return}
+  if(isWH){
+    if(whPlanosSel.size===0){showMsg('Selecione pelo menos um plano Wellhub.','error');return}
+    if(!document.getElementById('wh-descricao').value.trim()){showMsg('Adicione uma descrição.','error');return}
   }
   hideMsg()
   renderResumo()
   goStep(3)
 }
 
-function renderResumo() {
-  const svc = getSvc()
-  const isWellhub = svc?.especial === 'wellhub'
-  const vagas = isWellhub ? document.getElementById('wh-vagas').value : document.getElementById('vagas-total').value
-  const selecionados = isWellhub ? Array.from(whPlanosSelecionados).join(', ') : null
-  const precoVenda = isWellhub ? 'Variável por plano escolhido' : `R$${svc.precoVenda.toFixed(2).replace('.',',')}/mês`
-  const ganho = isWellhub ? `R$${(parseInt(vagas)*8).toFixed(0)}–R$${(parseInt(vagas)*35).toFixed(0)}/mês` : (() => {
-    const custo = parseFloat(document.getElementById('custo-plano').value || 0)
-    const v = parseInt(vagas)
-    const lucro = tipoSelecionado === 'corporativo' ? svc.repasse * v : (svc.repasse * v) - custo
-    return `R$${Math.max(0,lucro).toFixed(2).replace('.',',')}/mês`
-  })()
-  document.getElementById('resumo-grid').innerHTML = `
+function renderResumo(){
+  const svc=getSvc()
+  const isWH=svc?.especial==='wellhub'
+  const vagas=isWH?document.getElementById('wh-vagas').value:document.getElementById('vagas-total').value
+  const ganho=isWH?`R$${(parseInt(vagas)*8).toFixed(0)}–R$${(parseInt(vagas)*35).toFixed(0)}/mês`:
+    (()=>{const c=parseFloat(document.getElementById('custo-plano').value||0);const v=parseInt(vagas);const l=tipoSelecionado==='corporativo'?svc.repasse*v:(svc.repasse*v)-c;return`R$${Math.max(0,l).toFixed(2).replace('.',',')}/mês`})()
+  document.getElementById('resumo-grid').innerHTML=`
     <div class="resumo-item"><div class="resumo-label">Serviço</div><div class="resumo-val">${svc.nome}</div></div>
-    <div class="resumo-item"><div class="resumo-label">Tipo</div><div class="resumo-val">${tipoSelecionado === 'corporativo' ? 'Benefício corporativo' : 'Plano família'}</div></div>
+    <div class="resumo-item"><div class="resumo-label">Tipo</div><div class="resumo-val">${tipoSelecionado==='corporativo'?'Benefício corporativo':'Plano família'}</div></div>
     <div class="resumo-item"><div class="resumo-label">Vagas ofertadas</div><div class="resumo-val">${vagas} vaga${vagas>1?'s':''}</div></div>
-    <div class="resumo-item"><div class="resumo-label">Preço ao membro</div><div class="resumo-val">${precoVenda}</div></div>
-    ${isWellhub ? `<div class="resumo-item"><div class="resumo-label">Planos permitidos</div><div class="resumo-val" style="font-size:13px;">${selecionados}</div></div>` : ''}
-    <div class="resumo-item" style="border:1.5px solid rgba(0,200,100,0.3);background:rgba(0,200,100,0.08);">
-      <div class="resumo-label" style="color:#00875A;">Seu ganho estimado</div>
-      <div class="resumo-val" style="color:#00875A;">${ganho}</div>
-    </div>`
+    ${isWH?`<div class="resumo-item"><div class="resumo-label">Planos permitidos</div><div class="resumo-val" style="font-size:12px;">${Array.from(whPlanosSel).join(', ')}</div></div>`:''}
+    <div class="resumo-item" style="border:1.5px solid rgba(0,200,100,0.3);background:rgba(0,200,100,0.08);"><div class="resumo-label" style="color:#00875A;">Seu ganho estimado</div><div class="resumo-val" style="color:#00875A;">${ganho}</div></div>`
 }
 
-async function publicarPiscina() {
-  if (!document.getElementById('aceite').checked) { showMsg('Aceite os termos para publicar.','error'); return }
-  const btn = document.getElementById('btn-publicar')
-  btn.disabled = true; btn.textContent = 'Publicando...'
+async function publicarPiscina(){
+  if(!document.getElementById('aceite').checked){showMsg('Aceite os termos para publicar.','error');return}
+  const btn=document.getElementById('btn-publicar')
+  btn.disabled=true;btn.textContent='Publicando...'
   hideMsg()
-  const svc = getSvc()
-  const isWellhub = svc?.especial === 'wellhub'
-  const vagas = parseInt(isWellhub ? document.getElementById('wh-vagas').value : document.getElementById('vagas-total').value)
-  const desc = isWellhub ? document.getElementById('wh-descricao').value.trim() : document.getElementById('descricao').value.trim()
-  const precoVenda = isWellhub ? 0 : svc.precoVenda
-  const { error } = await sb.from('piscinas').insert({
-    dono_id: userId, servico: svc.nome, descricao: desc,
-    vagas_total: vagas, vagas_ocupadas: 0,
-    preco_por_vaga: precoVenda, status: 'aberta', icone_url: null
+  const svc=getSvc()
+  const isWH=svc?.especial==='wellhub'
+  const vagas=parseInt(isWH?document.getElementById('wh-vagas').value:document.getElementById('vagas-total').value)
+  const desc=isWH?document.getElementById('wh-descricao').value.trim():document.getElementById('descricao').value.trim()
+  const {error}=await sb.from('piscinas').insert({
+    dono_id:userId,servico:svc.nome,descricao:desc,
+    vagas_total:vagas,vagas_ocupadas:0,
+    preco_por_vaga:isWH?0:svc.precoVenda,status:'aberta',icone_url:null
   })
-  if (error) { showMsg('Erro: ' + error.message,'error'); btn.disabled=false; btn.textContent='🚀 Publicar minha piscina'; return }
+  if(error){showMsg('Erro: '+error.message,'error');btn.disabled=false;btn.textContent='🚀 Publicar minha piscina';return}
   showMsg('✅ Piscina publicada! Redirecionando...','success')
-  setTimeout(() => window.location.href='explorar.html', 2000)
+  setTimeout(()=>window.location.href='explorar.html',2000)
 }
 
 function showMsg(t,tipo){const e=document.getElementById('msg');e.textContent=t;e.className='msg '+tipo;e.style.display='block';}
