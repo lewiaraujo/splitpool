@@ -135,7 +135,8 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 .m-wh-them{font-size:9px;color:var(--bluedark);opacity:.35;text-decoration:line-through;font-weight:500;}
 .m-wh-us{font-size:14px;font-weight:900;color:var(--blue);}
 .m-wh-mo{font-size:9px;color:var(--bluedark);opacity:.35;font-weight:500;}
-/* dono inline (compacto) */
+.m-wh-access{font-size:9px;font-weight:700;color:var(--green);margin-top:3px;}
+/* descrição */
 .m-owner{display:flex;align-items:center;gap:10px;background:#f5f9ff;border-radius:10px;padding:9px 12px;}
 .m-owner-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;}
 .m-owner-name{font-size:13px;font-weight:800;color:var(--bluedark);}
@@ -260,7 +261,7 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
       </div>
       <!-- wellhub selecionável -->
       <div id="m-wh-block" style="display:none;">
-        <div class="m-wh-title">Escolha seu plano</div>
+        <div class="m-wh-title">Escolha seu plano — acesso aberto a qualquer pessoa</div>
         <div class="m-wh-grid" id="m-wh-grid"></div>
         <div class="m-wh-hint" id="m-wh-hint">Selecione um plano para continuar</div>
       </div>
@@ -508,8 +509,8 @@ function abrirModal(id) {
     g.innerHTML = WH_PLANS.map((pl,i) => `
       <div class="m-wh-item" onclick="selecionarWhPlano(this,WH_PLANS[${i}])">
         <div class="m-wh-name">${pl.n}</div>
-        <div class="m-wh-them">Sem Splitpool: ${fmtR(pl.of)}/mês</div>
         <div class="m-wh-us">${fmtR(pl.sp)}<span class="m-wh-mo">/mês</span></div>
+        <div class="m-wh-access">✓ Acesso livre, sem vínculo</div>
       </div>`).join('')
   } else {
     document.getElementById('m-price-block').style.display='block'
