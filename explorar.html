@@ -64,6 +64,7 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 .card-info{flex:1;}
 .card-servico{font-size:17px;font-weight:800;color:var(--bluedark);line-height:1.2;}
 .card-dono{font-size:12px;color:var(--bluedark);opacity:.45;margin-top:3px;font-weight:500;}
+.card-code{display:inline-flex;align-items:center;gap:4px;background:#f0f6ff;border:1px solid rgba(18,85,204,0.18);border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--blue);margin-top:4px;}
 .card-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:6px;}
 .badge-aberta{background:rgba(0,200,100,0.12);color:#00875A;border:1px solid rgba(0,200,100,0.25);}
 .badge-fechada{background:rgba(200,0,0,0.08);color:#991B1B;border:1px solid rgba(200,0,0,0.15);}
@@ -88,89 +89,75 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 .empty h3{font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:8px;}
 .empty p{font-size:14px;color:var(--bluedark);opacity:.55;font-weight:500;}
 
-/* MODAL DETALHE — enriquecido mobile-first */
-.modal-overlay{position:fixed;inset:0;background:rgba(5,20,70,0.6);backdrop-filter:blur(12px);z-index:1000;display:none;align-items:flex-end;justify-content:center;padding:0;}
+/* MODAL DETALHE — compacto mobile-first, sem scroll */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,20,70,0.6);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:flex-end;justify-content:center;padding:0;}
 .modal-overlay.open{display:flex;}
-@keyframes mIn{from{transform:translateY(100%);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.modal{background:#fff;border-radius:24px 24px 0 0;padding:0;width:100%;max-width:560px;position:relative;animation:mIn .28s cubic-bezier(.22,1,.36,1);box-shadow:0 -8px 40px rgba(0,20,80,.18);max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;}
-
-/* handle bar */
-.modal-handle{width:40px;height:4px;background:rgba(0,0,0,.12);border-radius:2px;margin:12px auto 0;}
-
-/* header */
-.modal-header{display:flex;align-items:center;gap:14px;padding:18px 20px 0;}
-.modal-ico{width:60px;height:60px;border-radius:14px;overflow:hidden;background:#f0f6ff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:var(--blue);flex-shrink:0;}
-.modal-ico img{width:60px;height:60px;object-fit:cover;}
-.modal-title{font-size:20px;font-weight:900;color:var(--bluedark);line-height:1.2;}
-.modal-sub{font-size:12px;color:var(--bluedark);opacity:.45;margin-top:3px;font-weight:500;}
-.modal-close{margin-left:auto;background:rgba(0,0,0,.06);border:none;color:var(--bluedark);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-
-/* body */
-.modal-body{padding:16px 20px 24px;display:flex;flex-direction:column;gap:14px;}
-
+@keyframes mIn{from{transform:translateY(60px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:540px;position:relative;animation:mIn .25s cubic-bezier(.22,1,.36,1);box-shadow:0 -6px 32px rgba(0,20,80,.15);display:flex;flex-direction:column;}
+.modal-handle{width:36px;height:4px;background:rgba(0,0,0,.1);border-radius:2px;margin:10px auto 0;flex-shrink:0;}
+.modal-header{display:flex;align-items:center;gap:12px;padding:12px 16px 0;flex-shrink:0;}
+.modal-ico{width:48px;height:48px;border-radius:12px;overflow:hidden;background:#f0f6ff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--blue);flex-shrink:0;}
+.modal-ico img{width:48px;height:48px;object-fit:cover;}
+.modal-title{font-size:17px;font-weight:900;color:var(--bluedark);line-height:1.2;}
+.modal-sub{font-size:11px;color:var(--bluedark);opacity:.4;margin-top:2px;font-weight:500;}
+.modal-close{margin-left:auto;background:rgba(0,0,0,.06);border:none;color:var(--bluedark);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.modal-body{padding:10px 16px 8px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;flex:1;}
 /* código + vagas */
-.modal-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.m-code{display:inline-flex;align-items:center;gap:5px;background:#f0f6ff;border:1px solid rgba(18,85,204,0.2);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--blue);}
+.modal-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.m-code{display:inline-flex;align-items:center;gap:4px;background:#f0f6ff;border:1px solid rgba(18,85,204,0.2);border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--blue);}
 .m-code span{font-weight:500;opacity:.5;color:var(--bluedark);}
-.m-vagas-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;}
+.m-vagas-pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
 .m-vagas-pill.ok{background:#e6fff8;color:#00875A;border:1px solid rgba(0,168,120,0.25);}
 .m-vagas-pill.last{background:#fff8e0;color:#b07000;border:1px solid rgba(180,120,0,0.2);}
 .m-vagas-pill.full{background:#fff0f0;color:#c0392b;border:1px solid rgba(192,57,43,0.2);}
-
-/* comparativo de preço */
-.m-price-block{background:#f5f9ff;border-radius:14px;padding:16px;}
-.m-price-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-bottom:12px;}
-.m-price-row{display:grid;grid-template-columns:1fr 20px 1fr;align-items:center;gap:6px;}
-.m-pcol{display:flex;flex-direction:column;gap:2px;}
-.m-plbl{font-size:11px;font-weight:600;color:var(--bluedark);opacity:.5;}
-.m-pval{font-size:26px;font-weight:900;color:var(--bluedark);line-height:1;font-family:'Inter',sans-serif;}
-.m-pcol.them .m-pval{text-decoration:line-through;opacity:.3;font-size:20px;}
+/* comparativo preço */
+.m-price-block{background:#f5f9ff;border-radius:12px;padding:12px 14px;}
+.m-price-label{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-bottom:8px;}
+.m-price-row{display:grid;grid-template-columns:1fr 18px 1fr;align-items:center;gap:4px;}
+.m-pcol{display:flex;flex-direction:column;gap:1px;}
+.m-plbl{font-size:10px;font-weight:600;color:var(--bluedark);opacity:.5;}
+.m-pval{font-size:22px;font-weight:900;color:var(--bluedark);line-height:1;}
+.m-pcol.them .m-pval{text-decoration:line-through;opacity:.3;font-size:17px;}
 .m-pcol.us .m-pval{color:var(--blue);}
-.m-pmo{font-size:11px;color:var(--bluedark);opacity:.4;font-weight:500;}
-.m-parrow{font-size:14px;color:var(--bluedark);opacity:.25;text-align:center;}
-.m-anual-row{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(0,180,210,0.2);display:none;grid-template-columns:1fr 20px 1fr;align-items:center;gap:6px;}
+.m-pmo{font-size:10px;color:var(--bluedark);opacity:.4;font-weight:500;}
+.m-parrow{font-size:13px;color:var(--bluedark);opacity:.2;text-align:center;}
+.m-anual-row{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,180,210,0.2);display:none;grid-template-columns:1fr 18px 1fr;align-items:center;gap:4px;}
 .m-anual-row.show{display:grid;}
-.m-anual-val{font-size:13px;font-weight:700;color:var(--bluedark);opacity:.35;text-decoration:line-through;}
-.m-anual-note{font-size:11px;color:var(--bluedark);opacity:.35;font-weight:500;}
-
-/* wellhub grid */
-.m-wh-title{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-bottom:10px;}
-.m-wh-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
-.m-wh-item{border:1.5px solid rgba(0,180,210,0.18);border-radius:10px;padding:10px 12px;background:rgba(255,255,255,0.7);}
-.m-wh-name{font-size:12px;font-weight:800;color:var(--bluedark);margin-bottom:3px;}
-.m-wh-them{font-size:10px;color:var(--bluedark);opacity:.35;text-decoration:line-through;font-weight:500;}
-.m-wh-us{font-size:15px;font-weight:900;color:var(--blue);}
-.m-wh-mo{font-size:10px;color:var(--bluedark);opacity:.35;font-weight:500;}
-
-/* descrição */
-.m-desc-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-bottom:6px;}
-.m-desc-text{font-size:13px;color:var(--bluedark);opacity:.65;line-height:1.7;font-weight:500;}
-
-/* dono */
-.m-owner{display:flex;align-items:center;gap:12px;background:#f5f9ff;border-radius:12px;padding:12px 14px;}
-.m-owner-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#fff;flex-shrink:0;}
-.m-owner-name{font-size:14px;font-weight:800;color:var(--bluedark);}
-.m-owner-lv{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:3px;}
+.m-anual-val{font-size:12px;font-weight:700;color:var(--bluedark);opacity:.35;text-decoration:line-through;}
+.m-anual-note{font-size:10px;color:var(--bluedark);opacity:.35;font-weight:500;}
+/* wellhub — selecionável */
+.m-wh-title{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-bottom:7px;}
+.m-wh-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+.m-wh-item{border:1.5px solid rgba(0,180,210,0.18);border-radius:9px;padding:8px 10px;background:#fff;cursor:pointer;transition:.15s;}
+.m-wh-item:hover{border-color:var(--blue);}
+.m-wh-item.selected{border-color:var(--blue);background:#f0f6ff;box-shadow:0 0 0 2px rgba(18,85,204,0.15);}
+.m-wh-name{font-size:11px;font-weight:800;color:var(--bluedark);margin-bottom:2px;}
+.m-wh-them{font-size:9px;color:var(--bluedark);opacity:.35;text-decoration:line-through;font-weight:500;}
+.m-wh-us{font-size:14px;font-weight:900;color:var(--blue);}
+.m-wh-mo{font-size:9px;color:var(--bluedark);opacity:.35;font-weight:500;}
+/* dono inline (compacto) */
+.m-owner{display:flex;align-items:center;gap:10px;background:#f5f9ff;border-radius:10px;padding:9px 12px;}
+.m-owner-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;}
+.m-owner-name{font-size:13px;font-weight:800;color:var(--bluedark);}
+.m-owner-lv{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:2px;}
 .m-owner-lv.iniciante{background:rgba(18,85,204,0.07);color:var(--blue);}
 .m-owner-lv.verificado{background:#e6fff8;color:#00875A;}
 .m-owner-lv.elite{background:#fff8e0;color:#b07000;}
-.m-owner-right{margin-left:auto;font-size:10px;color:var(--bluedark);opacity:.4;font-weight:600;text-align:right;line-height:1.5;}
-
-/* trust */
-.m-trust{display:flex;flex-wrap:wrap;gap:7px;}
-.m-trust-item{display:flex;align-items:center;gap:6px;background:#f5f9ff;border:1px solid rgba(0,180,210,0.15);border-radius:8px;padding:7px 10px;font-size:11px;font-weight:600;color:var(--bluedark);}
-.m-trust-item svg{width:13px;height:13px;color:var(--blue);flex-shrink:0;}
-
-/* cta */
-.m-cta{padding:0 20px 28px;}
-.modal-btn{width:100%;padding:16px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(18,85,204,0.35);transition:.2s;}
-.modal-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(18,85,204,0.5);}
+.m-owner-right{margin-left:auto;font-size:9px;color:var(--bluedark);opacity:.35;font-weight:600;text-align:right;line-height:1.4;}
+/* trust compacto — 1 linha */
+.m-trust{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;}
+.m-trust-item{display:flex;align-items:center;gap:5px;background:#f5f9ff;border:1px solid rgba(0,180,210,0.12);border-radius:7px;padding:5px 8px;font-size:10px;font-weight:600;color:var(--bluedark);white-space:nowrap;flex-shrink:0;}
+.m-trust-item svg{width:11px;height:11px;color:var(--blue);flex-shrink:0;}
+/* cta fixo */
+.m-cta{padding:8px 16px 20px;flex-shrink:0;}
+.modal-btn{width:100%;padding:14px;border-radius:11px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(18,85,204,0.3);transition:.2s;}
+.modal-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(18,85,204,0.45);}
 .modal-btn:disabled{background:#93C5FD;box-shadow:none;cursor:not-allowed;transform:none;}
-
+.m-wh-hint{font-size:10px;color:var(--bluedark);opacity:.4;text-align:center;margin-top:4px;font-weight:500;}
 @media(min-width:600px){
   .modal-overlay{align-items:center;padding:1rem;}
-  .modal{border-radius:20px;max-height:88vh;}
-  @keyframes mIn{from{transform:scale(.94) translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
+  .modal{border-radius:20px;max-height:86vh;}
+  @keyframes mIn{from{transform:scale(.95) translateY(16px);opacity:0;}to{transform:none;opacity:1;}}
 }
 
 /* TOAST */
@@ -236,7 +223,6 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 <div class="modal-overlay" id="modal-detalhe">
   <div class="modal">
     <div class="modal-handle"></div>
-    <!-- header -->
     <div class="modal-header">
       <div class="modal-ico" id="m-ico"></div>
       <div style="flex:1;">
@@ -245,14 +231,12 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
       </div>
       <button class="modal-close" onclick="fecharModal()">✕</button>
     </div>
-    <!-- body -->
     <div class="modal-body">
-      <!-- código + vagas -->
       <div class="modal-meta">
-        <div class="m-code"><span>Código</span> <strong id="m-code">SP-????</strong></div>
+        <div class="m-code"><span>Cód.</span> <strong id="m-code">SP-????</strong></div>
         <div class="m-vagas-pill ok" id="m-vagas-pill"><span id="m-vagas-txt">? vagas</span></div>
       </div>
-      <!-- comparativo preço (não-Wellhub) -->
+      <!-- preço comparativo (não-Wellhub) -->
       <div class="m-price-block" id="m-price-block">
         <div class="m-price-label">Comparativo de preço</div>
         <div class="m-price-row">
@@ -274,24 +258,20 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
           <div><div class="m-anual-note">Mesmo preço Splitpool</div></div>
         </div>
       </div>
-      <!-- wellhub plans -->
+      <!-- wellhub selecionável -->
       <div id="m-wh-block" style="display:none;">
-        <div class="m-wh-title">Planos disponíveis nesta piscina</div>
+        <div class="m-wh-title">Escolha seu plano</div>
         <div class="m-wh-grid" id="m-wh-grid"></div>
-      </div>
-      <!-- descrição -->
-      <div>
-        <div class="m-desc-label">Sobre esta piscina</div>
-        <div class="m-desc-text" id="m-desc"></div>
+        <div class="m-wh-hint" id="m-wh-hint">Selecione um plano para continuar</div>
       </div>
       <!-- dono -->
       <div class="m-owner">
         <div class="m-owner-av" id="m-owner-av">?</div>
         <div>
-          <div class="m-owner-name" id="m-owner-name">Dono</div>
+          <div class="m-owner-name" id="m-owner-name">Dono verificado</div>
           <div class="m-owner-lv iniciante" id="m-owner-lv">Iniciante</div>
         </div>
-        <div class="m-owner-right">Dono verificado<br>pelo Splitpool</div>
+        <div class="m-owner-right">Verificado<br>pelo Splitpool</div>
       </div>
       <!-- trust -->
       <div class="m-trust">
@@ -301,15 +281,14 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
         </div>
         <div class="m-trust-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          72h para confirmar acesso
+          72h para confirmar
         </div>
         <div class="m-trust-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-          Reembolso se não funcionar
+          Reembolso garantido
         </div>
       </div>
     </div>
-    <!-- cta -->
     <div class="m-cta">
       <button class="modal-btn" id="m-btn" onclick="entrarPiscina()">Entrar nesta piscina 🏊</button>
     </div>
@@ -427,6 +406,7 @@ function renderizar() {
     const disponiveis = p.vagas_total - p.vagas_ocupadas
     const pct = Math.round((p.vagas_ocupadas / p.vagas_total) * 100)
     const esgotado = disponiveis <= 0
+    const codigo = poolCode(p.id)
     return `
     <div class="card" onclick="abrirModal(${p.id})">
       <div class="card-top">
@@ -434,6 +414,7 @@ function renderizar() {
         <div class="card-info">
           <div class="card-servico">${p.servico}</div>
           <div class="card-dono">Piscina verificada</div>
+          <div class="card-code">${codigo}</div>
           <span class="card-badge ${esgotado ? 'badge-fechada' : 'badge-aberta'}">${esgotado ? 'Sem vagas' : `${disponiveis} vaga${disponiveis > 1 ? 's' : ''} livre${disponiveis > 1 ? 's' : ''}`}</span>
         </div>
         <div class="card-preco">
@@ -441,7 +422,6 @@ function renderizar() {
           <div class="preco-label">/mês</div>
         </div>
       </div>
-      ${p.descricao ? `<div class="card-desc">${p.descricao}</div>` : ''}
       <div>
         <div class="card-vagas">${p.vagas_ocupadas}/${p.vagas_total} vagas ocupadas</div>
         <div class="vagas-bar"><div class="vagas-fill" style="width:${pct}%"></div></div>
@@ -462,6 +442,8 @@ function mostrarVazio(titulo, texto) {
       <p>${texto}</p>
     </div>`
 }
+
+let whPlanoSelecionado = null
 
 const CAT_MODAL = {
   'Microsoft 365 Family':{mensal:51.00,anual:49.92,sp:25.50},
@@ -487,35 +469,44 @@ const WH_PLANS = [
 function fmtR(v){return'R$'+Number(v).toFixed(2).replace('.',',');}
 function poolCode(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var s='';for(var i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
 
+
+
+function selecionarWhPlano(el, plano) {
+  whPlanoSelecionado = plano
+  document.querySelectorAll('.m-wh-item').forEach(i => i.classList.remove('selected'))
+  el.classList.add('selected')
+  const btn = document.getElementById('m-btn')
+  btn.disabled = false
+  btn.textContent = `Entrar com plano ${plano.n} — ${fmtR(plano.sp)}/mês 🏊`
+  document.getElementById('m-wh-hint').textContent = ''
+}
+
 function abrirModal(id) {
   const p = todasPiscinas.find(x => x.id === id)
   if (!p) return
   piscinaAtual = p
+  whPlanoSelecionado = null
   const livre = p.vagas_total - p.vagas_ocupadas
   const isWH = p.servico.toLowerCase().includes('wellhub')
 
-  // ícone + título
   document.getElementById('m-ico').innerHTML = getIcone(p.servico, p.icone_url)
   document.getElementById('m-titulo').textContent = p.servico
-
-  // código
   document.getElementById('m-code').textContent = poolCode(p.id)
 
-  // vagas pill
   const pill = document.getElementById('m-vagas-pill')
   const vtxt = document.getElementById('m-vagas-txt')
   if(livre===0){pill.className='m-vagas-pill full';vtxt.textContent='Piscina lotada';}
   else if(livre===1){pill.className='m-vagas-pill last';vtxt.textContent='Última vaga';}
   else{pill.className='m-vagas-pill ok';vtxt.textContent=livre+' vagas livres';}
 
-  // preços
   const cat = CAT_MODAL[p.servico] || null
   if(isWH){
     document.getElementById('m-price-block').style.display='none'
     document.getElementById('m-wh-block').style.display='block'
+    document.getElementById('m-wh-hint').textContent = 'Selecione um plano para continuar'
     const g = document.getElementById('m-wh-grid')
-    g.innerHTML = WH_PLANS.map(pl=>`
-      <div class="m-wh-item">
+    g.innerHTML = WH_PLANS.map((pl,i) => `
+      <div class="m-wh-item" onclick="selecionarWhPlano(this,WH_PLANS[${i}])">
         <div class="m-wh-name">${pl.n}</div>
         <div class="m-wh-them">Sem Splitpool: ${fmtR(pl.of)}/mês</div>
         <div class="m-wh-us">${fmtR(pl.sp)}<span class="m-wh-mo">/mês</span></div>
@@ -529,27 +520,26 @@ function abrirModal(id) {
     document.getElementById('m-psem').textContent = fmtR(sv)
     document.getElementById('m-psp').textContent = fmtR(spv)
     const anualRow = document.getElementById('m-anual-row')
-    if(av && av !== sv){
-      anualRow.classList.add('show')
-      document.getElementById('m-anual-val').textContent = fmtR(av)
-    } else {
-      anualRow.classList.remove('show')
-    }
+    if(av && av !== sv){ anualRow.classList.add('show'); document.getElementById('m-anual-val').textContent = fmtR(av); }
+    else { anualRow.classList.remove('show') }
   }
 
-  // descrição
-  document.getElementById('m-desc').textContent = p.descricao || 'Sem descrição adicional.'
-
-  // dono (fallback sem busca assíncrona — exibe inicial do serviço)
   document.getElementById('m-owner-av').textContent = p.servico[0].toUpperCase()
   document.getElementById('m-owner-name').textContent = 'Dono verificado'
   document.getElementById('m-owner-lv').className = 'm-owner-lv iniciante'
   document.getElementById('m-owner-lv').textContent = 'Iniciante'
 
-  // botão
   const btn = document.getElementById('m-btn')
-  btn.disabled = livre <= 0
-  btn.textContent = livre <= 0 ? 'Sem vagas disponíveis' : 'Entrar nesta piscina 🏊'
+  if(livre <= 0){
+    btn.disabled = true
+    btn.textContent = 'Sem vagas disponíveis'
+  } else if(isWH){
+    btn.disabled = true
+    btn.textContent = 'Selecione um plano acima 👆'
+  } else {
+    btn.disabled = false
+    btn.textContent = 'Entrar nesta piscina 🏊'
+  }
 
   document.getElementById('modal-detalhe').classList.add('open')
 }
@@ -557,12 +547,19 @@ function abrirModal(id) {
 function fecharModal() {
   document.getElementById('modal-detalhe').classList.remove('open')
   piscinaAtual = null
+  whPlanoSelecionado = null
 }
 
 function entrarPiscina() {
   if (!piscinaAtual) return
-  // Redireciona para checkout com o ID da piscina
-  window.location.href = `checkout.html?piscina=${piscinaAtual.id}`
+  const isWH = piscinaAtual.servico.toLowerCase().includes('wellhub')
+  if(isWH && !whPlanoSelecionado) {
+    document.getElementById('m-wh-hint').textContent = '⚠️ Escolha um plano antes de continuar'
+    return
+  }
+  let url = `checkout.html?piscina=${piscinaAtual.id}`
+  if(isWH && whPlanoSelecionado) url += `&plano=${encodeURIComponent(whPlanoSelecionado.n)}&valor=${whPlanoSelecionado.sp}`
+  window.location.href = url
 }
 
 async function logout() {
