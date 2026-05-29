@@ -265,6 +265,20 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
         <div class="m-wh-grid" id="m-wh-grid"></div>
         <div class="m-wh-hint" id="m-wh-hint">Selecione um plano para continuar</div>
       </div>
+      <!-- benefício corporativo (TotalPass) — sem comparativo -->
+      <div id="m-beneficio-block" style="display:none;" class="m-price-block">
+        <div class="m-price-label">Benefício corporativo — acesso aberto</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
+          <div>
+            <div class="m-pval" id="m-beneficio-preco" style="color:var(--blue);">—</div>
+            <div class="m-pmo">por mês</div>
+          </div>
+          <div style="flex:1;background:#e6fff8;border-radius:8px;padding:8px 10px;border:1px solid rgba(0,168,120,0.2);">
+            <div style="font-size:11px;font-weight:800;color:#00875A;margin-bottom:2px;">✓ Acesso livre, sem vínculo</div>
+            <div style="font-size:10px;color:var(--bluedark);opacity:.55;font-weight:500;line-height:1.4;">Normalmente restrito a funcionários de empresas parceiras. Aqui, qualquer pessoa pode entrar.</div>
+          </div>
+        </div>
+      </div>
       <!-- dono -->
       <div class="m-owner">
         <div class="m-owner-av" id="m-owner-av">?</div>
@@ -382,12 +396,15 @@ function setCategoria(cat, el) {
   renderizar()
 }
 
+const BLOCKLIST = ['spotify','youtube','apple one','netflix']
+
 function renderizar() {
   const busca = document.getElementById('busca').value.toLowerCase()
   let lista = todasPiscinas.filter(p => {
     const matchBusca = !busca || p.servico.toLowerCase().includes(busca) || (p.descricao||'').toLowerCase().includes(busca)
     const matchCat = categoriaAtual === 'todos' || getCategoria(p.servico) === categoriaAtual
-    return matchBusca && matchCat
+    const bloqueado = BLOCKLIST.some(b => p.servico.toLowerCase().includes(b))
+    return matchBusca && matchCat && !bloqueado
   })
 
   document.getElementById('total-badge').textContent = `${lista.length} piscina${lista.length !== 1 ? 's' : ''} encontrada${lista.length !== 1 ? 's' : ''}`
@@ -515,14 +532,23 @@ function abrirModal(id) {
   } else {
     document.getElementById('m-price-block').style.display='block'
     document.getElementById('m-wh-block').style.display='none'
-    const sv = cat ? cat.mensal : p.preco_por_vaga
-    const spv = cat ? cat.sp : p.preco_por_vaga
-    const av = cat ? cat.anual : null
-    document.getElementById('m-psem').textContent = fmtR(sv)
-    document.getElementById('m-psp').textContent = fmtR(spv)
-    const anualRow = document.getElementById('m-anual-row')
-    if(av && av !== sv){ anualRow.classList.add('show'); document.getElementById('m-anual-val').textContent = fmtR(av); }
-    else { anualRow.classList.remove('show') }
+    const isBeneficio = ['TotalPass'].some(s => p.servico.toLowerCase().includes(s.toLowerCase()))
+    if(isBeneficio){
+      document.getElementById('m-price-block').style.display='none'
+      document.getElementById('m-beneficio-block').style.display='block'
+      const spv = cat ? cat.sp : p.preco_por_vaga
+      document.getElementById('m-beneficio-preco').textContent = fmtR(spv)
+    } else {
+      document.getElementById('m-beneficio-block').style.display='none'
+      const sv = cat ? cat.mensal : p.preco_por_vaga
+      const spv = cat ? cat.sp : p.preco_por_vaga
+      const av = cat ? cat.anual : null
+      document.getElementById('m-psem').textContent = fmtR(sv)
+      document.getElementById('m-psp').textContent = fmtR(spv)
+      const anualRow = document.getElementById('m-anual-row')
+      if(av && av !== sv){ anualRow.classList.add('show'); document.getElementById('m-anual-val').textContent = fmtR(av); }
+      else { anualRow.classList.remove('show') }
+    }
   }
 
   document.getElementById('m-owner-av').textContent = p.servico[0].toUpperCase()
