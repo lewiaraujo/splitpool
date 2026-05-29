@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splitpool — Checkout</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;--green:#00A878;--text:#0C2461;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;color:var(--text);overflow-x:hidden;background:#3acde8;}
+.pool-bg{position:fixed;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1572331165267-854da2b021d4?w=1920&q=85') center/cover no-repeat;filter:brightness(1.05) saturate(1.1);}
+.pool-overlay{position:fixed;inset:0;z-index:1;background:rgba(160,225,245,0.08);}
+.shimmer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
+.shimmer canvas{position:absolute;inset:0;width:100%;height:100%;}
+.page{position:relative;z-index:10;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);background:rgba(255,255,255,0.72);border-bottom:1px solid rgba(0,180,210,0.18);padding:0 5%;}
+.nav-in{max-width:860px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{height:46px;object-fit:contain;}
+.nav-back{display:flex;align-items:center;gap:6px;color:var(--bluedark);text-decoration:none;font-size:14px;font-weight:600;opacity:.7;transition:.2s;}
+.nav-back:hover{opacity:1;}
+.nav-back svg{width:16px;height:16px;}
+
+.page-wrap{padding:88px 5% 60px;min-height:100vh;}
+.container{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
+
+/* LOADING */
+#loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:60vh;color:var(--bluedark);}
+.spinner{width:36px;height:36px;border:3px solid rgba(18,85,204,0.15);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* CHECKOUT STATE */
+#checkout-state{display:none;flex-direction:column;gap:14px;}
+
+/* SUCCESS STATE */
+#success-state{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:20px;}
+
+.card{background:rgba(255,255,255,0.90);border:1px solid rgba(0,180,210,0.18);border-radius:16px;padding:24px;box-shadow:0 4px 24px rgba(0,20,80,0.09);backdrop-filter:blur(12px);}
+
+/* RESUMO DA PISCINA */
+.resumo-top{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.res-ico{width:52px;height:52px;border-radius:12px;overflow:hidden;background:#f0f6ff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--blue);flex-shrink:0;}
+.res-ico img{width:52px;height:52px;object-fit:cover;}
+.res-nome{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;color:var(--bluedark);}
+.res-sub{font-size:12px;color:var(--bluedark);opacity:.5;font-weight:500;margin-top:2px;}
+.res-code{display:inline-flex;align-items:center;gap:4px;background:#f0f6ff;border:1px solid rgba(18,85,204,0.2);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--blue);margin-top:4px;}
+
+/* COMPARATIVO */
+.price-compare{display:grid;grid-template-columns:1fr 20px 1fr;align-items:center;gap:8px;background:#f5f9ff;border-radius:12px;padding:14px;}
+.pc-col{display:flex;flex-direction:column;gap:2px;}
+.pc-lbl{font-size:11px;font-weight:600;color:var(--bluedark);opacity:.5;}
+.pc-val{font-family:'Nunito',sans-serif;font-size:24px;font-weight:900;color:var(--bluedark);line-height:1;}
+.pc-col.them .pc-val{text-decoration:line-through;opacity:.3;font-size:18px;}
+.pc-col.us .pc-val{color:var(--blue);}
+.pc-mo{font-size:11px;color:var(--bluedark);opacity:.4;font-weight:500;}
+.pc-arrow{font-size:14px;color:var(--bluedark);opacity:.2;text-align:center;}
+
+/* ACESSO LIVRE (Wellhub/TotalPass) */
+.acesso-livre{background:#e6fff8;border:1px solid rgba(0,168,120,0.25);border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;}
+.acesso-livre-ico{font-size:20px;flex-shrink:0;}
+.acesso-livre-title{font-size:13px;font-weight:800;color:#00875A;margin-bottom:3px;}
+.acesso-livre-desc{font-size:12px;color:var(--bluedark);opacity:.6;font-weight:500;line-height:1.5;}
+.acesso-livre-preco{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:var(--blue);margin-top:6px;}
+.acesso-livre-preco span{font-size:12px;font-weight:500;opacity:.5;font-family:'Inter',sans-serif;}
+
+/* PLANO WELLHUB SELECIONADO */
+.plano-sel{background:#f0f6ff;border:1.5px solid rgba(18,85,204,0.2);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
+.plano-sel-nome{font-size:13px;font-weight:800;color:var(--bluedark);}
+.plano-sel-preco{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;color:var(--blue);}
+
+/* MÉTODO PAGAMENTO */
+.metodo-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--bluedark);opacity:.45;margin-bottom:12px;}
+.metodo-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.metodo-tab{border:2px solid rgba(0,180,210,0.2);border-radius:12px;padding:14px;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.6);display:flex;align-items:center;gap:10px;}
+.metodo-tab:hover{border-color:var(--blue);background:#fff;}
+.metodo-tab.sel{border-color:var(--blue);background:#f0f6ff;}
+.metodo-tab-ico{font-size:22px;}
+.metodo-tab-info{}
+.metodo-tab-nome{font-size:13px;font-weight:800;color:var(--bluedark);}
+.metodo-tab-sub{font-size:11px;color:var(--bluedark);opacity:.45;font-weight:500;}
+
+/* PIX */
+.pix-area{display:none;flex-direction:column;align-items:center;gap:14px;}
+.pix-area.show{display:flex;}
+.qr-wrap{background:#fff;border:2px solid rgba(0,180,210,0.2);border-radius:16px;padding:20px;display:flex;align-items:center;justify-content:center;}
+.qr-wrap svg{width:160px;height:160px;}
+.pix-valor{font-family:'Nunito',sans-serif;font-size:28px;font-weight:900;color:var(--bluedark);}
+.pix-chave-wrap{width:100%;}
+.pix-chave-label{font-size:11px;font-weight:700;color:var(--bluedark);opacity:.45;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+.pix-chave-box{display:flex;align-items:center;gap:8px;background:#f5f9ff;border:1px solid rgba(0,180,210,0.2);border-radius:10px;padding:10px 14px;}
+.pix-chave-txt{font-size:11px;font-weight:600;color:var(--bluedark);flex:1;word-break:break-all;opacity:.7;}
+.pix-copy-btn{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.2s;flex-shrink:0;}
+.pix-copy-btn:hover{opacity:.85;}
+.pix-info{font-size:12px;color:var(--bluedark);opacity:.55;font-weight:500;text-align:center;line-height:1.6;}
+
+/* CARTÃO */
+.card-area{display:none;flex-direction:column;gap:12px;}
+.card-area.show{display:flex;}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--bluedark);opacity:.7;margin-bottom:5px;}
+.field input{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.25);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;transition:.2s;}
+.field input:focus{border-color:var(--blue);background:#fff;}
+.field input::placeholder{color:var(--bluedark);opacity:.3;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* TRUST */
+.trust-row{display:flex;flex-wrap:wrap;gap:8px;}
+.trust-item{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.75);border:1px solid rgba(0,180,210,0.18);border-radius:8px;padding:7px 10px;font-size:11px;font-weight:600;color:var(--bluedark);}
+.trust-item svg{width:13px;height:13px;color:var(--blue);flex-shrink:0;}
+
+/* TOTAL + BOTÃO */
+.total-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid rgba(0,180,210,0.15);}
+.total-label{font-size:13px;font-weight:600;color:var(--bluedark);opacity:.6;}
+.total-val{font-family:'Nunito',sans-serif;font-size:26px;font-weight:900;color:var(--bluedark);}
+.total-val small{font-size:13px;font-weight:500;opacity:.5;font-family:'Inter',sans-serif;}
+.btn-pagar{width:100%;padding:16px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(18,85,204,0.35);transition:.25s;}
+.btn-pagar:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(18,85,204,0.45);}
+.btn-pagar:disabled{background:#93C5FD;box-shadow:none;cursor:not-allowed;transform:none;}
+
+/* SUCCESS */
+.success-ico{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--green),#00d68f);display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 8px 32px rgba(0,168,120,0.3);animation:popIn .5s cubic-bezier(.22,1,.36,1);}
+@keyframes popIn{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}
+.success-title{font-family:'Nunito',sans-serif;font-size:26px;font-weight:900;color:var(--bluedark);}
+.success-sub{font-size:14px;color:var(--bluedark);opacity:.6;font-weight:500;line-height:1.7;max-width:340px;}
+.success-card{background:rgba(255,255,255,0.90);border:1px solid rgba(0,180,210,0.18);border-radius:16px;padding:20px 24px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(0,20,80,0.09);}
+.success-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(0,180,210,0.1);font-size:13px;}
+.success-row:last-child{border:none;font-weight:800;}
+.success-row span:first-child{color:var(--bluedark);opacity:.6;font-weight:500;}
+.success-row span:last-child{font-weight:700;color:var(--bluedark);}
+.btn-meus-planos{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;padding:14px 32px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(18,85,204,0.35);transition:.25s;text-decoration:none;display:inline-block;}
+.btn-meus-planos:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(18,85,204,0.45);}
+.success-info{font-size:12px;color:var(--bluedark);opacity:.45;font-weight:500;text-align:center;}
+
+@media(max-width:520px){
+  .card{padding:16px;}
+  .metodo-tabs{grid-template-columns:1fr 1fr;}
+  .field-row{grid-template-columns:1fr;}
+  .pc-val{font-size:20px;}
+  .pix-val{font-size:22px;}
+  .total-val{font-size:22px;}
+}
+</style>
+</head>
+<body>
+<div class="pool-bg"></div>
+<div class="pool-overlay"></div>
+<div class="shimmer"><canvas id="wc"></canvas></div>
+
+<nav>
+  <div class="nav-in">
+    <a href="explorar.html" class="nav-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Voltar
+    </a>
+    <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="Splitpool" class="nav-logo">
+  </div>
+</nav>
+
+<div class="page">
+<div class="page-wrap">
+<div class="container">
+
+  <!-- LOADING -->
+  <div id="loading-state">
+    <div class="spinner"></div>
+    <span style="font-size:14px;font-weight:600;color:var(--bluedark);opacity:.6;">Preparando seu checkout...</span>
+  </div>
+
+  <!-- CHECKOUT -->
+  <div id="checkout-state">
+
+    <!-- RESUMO -->
+    <div class="card">
+      <div class="resumo-top">
+        <div class="res-ico" id="res-ico"></div>
+        <div>
+          <div class="res-nome" id="res-nome">—</div>
+          <div class="res-sub" id="res-sub">Piscina verificada pelo Splitpool</div>
+          <div class="res-code">Cód. <strong id="res-code">SP-????</strong></div>
+        </div>
+      </div>
+
+      <!-- Comparativo (não-benefício) -->
+      <div id="bloco-compare">
+        <div class="price-compare">
+          <div class="pc-col them">
+            <div class="pc-lbl">Sem Splitpool</div>
+            <div class="pc-val" id="pc-sem">—</div>
+            <div class="pc-mo">por mês</div>
+          </div>
+          <div class="pc-arrow">→</div>
+          <div class="pc-col us">
+            <div class="pc-lbl">Na Splitpool</div>
+            <div class="pc-val" id="pc-sp">—</div>
+            <div class="pc-mo">por mês</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acesso livre (Wellhub/TotalPass) -->
+      <div id="bloco-acesso" style="display:none;">
+        <div class="acesso-livre">
+          <div class="acesso-livre-ico">🏋️</div>
+          <div>
+            <div class="acesso-livre-title">✓ Acesso livre, sem vínculo empregatício</div>
+            <div class="acesso-livre-desc">Normalmente restrito a funcionários de empresas parceiras. Pela Splitpool, qualquer pessoa pode entrar — sem precisar checar elegibilidade.</div>
+            <div class="acesso-livre-preco" id="ac-preco">—<span>/mês</span></div>
+          </div>
+        </div>
+        <!-- Plano Wellhub selecionado -->
+        <div class="plano-sel" id="plano-sel" style="display:none;">
+          <div>
+            <div style="font-size:10px;opacity:.45;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Plano selecionado</div>
+            <div class="plano-sel-nome" id="plano-sel-nome">—</div>
+          </div>
+          <div class="plano-sel-preco" id="plano-sel-preco">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGAMENTO -->
+    <div class="card">
+      <div class="metodo-label">Forma de pagamento</div>
+      <div class="metodo-tabs">
+        <div class="metodo-tab sel" id="tab-pix" onclick="setMetodo('pix')">
+          <div class="metodo-tab-ico">⚡</div>
+          <div class="metodo-tab-info">
+            <div class="metodo-tab-nome">PIX</div>
+            <div class="metodo-tab-sub">Instantâneo</div>
+          </div>
+        </div>
+        <div class="metodo-tab" id="tab-cartao" onclick="setMetodo('cartao')">
+          <div class="metodo-tab-ico">💳</div>
+          <div class="metodo-tab-info">
+            <div class="metodo-tab-nome">Cartão</div>
+            <div class="metodo-tab-sub">Crédito ou débito</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PIX -->
+      <div class="pix-area show" id="pix-area">
+        <div class="qr-wrap">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- QR code simulado -->
+            <rect width="100" height="100" fill="white"/>
+            <rect x="5" y="5" width="30" height="30" fill="none" stroke="#1255CC" stroke-width="3"/>
+            <rect x="10" y="10" width="20" height="20" fill="#1255CC"/>
+            <rect x="65" y="5" width="30" height="30" fill="none" stroke="#1255CC" stroke-width="3"/>
+            <rect x="70" y="10" width="20" height="20" fill="#1255CC"/>
+            <rect x="5" y="65" width="30" height="30" fill="none" stroke="#1255CC" stroke-width="3"/>
+            <rect x="10" y="70" width="20" height="20" fill="#1255CC"/>
+            <rect x="40" y="5" width="5" height="5" fill="#1255CC"/>
+            <rect x="50" y="5" width="5" height="5" fill="#1255CC"/>
+            <rect x="45" y="10" width="5" height="5" fill="#1255CC"/>
+            <rect x="40" y="15" width="10" height="5" fill="#1255CC"/>
+            <rect x="40" y="40" width="5" height="5" fill="#1255CC"/>
+            <rect x="50" y="40" width="5" height="5" fill="#1255CC"/>
+            <rect x="60" y="40" width="5" height="5" fill="#1255CC"/>
+            <rect x="45" y="45" width="10" height="5" fill="#1255CC"/>
+            <rect x="40" y="50" width="5" height="5" fill="#1255CC"/>
+            <rect x="55" y="50" width="10" height="5" fill="#1255CC"/>
+            <rect x="65" y="40" width="5" height="25" fill="#1255CC"/>
+            <rect x="70" y="55" width="25" height="5" fill="#1255CC"/>
+            <rect x="70" y="65" width="5" height="30" fill="#1255CC"/>
+            <rect x="80" y="65" width="5" height="5" fill="#1255CC"/>
+            <rect x="80" y="75" width="15" height="5" fill="#1255CC"/>
+            <rect x="40" y="60" width="20" height="5" fill="#1255CC"/>
+            <rect x="40" y="70" width="5" height="25" fill="#1255CC"/>
+            <rect x="50" y="75" width="10" height="5" fill="#1255CC"/>
+            <rect x="55" y="80" width="5" height="15" fill="#1255CC"/>
+          </svg>
+        </div>
+        <div class="pix-valor" id="pix-valor">R$ —</div>
+        <div class="pix-chave-wrap">
+          <div class="pix-chave-label">Chave PIX (copia e cola)</div>
+          <div class="pix-chave-box">
+            <div class="pix-chave-txt" id="pix-chave">00020126580014br.gov.bcb.pix0136splitpool@pagamentos.com.br5204000053039865802BR5913Splitpool</div>
+            <button class="pix-copy-btn" onclick="copiarPix()">Copiar</button>
+          </div>
+        </div>
+        <div class="pix-info">Após o pagamento, confirme o acesso em até <strong>72h</strong>.<br>Pagamento simulado — ambiente de testes.</div>
+      </div>
+
+      <!-- CARTÃO -->
+      <div class="card-area" id="cartao-area">
+        <div class="field">
+          <label>Número do cartão</label>
+          <input type="text" id="cc-num" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCartao(this)">
+        </div>
+        <div class="field">
+          <label>Nome no cartão</label>
+          <input type="text" id="cc-nome" placeholder="Como aparece no cartão" style="text-transform:uppercase;">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Validade</label>
+            <input type="text" id="cc-val" placeholder="MM/AA" maxlength="5" oninput="fmtValidade(this)">
+          </div>
+          <div class="field">
+            <label>CVV</label>
+            <input type="text" id="cc-cvv" placeholder="000" maxlength="4">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--bluedark);opacity:.4;font-weight:500;text-align:center;">Ambiente simulado — não insira dados reais de cartão.</div>
+      </div>
+
+      <!-- TOTAL + BOTÃO -->
+      <div class="total-row">
+        <div>
+          <div class="total-label">Total hoje</div>
+          <div class="total-val" id="total-val">R$ —<small>/mês</small></div>
+        </div>
+      </div>
+
+      <!-- TRUST -->
+      <div class="trust-row" style="margin-bottom:16px;">
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Pagamento protegido
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          72h para confirmar acesso
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Reembolso garantido
+        </div>
+      </div>
+
+      <button class="btn-pagar" id="btn-pagar" onclick="confirmarPagamento()">Confirmar pagamento</button>
+    </div>
+
+  </div><!-- /checkout-state -->
+
+  <!-- SUCCESS -->
+  <div id="success-state">
+    <div class="success-ico">✓</div>
+    <div class="success-title">Pagamento confirmado! 🎉</div>
+    <div class="success-sub">Sua vaga está reservada. O dono receberá a solicitação e você terá acesso em até <strong>72h</strong>.</div>
+    <div class="success-card" id="success-card"></div>
+    <a href="meus-planos.html" class="btn-meus-planos">Ver meus planos →</a>
+    <div class="success-info">Você receberá um e-mail com os detalhes da sua assinatura.</div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<script>
+const SBU='https://eawfweuamtwlsilrkgoo.supabase.co'
+const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
+const {createClient}=supabase
+const sb=createClient(SBU,SBK)
+const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/'
+
+const CAT={
+  'Microsoft 365 Family':{icon:'microsoft_icon.png',mensal:51.00,sp:25.50},
+  'Microsoft 365':{icon:'microsoft_icon.png',mensal:51.00,sp:25.50},
+  'Duolingo Super Família':{icon:'duolingo_icon.png',mensal:14.99,sp:7.50},
+  'Duolingo Super':{icon:'duolingo_icon.png',mensal:14.99,sp:7.50},
+  'Duolingo Max Família':{icon:'duolingo_icon.png',mensal:33.33,sp:16.70},
+  'Duolingo Max':{icon:'duolingo_icon.png',mensal:33.33,sp:16.70},
+  'Canva Teams':{icon:null,mensal:24.17,sp:12.10},
+  'Notion Team':{icon:'Notion_icon.png',mensal:50.00,sp:25.00},
+  'Claude Pro':{icon:'claude-ai_icon.jpg',mensal:100.00,sp:50.00},
+  'Wellhub':{icon:'wellhub_gympass_icon.png',beneficio:true},
+  'TotalPass':{icon:null,beneficio:true,sp:59.90},
+  'Alura':{icon:null,mensal:99.90,sp:39.90},
+}
+
+function fmt(v){return'R$ '+Number(v).toFixed(2).replace('.',',')}
+function poolCode(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var s='';for(var i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
+
+let metodo='pix'
+let precoFinal=0
+let piscinaData=null
+
+function setMetodo(m){
+  metodo=m
+  document.getElementById('tab-pix').classList.toggle('sel',m==='pix')
+  document.getElementById('tab-cartao').classList.toggle('sel',m==='cartao')
+  document.getElementById('pix-area').classList.toggle('show',m==='pix')
+  document.getElementById('cartao-area').classList.toggle('show',m==='cartao')
+  const btn=document.getElementById('btn-pagar')
+  btn.textContent=m==='pix'?'Confirmar pagamento via PIX':'Confirmar pagamento com cartão'
+}
+
+function fmtCartao(el){
+  let v=el.value.replace(/\D/g,'').substring(0,16)
+  el.value=v.replace(/(.{4})/g,'$1 ').trim()
+}
+function fmtValidade(el){
+  let v=el.value.replace(/\D/g,'').substring(0,4)
+  if(v.length>2) v=v.substring(0,2)+'/'+v.substring(2)
+  el.value=v
+}
+function copiarPix(){
+  const chave=document.getElementById('pix-chave').textContent
+  navigator.clipboard.writeText(chave).catch(()=>{})
+  const btn=document.querySelector('.pix-copy-btn')
+  btn.textContent='Copiado!'
+  btn.style.background='var(--green)'
+  setTimeout(()=>{btn.textContent='Copiar';btn.style.background=''},2000)
+}
+
+async function load(){
+  const ps=new URLSearchParams(window.location.search)
+  const id=ps.get('piscina')
+  const planoNome=ps.get('plano')
+  const planoValor=ps.get('valor')
+
+  if(!id){window.location.href='explorar.html';return}
+
+  // Verifica sessão
+  const {data:sess}=await sb.auth.getSession()
+  if(!sess.session){window.location.href='cadastro.html';return}
+
+  try{
+    const r=await fetch(SBU+'/rest/v1/piscinas?id=eq.'+id+'&select=*',
+      {headers:{'apikey':SBK,'Authorization':'Bearer '+SBK}})
+    const d=await r.json()
+    if(!d||!d.length){window.location.href='explorar.html';return}
+    piscinaData=d[0]
+    render(piscinaData,planoNome,planoValor)
+  }catch(e){window.location.href='explorar.html';}
+}
+
+function render(p,planoNome,planoValor){
+  document.getElementById('loading-state').style.display='none'
+  document.getElementById('checkout-state').style.display='flex'
+
+  const cat=CAT[p.servico]||{}
+  const isBeneficio=!!cat.beneficio
+  const isWH=p.servico.toLowerCase().includes('wellhub')
+
+  // Ícone
+  const ico=document.getElementById('res-ico')
+  if(cat.icon){
+    ico.innerHTML=`<img src="${BASE+cat.icon}" alt="${p.servico}" onerror="this.parentElement.textContent='${p.servico[0]}'"/>`
+  }else{ico.textContent=p.servico[0]}
+
+  document.getElementById('res-nome').textContent=p.servico
+  document.getElementById('res-code').textContent=poolCode(p.id)
+  document.title='Splitpool — Checkout · '+p.servico
+
+  // Preço
+  if(isBeneficio){
+    document.getElementById('bloco-compare').style.display='none'
+    document.getElementById('bloco-acesso').style.display='block'
+    if(isWH && planoNome && planoValor){
+      precoFinal=parseFloat(planoValor)
+      document.getElementById('ac-preco').innerHTML=fmt(precoFinal)+'<span>/mês</span>'
+      document.getElementById('plano-sel').style.display='flex'
+      document.getElementById('plano-sel-nome').textContent='Wellhub '+planoNome
+      document.getElementById('plano-sel-preco').textContent=fmt(precoFinal)
+    }else{
+      precoFinal=cat.sp||p.preco_por_vaga
+      document.getElementById('ac-preco').innerHTML=fmt(precoFinal)+'<span>/mês</span>'
+    }
+  }else{
+    precoFinal=cat.sp||p.preco_por_vaga
+    document.getElementById('pc-sem').textContent=fmt(cat.mensal||p.preco_por_vaga)
+    document.getElementById('pc-sp').textContent=fmt(precoFinal)
+  }
+
+  // Total e PIX
+  document.getElementById('total-val').innerHTML=fmt(precoFinal)+'<small>/mês</small>'
+  document.getElementById('pix-valor').textContent=fmt(precoFinal)
+  document.getElementById('btn-pagar').textContent='Confirmar pagamento via PIX'
+}
+
+async function confirmarPagamento(){
+  const btn=document.getElementById('btn-pagar')
+  if(metodo==='cartao'){
+    const num=document.getElementById('cc-num').value.replace(/\s/g,'')
+    const nome=document.getElementById('cc-nome').value
+    const val=document.getElementById('cc-val').value
+    const cvv=document.getElementById('cc-cvv').value
+    if(num.length<16||!nome||val.length<5||cvv.length<3){
+      alert('Preencha todos os campos do cartão.');return
+    }
+  }
+
+  btn.disabled=true
+  btn.textContent='Processando...'
+
+  // Simulação de pagamento — 2s de delay
+  await new Promise(r=>setTimeout(r,2000))
+
+  // Registrar membro na piscina (simulado — tabela membros futura)
+  // Por ora apenas mostra sucesso
+  mostrarSucesso()
+}
+
+function mostrarSucesso(){
+  document.getElementById('checkout-state').style.display='none'
+  const ss=document.getElementById('success-state')
+  ss.style.display='flex'
+
+  const p=piscinaData
+  const sc=document.getElementById('success-card')
+  sc.innerHTML=`
+    <div class="success-row"><span>Serviço</span><span>${p.servico}</span></div>
+    <div class="success-row"><span>Valor</span><span>${fmt(precoFinal)}/mês</span></div>
+    <div class="success-row"><span>Forma de pagamento</span><span>${metodo==='pix'?'PIX':'Cartão de crédito'}</span></div>
+    <div class="success-row"><span>Prazo de acesso</span><span>Até 72h</span></div>
+    <div class="success-row"><span>Próximo pagamento</span><span>Em 30 dias</span></div>`
+
+  window.scrollTo({top:0,behavior:'smooth'})
+}
+
+// Canvas waves
+;(function(){
+  const c=document.getElementById('wc'),ctx=c.getContext('2d');
+  let W,H,t=0,lines=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;lines=[];for(let i=0;i<7;i++)lines.push({y:H*(0.08+i*0.13),amp:9+i*3,freq:0.005+i*0.002,speed:0.014+i*0.005,phase:Math.random()*Math.PI*2,alpha:0.16+i*0.025});}
+  function draw(){t+=0.012;ctx.clearRect(0,0,W,H);lines.forEach(l=>{ctx.beginPath();ctx.moveTo(0,l.y);for(let x=0;x<=W;x+=6){const y=l.y+Math.sin(x*l.freq+t*l.speed+l.phase)*l.amp+Math.sin(x*l.freq*1.8+t*l.speed*1.4)*l.amp*0.35;ctx.lineTo(x,y);}ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=`rgba(255,255,255,${l.alpha})`;ctx.fill();});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+
+load();
+</script>
+</body>
+</html>
