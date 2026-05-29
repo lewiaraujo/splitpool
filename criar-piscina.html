@@ -119,7 +119,30 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 .resumo-item{background:rgba(18,85,204,0.06);border-radius:10px;padding:1rem;}
 .resumo-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);opacity:.7;margin-bottom:4px;}
 .resumo-val{font-size:15px;font-weight:800;color:var(--bluedark);}
-@media(max-width:700px){main{padding:80px 4% 40px;}.step-btn .step-label{display:none;}}
+/* upload comprovante */
+.upload-area{border:2px dashed rgba(0,180,210,0.35);border-radius:12px;padding:1.5rem;text-align:center;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.5);}
+.upload-area:hover{border-color:var(--blue);background:rgba(18,85,204,0.04);}
+.upload-area.ok{border-color:#00A878;border-style:solid;background:rgba(0,168,120,0.06);}
+.upload-ico{font-size:2rem;margin-bottom:8px;}
+.upload-txt{font-size:13px;font-weight:700;color:var(--bluedark);opacity:.7;}
+.upload-sub{font-size:11px;color:var(--bluedark);opacity:.45;margin-top:4px;font-weight:500;}
+.upload-ok{font-size:13px;font-weight:700;color:#00875A;margin-top:6px;}
+/* campo cartão */
+.card-input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field input[type=text]{width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;transition:.2s;}
+.field input[type=text]:focus{border-color:var(--blue);background:#fff;}
+/* aviso final */
+.aviso-final{border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;}
+.aviso-final .av-title{font-size:14px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+.aviso-final .av-item{font-size:13px;line-height:1.8;font-weight:500;opacity:.8;}
+.av-pending{background:rgba(255,170,0,0.08);border:1.5px solid rgba(255,170,0,0.25);}
+.av-pending .av-title{color:#B45309;}
+.av-money{background:rgba(18,85,204,0.06);border:1.5px solid rgba(18,85,204,0.15);}
+.av-money .av-title{color:var(--blue);}
+/* bloqueio serviço já existente */
+.svc-item.bloqueado{opacity:.4;cursor:not-allowed;position:relative;}
+.svc-item.bloqueado::after{content:'Já criada';position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:#991B1B;background:rgba(255,220,220,0.95);padding:2px 6px;border-radius:4px;white-space:nowrap;}
+@media(max-width:700px){main{padding:80px 4% 40px;}.step-btn .step-label{display:none;}.card-input-row{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -266,27 +289,78 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
     <!-- PASSO 3 -->
     <div class="panel" id="panel-3">
       <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Revise e publique</h2>
-      <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Confirme os dados antes de publicar sua piscina.</p>
+      <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Confirme os dados e envie o comprovante antes de publicar.</p>
       <div class="resumo" id="resumo-grid"></div>
-      <div style="background:rgba(0,200,100,0.08);border:1.5px solid rgba(0,200,100,0.2);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;">
+
+      <!-- COMPROVANTE DO PLANO -->
+      <div class="field" style="margin-bottom:1.5rem;">
+        <label>📎 Comprovante do plano ativo</label>
+        <div class="field-hint" style="margin-bottom:10px;">Envie um print ou PDF mostrando que você tem o plano ativo (tela da assinatura, e-mail de confirmação, etc.).</div>
+        <div class="upload-area" id="upload-area" onclick="document.getElementById('comprovante-input').click()">
+          <input type="file" id="comprovante-input" accept="image/*,.pdf" style="display:none;" onchange="onComprovanteSelected(this)">
+          <div class="upload-ico">📄</div>
+          <div class="upload-txt">Clique para selecionar o arquivo</div>
+          <div class="upload-sub">PNG, JPG ou PDF · Máx. 5MB</div>
+          <div class="upload-ok" id="upload-ok" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- VENCIMENTO DO CARTÃO -->
+      <div class="field" style="margin-bottom:1.5rem;">
+        <label>💳 Data de vencimento do seu cartão</label>
+        <div class="field-hint" style="margin-bottom:10px;">Precisamos saber para quando o plano pode ser renovado automaticamente e para avisar você com antecedência.</div>
+        <div class="card-input-row">
+          <div class="field" style="margin-bottom:0;">
+            <label style="font-size:12px;opacity:.6;">Mês</label>
+            <select id="cartao-mes">
+              <option value="">Mês</option>
+              ${Array.from({length:12},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${String(i+1).padStart(2,'0')}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label style="font-size:12px;opacity:.6;">Ano</label>
+            <select id="cartao-ano">
+              <option value="">Ano</option>
+              ${Array.from({length:8},(_,i)=>`<option value="${2025+i}">${2025+i}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- O QUE ACONTECE APÓS PUBLICAR -->
+      <div style="background:rgba(0,200,100,0.08);border:1.5px solid rgba(0,200,100,0.2);border-radius:12px;padding:1.25rem;margin-bottom:1rem;">
         <div style="font-size:14px;font-weight:800;color:#00875A;margin-bottom:8px;">✅ O que acontece após publicar</div>
         <div style="font-size:13px;color:var(--bluedark);opacity:.7;line-height:1.8;font-weight:500;">
-          • Sua piscina aparece imediatamente no <strong>Explorar</strong><br>
           • Membros entram, pagam e recebem acesso via Splitpool<br>
           • Você recebe via PIX quando houver membros ativos<br>
           • O Splitpool gerencia pagamentos, credenciais e suporte
         </div>
       </div>
+
+      <!-- AVISO: VALIDAÇÃO PENDENTE -->
+      <div class="aviso-final av-pending">
+        <div class="av-title">⏳ Sua piscina ficará visível após validação</div>
+        <div class="av-item">Vamos conferir o comprovante enviado e ativar sua piscina em até <strong>24h úteis</strong>. Você receberá um e-mail assim que estiver no ar.</div>
+      </div>
+
+      <!-- AVISO: REPASSE MENSAL -->
+      <div class="aviso-final av-money">
+        <div class="av-title">💰 Repasses ao fim de cada ciclo mensal</div>
+        <div class="av-item">Os valores são liberados via PIX ao fim de cada mês, após a confirmação de acesso pelos membros. O primeiro mês fica retido como garantia.</div>
+      </div>
+
+      <!-- AVISO TERMOS -->
       <div style="background:rgba(255,170,0,0.08);border:1.5px solid rgba(255,170,0,0.2);border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:13px;color:var(--bluedark);opacity:.8;line-height:1.7;font-weight:500;">
         ⚠️ Ao publicar, você se compromete a manter o serviço ativo. Encerramento sem aviso de 7 dias gera reembolso proporcional aos membros e suspensão temporária do selo verificado.
       </div>
+
       <div class="field" style="display:flex;align-items:flex-start;gap:10px;margin-bottom:1.5rem;">
         <input type="checkbox" id="aceite" style="width:auto;margin-top:3px;flex-shrink:0;">
         <label for="aceite" style="font-size:14px;font-weight:500;color:var(--bluedark);opacity:.8;cursor:pointer;">Li e aceito os termos. Meu plano está ativo e tenho as vagas disponíveis para os membros.</label>
       </div>
       <div class="btn-row">
         <button class="btn-secondary" onclick="goStep(2)">← Voltar</button>
-        <button class="btn-primary" id="btn-publicar" onclick="publicarPiscina()">🚀 Publicar minha piscina</button>
+        <button class="btn-primary" id="btn-publicar" onclick="publicarPiscina()">🚀 Enviar para validação</button>
       </div>
     </div>
   </div>
@@ -299,6 +373,8 @@ const SUPABASE_KEY='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
 const {createClient}=supabase
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY)
 let userId=null,nomeUsuario='',tipoSelecionado=null,svcSelecionado=null,planoAtual=null
+let piscinasExistentes=[] // serviços que o dono já tem piscina ativa
+let comprovanteFile=null
 
 const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/'
 
@@ -383,18 +459,35 @@ sb.auth.getSession().then(({data})=>{
   const email=data.session.user.email
   nomeUsuario=email.split('@')[0].charAt(0).toUpperCase()+email.split('@')[0].slice(1)
   document.getElementById('nav-user').textContent=email.split('@')[0]
-  renderSvcs()
+  // Carrega piscinas existentes do dono para bloquear duplicatas
+  sb.from('piscinas').select('servico').eq('dono_id',userId).neq('status','encerrada').then(({data:d})=>{
+    piscinasExistentes=(d||[]).map(p=>p.servico.toLowerCase())
+    renderSvcs()
+  })
 })
 
 function renderSvcs(){
   const tipo=tipoSelecionado
   const lista=tipo==='corporativo'?SVCS_CORP:tipo==='familia'?SVCS_FAMILIA:[...SVCS_FAMILIA,...SVCS_CORP]
-  document.getElementById('svc-grid').innerHTML=lista.map(s=>`
-    <div class="svc-item ${svcSelecionado?.nome===s.nome?'sel':''}" onclick="selecionarSvc('${s.nome}')">
+  document.getElementById('svc-grid').innerHTML=lista.map(s=>{
+    const jaTem=piscinasExistentes.includes(s.nome.toLowerCase())
+    return`<div class="svc-item ${svcSelecionado?.nome===s.nome?'sel':''} ${jaTem?'bloqueado':''}" onclick="${jaTem?'showMsg(\'Você já tem uma piscina ativa de '+s.nome+'. No MVP só é permitida 1 piscina por serviço.\',\'error\')':'selecionarSvc(\''+s.nome+'\')'}">
       <img src="${s.img}" alt="${s.nome}" onerror="this.style.display='none'">
       <div class="svc-item-name">${s.nome}</div>
       <div class="svc-item-sub">${s.sub}</div>
-    </div>`).join('')
+    </div>`
+  }).join('')
+}
+
+function onComprovanteSelected(input){
+  const file=input.files[0]
+  if(!file) return
+  if(file.size>5*1024*1024){showMsg('Arquivo muito grande. Máximo 5MB.','error');return}
+  comprovanteFile=file
+  const area=document.getElementById('upload-area')
+  area.classList.add('ok')
+  document.getElementById('upload-ok').style.display='block'
+  document.getElementById('upload-ok').textContent='✓ '+file.name+' selecionado'
 }
 
 function renderWellhubGrid(){
@@ -598,21 +691,55 @@ function renderResumo(){
 
 async function publicarPiscina(){
   if(!document.getElementById('aceite').checked){showMsg('Aceite os termos para publicar.','error');return}
+  if(!comprovanteFile){showMsg('Envie o comprovante do plano ativo antes de publicar.','error');return}
+  const mes=document.getElementById('cartao-mes').value
+  const ano=document.getElementById('cartao-ano').value
+  if(!mes||!ano){showMsg('Informe a data de vencimento do seu cartão.','error');return}
+
   const btn=document.getElementById('btn-publicar')
-  btn.disabled=true;btn.textContent='Publicando...'
+  btn.disabled=true;btn.textContent='Enviando...'
   hideMsg()
+
   const svc=getSvc()
   const isWH=svc?.especial==='wellhub'
   const vagas=parseInt(isWH?document.getElementById('wh-vagas').value:document.getElementById('vagas-total').value)
   const desc=isWH?document.getElementById('wh-desc-auto').textContent:document.getElementById('desc-auto').textContent
+
+  // Upload do comprovante no Supabase Storage
+  let comprovanteUrl=null
+  try{
+    const ext=comprovanteFile.name.split('.').pop()
+    const path=`comprovantes/${userId}_${svc.nome.replace(/\s/g,'_')}_${Date.now()}.${ext}`
+    const {data:up,error:upErr}=await sb.storage.from('comprovantes').upload(path,comprovanteFile,{upsert:true})
+    if(!upErr) comprovanteUrl=path
+  }catch(e){}
+
+  // Salva piscina com status pendente e dados do cartão
   const {error}=await sb.from('piscinas').insert({
-    dono_id:userId,servico:svc.nome,descricao:desc,
-    vagas_total:vagas,vagas_ocupadas:0,
-    preco_por_vaga:isWH?0:svc.precoVenda,status:'aberta',icone_url:null
+    dono_id:userId,
+    servico:svc.nome,
+    descricao:desc,
+    vagas_total:vagas,
+    vagas_ocupadas:0,
+    preco_por_vaga:isWH?0:svc.precoVenda,
+    status:'pendente',
+    icone_url:null,
+    cartao_vencimento:`${ano}-${mes}`,
+    comprovante_url:comprovanteUrl
   })
-  if(error){showMsg('Erro: '+error.message,'error');btn.disabled=false;btn.textContent='🚀 Publicar minha piscina';return}
-  showMsg('✅ Piscina publicada! Redirecionando...','success')
-  setTimeout(()=>window.location.href='explorar.html',2000)
+
+  if(error){
+    // Colunas novas podem não existir ainda — salva sem elas como fallback
+    const {error:e2}=await sb.from('piscinas').insert({
+      dono_id:userId,servico:svc.nome,descricao:desc,
+      vagas_total:vagas,vagas_ocupadas:0,
+      preco_por_vaga:isWH?0:svc.precoVenda,status:'pendente',icone_url:null
+    })
+    if(e2){showMsg('Erro: '+e2.message,'error');btn.disabled=false;btn.textContent='🚀 Enviar para validação';return}
+  }
+
+  showMsg('✅ Piscina enviada para validação! Você receberá um e-mail em até 24h úteis.','success')
+  setTimeout(()=>window.location.href='explorar.html',3000)
 }
 
 function showMsg(t,tipo){const e=document.getElementById('msg');e.textContent=t;e.className='msg '+tipo;e.style.display='block';}
