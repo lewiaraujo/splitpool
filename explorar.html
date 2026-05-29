@@ -88,26 +88,90 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 .empty h3{font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:8px;}
 .empty p{font-size:14px;color:var(--bluedark);opacity:.55;font-weight:500;}
 
-/* MODAL DETALHE */
-.modal-overlay{position:fixed;inset:0;background:rgba(5,20,70,0.55);backdrop-filter:blur(12px);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem;}
+/* MODAL DETALHE — enriquecido mobile-first */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,20,70,0.6);backdrop-filter:blur(12px);z-index:1000;display:none;align-items:flex-end;justify-content:center;padding:0;}
 .modal-overlay.open{display:flex;}
-.modal{background:#fff;border-radius:20px;padding:2.5rem;max-width:480px;width:100%;position:relative;animation:mIn .2s ease;box-shadow:0 30px 70px rgba(0,20,80,.2);max-height:90vh;overflow-y:auto;}
-@keyframes mIn{from{transform:scale(.94) translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
-.modal-close{position:absolute;top:16px;right:16px;background:rgba(0,0,0,.06);border:none;color:var(--bluedark);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
-.modal-header{display:flex;align-items:center;gap:16px;margin-bottom:1.5rem;}
-.modal-ico{width:72px;height:72px;border-radius:16px;overflow:hidden;background:#f0f6ff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:var(--blue);flex-shrink:0;}
-.modal-ico img{width:72px;height:72px;object-fit:cover;}
-.modal-title{font-size:22px;font-weight:900;color:var(--bluedark);}
-.modal-sub{font-size:13px;color:var(--bluedark);opacity:.5;margin-top:4px;font-weight:500;}
-.modal-section{margin-bottom:1.25rem;}
-.modal-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);opacity:.7;margin-bottom:6px;}
-.modal-text{font-size:14px;color:var(--bluedark);opacity:.7;line-height:1.7;font-weight:500;}
-.modal-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1.5rem;}
-.mstat{background:#f5f9ff;border-radius:10px;padding:1rem;text-align:center;}
-.mstat-v{font-size:1.5rem;font-weight:900;color:var(--blue);line-height:1;}
-.mstat-l{font-size:11px;color:var(--bluedark);opacity:.5;margin-top:4px;font-weight:600;}
-.modal-btn{width:100%;padding:14px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(18,85,204,0.4);transition:.2s;}
+@keyframes mIn{from{transform:translateY(100%);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal{background:#fff;border-radius:24px 24px 0 0;padding:0;width:100%;max-width:560px;position:relative;animation:mIn .28s cubic-bezier(.22,1,.36,1);box-shadow:0 -8px 40px rgba(0,20,80,.18);max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;}
+
+/* handle bar */
+.modal-handle{width:40px;height:4px;background:rgba(0,0,0,.12);border-radius:2px;margin:12px auto 0;}
+
+/* header */
+.modal-header{display:flex;align-items:center;gap:14px;padding:18px 20px 0;}
+.modal-ico{width:60px;height:60px;border-radius:14px;overflow:hidden;background:#f0f6ff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:var(--blue);flex-shrink:0;}
+.modal-ico img{width:60px;height:60px;object-fit:cover;}
+.modal-title{font-size:20px;font-weight:900;color:var(--bluedark);line-height:1.2;}
+.modal-sub{font-size:12px;color:var(--bluedark);opacity:.45;margin-top:3px;font-weight:500;}
+.modal-close{margin-left:auto;background:rgba(0,0,0,.06);border:none;color:var(--bluedark);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* body */
+.modal-body{padding:16px 20px 24px;display:flex;flex-direction:column;gap:14px;}
+
+/* código + vagas */
+.modal-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.m-code{display:inline-flex;align-items:center;gap:5px;background:#f0f6ff;border:1px solid rgba(18,85,204,0.2);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--blue);}
+.m-code span{font-weight:500;opacity:.5;color:var(--bluedark);}
+.m-vagas-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;}
+.m-vagas-pill.ok{background:#e6fff8;color:#00875A;border:1px solid rgba(0,168,120,0.25);}
+.m-vagas-pill.last{background:#fff8e0;color:#b07000;border:1px solid rgba(180,120,0,0.2);}
+.m-vagas-pill.full{background:#fff0f0;color:#c0392b;border:1px solid rgba(192,57,43,0.2);}
+
+/* comparativo de preço */
+.m-price-block{background:#f5f9ff;border-radius:14px;padding:16px;}
+.m-price-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-bottom:12px;}
+.m-price-row{display:grid;grid-template-columns:1fr 20px 1fr;align-items:center;gap:6px;}
+.m-pcol{display:flex;flex-direction:column;gap:2px;}
+.m-plbl{font-size:11px;font-weight:600;color:var(--bluedark);opacity:.5;}
+.m-pval{font-size:26px;font-weight:900;color:var(--bluedark);line-height:1;font-family:'Inter',sans-serif;}
+.m-pcol.them .m-pval{text-decoration:line-through;opacity:.3;font-size:20px;}
+.m-pcol.us .m-pval{color:var(--blue);}
+.m-pmo{font-size:11px;color:var(--bluedark);opacity:.4;font-weight:500;}
+.m-parrow{font-size:14px;color:var(--bluedark);opacity:.25;text-align:center;}
+.m-anual-row{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(0,180,210,0.2);display:none;grid-template-columns:1fr 20px 1fr;align-items:center;gap:6px;}
+.m-anual-row.show{display:grid;}
+.m-anual-val{font-size:13px;font-weight:700;color:var(--bluedark);opacity:.35;text-decoration:line-through;}
+.m-anual-note{font-size:11px;color:var(--bluedark);opacity:.35;font-weight:500;}
+
+/* wellhub grid */
+.m-wh-title{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-bottom:10px;}
+.m-wh-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.m-wh-item{border:1.5px solid rgba(0,180,210,0.18);border-radius:10px;padding:10px 12px;background:rgba(255,255,255,0.7);}
+.m-wh-name{font-size:12px;font-weight:800;color:var(--bluedark);margin-bottom:3px;}
+.m-wh-them{font-size:10px;color:var(--bluedark);opacity:.35;text-decoration:line-through;font-weight:500;}
+.m-wh-us{font-size:15px;font-weight:900;color:var(--blue);}
+.m-wh-mo{font-size:10px;color:var(--bluedark);opacity:.35;font-weight:500;}
+
+/* descrição */
+.m-desc-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-bottom:6px;}
+.m-desc-text{font-size:13px;color:var(--bluedark);opacity:.65;line-height:1.7;font-weight:500;}
+
+/* dono */
+.m-owner{display:flex;align-items:center;gap:12px;background:#f5f9ff;border-radius:12px;padding:12px 14px;}
+.m-owner-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#fff;flex-shrink:0;}
+.m-owner-name{font-size:14px;font-weight:800;color:var(--bluedark);}
+.m-owner-lv{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:3px;}
+.m-owner-lv.iniciante{background:rgba(18,85,204,0.07);color:var(--blue);}
+.m-owner-lv.verificado{background:#e6fff8;color:#00875A;}
+.m-owner-lv.elite{background:#fff8e0;color:#b07000;}
+.m-owner-right{margin-left:auto;font-size:10px;color:var(--bluedark);opacity:.4;font-weight:600;text-align:right;line-height:1.5;}
+
+/* trust */
+.m-trust{display:flex;flex-wrap:wrap;gap:7px;}
+.m-trust-item{display:flex;align-items:center;gap:6px;background:#f5f9ff;border:1px solid rgba(0,180,210,0.15);border-radius:8px;padding:7px 10px;font-size:11px;font-weight:600;color:var(--bluedark);}
+.m-trust-item svg{width:13px;height:13px;color:var(--blue);flex-shrink:0;}
+
+/* cta */
+.m-cta{padding:0 20px 28px;}
+.modal-btn{width:100%;padding:16px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(18,85,204,0.35);transition:.2s;}
 .modal-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(18,85,204,0.5);}
+.modal-btn:disabled{background:#93C5FD;box-shadow:none;cursor:not-allowed;transform:none;}
+
+@media(min-width:600px){
+  .modal-overlay{align-items:center;padding:1rem;}
+  .modal{border-radius:20px;max-height:88vh;}
+  @keyframes mIn{from{transform:scale(.94) translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
+}
 
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--bluedark);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:2000;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none;}
@@ -171,24 +235,84 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 <!-- MODAL DETALHE -->
 <div class="modal-overlay" id="modal-detalhe">
   <div class="modal">
-    <button class="modal-close" onclick="fecharModal()">✕</button>
+    <div class="modal-handle"></div>
+    <!-- header -->
     <div class="modal-header">
       <div class="modal-ico" id="m-ico"></div>
-      <div>
+      <div style="flex:1;">
         <div class="modal-title" id="m-titulo"></div>
-        <div class="modal-sub" id="m-dono"></div>
+        <div class="modal-sub">Piscina verificada pelo Splitpool</div>
+      </div>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <!-- body -->
+    <div class="modal-body">
+      <!-- código + vagas -->
+      <div class="modal-meta">
+        <div class="m-code"><span>Código</span> <strong id="m-code">SP-????</strong></div>
+        <div class="m-vagas-pill ok" id="m-vagas-pill"><span id="m-vagas-txt">? vagas</span></div>
+      </div>
+      <!-- comparativo preço (não-Wellhub) -->
+      <div class="m-price-block" id="m-price-block">
+        <div class="m-price-label">Comparativo de preço</div>
+        <div class="m-price-row">
+          <div class="m-pcol them">
+            <div class="m-plbl">Sem Splitpool</div>
+            <div class="m-pval" id="m-psem">—</div>
+            <div class="m-pmo">por mês</div>
+          </div>
+          <div class="m-parrow">→</div>
+          <div class="m-pcol us">
+            <div class="m-plbl">Na Splitpool</div>
+            <div class="m-pval" id="m-psp">—</div>
+            <div class="m-pmo">por mês</div>
+          </div>
+        </div>
+        <div class="m-anual-row" id="m-anual-row">
+          <div><div class="m-plbl">Plano anual (÷12)</div><div class="m-anual-val" id="m-anual-val">—</div></div>
+          <div></div>
+          <div><div class="m-anual-note">Mesmo preço Splitpool</div></div>
+        </div>
+      </div>
+      <!-- wellhub plans -->
+      <div id="m-wh-block" style="display:none;">
+        <div class="m-wh-title">Planos disponíveis nesta piscina</div>
+        <div class="m-wh-grid" id="m-wh-grid"></div>
+      </div>
+      <!-- descrição -->
+      <div>
+        <div class="m-desc-label">Sobre esta piscina</div>
+        <div class="m-desc-text" id="m-desc"></div>
+      </div>
+      <!-- dono -->
+      <div class="m-owner">
+        <div class="m-owner-av" id="m-owner-av">?</div>
+        <div>
+          <div class="m-owner-name" id="m-owner-name">Dono</div>
+          <div class="m-owner-lv iniciante" id="m-owner-lv">Iniciante</div>
+        </div>
+        <div class="m-owner-right">Dono verificado<br>pelo Splitpool</div>
+      </div>
+      <!-- trust -->
+      <div class="m-trust">
+        <div class="m-trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Pagamento protegido
+        </div>
+        <div class="m-trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          72h para confirmar acesso
+        </div>
+        <div class="m-trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Reembolso se não funcionar
+        </div>
       </div>
     </div>
-    <div class="modal-stats">
-      <div class="mstat"><div class="mstat-v" id="m-preco"></div><div class="mstat-l">por mês</div></div>
-      <div class="mstat"><div class="mstat-v" id="m-vagas-disp"></div><div class="mstat-l">vagas livres</div></div>
-      <div class="mstat"><div class="mstat-v" id="m-total"></div><div class="mstat-l">vagas total</div></div>
+    <!-- cta -->
+    <div class="m-cta">
+      <button class="modal-btn" id="m-btn" onclick="entrarPiscina()">Entrar nesta piscina 🏊</button>
     </div>
-    <div class="modal-section">
-      <div class="modal-label">Sobre esta piscina</div>
-      <div class="modal-text" id="m-desc"></div>
-    </div>
-    <button class="modal-btn" id="m-btn" onclick="entrarPiscina()">Entrar nesta piscina 🏊</button>
   </div>
 </div>
 
@@ -339,21 +463,93 @@ function mostrarVazio(titulo, texto) {
     </div>`
 }
 
+const CAT_MODAL = {
+  'Microsoft 365 Family':{mensal:51.00,anual:49.92,sp:25.50},
+  'Microsoft 365':{mensal:51.00,anual:49.92,sp:25.50},
+  'Duolingo Super Família':{mensal:14.99,anual:14.99,sp:7.50},
+  'Duolingo Max Família':{mensal:33.33,anual:33.33,sp:16.70},
+  'Duolingo':{mensal:14.99,anual:14.99,sp:7.50},
+  'Canva Teams':{mensal:24.17,anual:24.17,sp:12.10},
+  'Canva':{mensal:24.17,anual:24.17,sp:12.10},
+  'Notion Team':{mensal:50.00,anual:null,sp:25.00},
+  'Notion':{mensal:50.00,anual:null,sp:25.00},
+  'Claude Pro':{mensal:100.00,anual:null,sp:50.00},
+  'Claude':{mensal:100.00,anual:null,sp:50.00},
+  'TotalPass':{mensal:115.00,anual:null,sp:59.90},
+  'Alura':{mensal:99.90,anual:79.92,sp:39.90},
+}
+const WH_PLANS = [
+  {n:'Starter',of:39.99,sp:51.99},{n:'Basic',of:69.99,sp:81.99},{n:'Basic+',of:99.99,sp:112.99},
+  {n:'Silver',of:149.99,sp:169.99},{n:'Silver+',of:199.99,sp:225.99},{n:'Gold',of:319.99,sp:361.99},
+  {n:'Gold+',of:439.99,sp:489.99},{n:'Platinum',of:599.99,sp:649.99},
+  {n:'Diamond',of:699.99,sp:749.99},{n:'Diamond+',of:779.99,sp:829.99}
+]
+function fmtR(v){return'R$'+Number(v).toFixed(2).replace('.',',');}
+function poolCode(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var s='';for(var i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
+
 function abrirModal(id) {
   const p = todasPiscinas.find(x => x.id === id)
   if (!p) return
   piscinaAtual = p
-  const disponiveis = p.vagas_total - p.vagas_ocupadas
+  const livre = p.vagas_total - p.vagas_ocupadas
+  const isWH = p.servico.toLowerCase().includes('wellhub')
 
+  // ícone + título
   document.getElementById('m-ico').innerHTML = getIcone(p.servico, p.icone_url)
   document.getElementById('m-titulo').textContent = p.servico
-  document.getElementById('m-dono').textContent = 'Piscina verificada pelo Splitpool'
-  document.getElementById('m-preco').textContent = `R$${Number(p.preco_por_vaga).toFixed(2).replace('.',',')}`
-  document.getElementById('m-vagas-disp').textContent = disponiveis
-  document.getElementById('m-total').textContent = p.vagas_total
+
+  // código
+  document.getElementById('m-code').textContent = poolCode(p.id)
+
+  // vagas pill
+  const pill = document.getElementById('m-vagas-pill')
+  const vtxt = document.getElementById('m-vagas-txt')
+  if(livre===0){pill.className='m-vagas-pill full';vtxt.textContent='Piscina lotada';}
+  else if(livre===1){pill.className='m-vagas-pill last';vtxt.textContent='Última vaga';}
+  else{pill.className='m-vagas-pill ok';vtxt.textContent=livre+' vagas livres';}
+
+  // preços
+  const cat = CAT_MODAL[p.servico] || null
+  if(isWH){
+    document.getElementById('m-price-block').style.display='none'
+    document.getElementById('m-wh-block').style.display='block'
+    const g = document.getElementById('m-wh-grid')
+    g.innerHTML = WH_PLANS.map(pl=>`
+      <div class="m-wh-item">
+        <div class="m-wh-name">${pl.n}</div>
+        <div class="m-wh-them">Sem Splitpool: ${fmtR(pl.of)}/mês</div>
+        <div class="m-wh-us">${fmtR(pl.sp)}<span class="m-wh-mo">/mês</span></div>
+      </div>`).join('')
+  } else {
+    document.getElementById('m-price-block').style.display='block'
+    document.getElementById('m-wh-block').style.display='none'
+    const sv = cat ? cat.mensal : p.preco_por_vaga
+    const spv = cat ? cat.sp : p.preco_por_vaga
+    const av = cat ? cat.anual : null
+    document.getElementById('m-psem').textContent = fmtR(sv)
+    document.getElementById('m-psp').textContent = fmtR(spv)
+    const anualRow = document.getElementById('m-anual-row')
+    if(av && av !== sv){
+      anualRow.classList.add('show')
+      document.getElementById('m-anual-val').textContent = fmtR(av)
+    } else {
+      anualRow.classList.remove('show')
+    }
+  }
+
+  // descrição
   document.getElementById('m-desc').textContent = p.descricao || 'Sem descrição adicional.'
-  document.getElementById('m-btn').disabled = disponiveis <= 0
-  document.getElementById('m-btn').textContent = disponiveis <= 0 ? 'Sem vagas disponíveis' : 'Entrar nesta piscina 🏊'
+
+  // dono (fallback sem busca assíncrona — exibe inicial do serviço)
+  document.getElementById('m-owner-av').textContent = p.servico[0].toUpperCase()
+  document.getElementById('m-owner-name').textContent = 'Dono verificado'
+  document.getElementById('m-owner-lv').className = 'm-owner-lv iniciante'
+  document.getElementById('m-owner-lv').textContent = 'Iniciante'
+
+  // botão
+  const btn = document.getElementById('m-btn')
+  btn.disabled = livre <= 0
+  btn.textContent = livre <= 0 ? 'Sem vagas disponíveis' : 'Entrar nesta piscina 🏊'
 
   document.getElementById('modal-detalhe').classList.add('open')
 }
