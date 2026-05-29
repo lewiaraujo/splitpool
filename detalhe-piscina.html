@@ -1,1040 +1,300 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Splitpool — Detalhe da Piscina</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --blue: #1255CC;
-      --bluedark: #0A3080;
-      --teal: #00C8D7;
-      --green: #00A878;
-      --white: #ffffff;
-      --glass: rgba(255,255,255,0.12);
-      --glass-border: rgba(255,255,255,0.22);
-      --card-bg: rgba(255,255,255,0.96);
-      --text-dark: #0f1923;
-      --text-mid: #4a5568;
-      --text-light: #718096;
-      --shadow: 0 8px 32px rgba(10,48,128,0.18);
-      --shadow-sm: 0 2px 12px rgba(10,48,128,0.10);
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-      background: #0a1628;
-      color: var(--text-dark);
-      overflow-x: hidden;
-    }
-
-    /* ── CANVAS BACKGROUND ── */
-    #bg-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    /* ── NAV ── */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      background: rgba(10, 18, 40, 0.7);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .nav-logo img {
-      height: 32px;
-      display: block;
-    }
-
-    .nav-back {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: rgba(255,255,255,0.75);
-      text-decoration: none;
-      font-family: 'Sora', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
-    .nav-back:hover { color: #fff; }
-    .nav-back svg { width: 16px; height: 16px; }
-
-    /* ── MAIN CONTENT ── */
-    .page-wrapper {
-      position: relative;
-      z-index: 1;
-      padding-top: 80px;
-      padding-bottom: 120px;
-      min-height: 100vh;
-    }
-
-    .container {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-
-    /* ── LOADING STATE ── */
-    #loading-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      min-height: 60vh;
-      color: rgba(255,255,255,0.6);
-      font-family: 'Sora', sans-serif;
-    }
-
-    .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid rgba(255,255,255,0.1);
-      border-top-color: var(--teal);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── ERROR STATE ── */
-    #error-state {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      min-height: 60vh;
-      color: rgba(255,255,255,0.7);
-      font-family: 'Sora', sans-serif;
-      text-align: center;
-    }
-
-    /* ── HERO CARD ── */
-    #content-state { display: none; }
-
-    .hero-card {
-      background: var(--card-bg);
-      border-radius: 24px;
-      padding: 32px;
-      box-shadow: var(--shadow);
-      margin-bottom: 16px;
-      animation: fadeUp 0.5s ease both;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .hero-top {
-      display: flex;
-      align-items: flex-start;
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-
-    .service-icon {
-      width: 72px;
-      height: 72px;
-      border-radius: 16px;
-      object-fit: cover;
-      flex-shrink: 0;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-      background: #e2e8f0;
-    }
-
-    .service-icon-placeholder {
-      width: 72px;
-      height: 72px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, var(--blue), var(--teal));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      flex-shrink: 0;
-    }
-
-    .hero-info { flex: 1; }
-
-    .service-tag {
-      display: inline-block;
-      background: linear-gradient(90deg, var(--blue), var(--teal));
-      color: #fff;
-      font-family: 'Sora', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border-radius: 20px;
-      margin-bottom: 8px;
-    }
-
-    .service-name {
-      font-family: 'Sora', sans-serif;
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text-dark);
-      line-height: 1.2;
-      margin-bottom: 8px;
-    }
-
-    .pool-code-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #f0f4ff;
-      border: 1px solid #c7d7ff;
-      border-radius: 8px;
-      padding: 4px 10px;
-      font-family: 'Sora', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--blue);
-    }
-
-    .pool-code-badge span { color: var(--text-light); font-weight: 400; }
-
-    .vagas-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .vagas-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-family: 'Sora', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .vagas-pill.available {
-      background: #e6fff8;
-      color: var(--green);
-      border: 1px solid #b3f0de;
-    }
-
-    .vagas-pill.limited {
-      background: #fff8e6;
-      color: #c07700;
-      border: 1px solid #ffe0a3;
-    }
-
-    .vagas-pill.full {
-      background: #fff0f0;
-      color: #c0392b;
-      border: 1px solid #ffc3c3;
-    }
-
-    .vagas-pill svg { width: 14px; height: 14px; }
-
-    /* ── DESCRICAO ── */
-    .desc-text {
-      font-size: 14px;
-      line-height: 1.7;
-      color: var(--text-mid);
-      padding-top: 16px;
-      border-top: 1px solid #eef2f7;
-    }
-
-    /* ── PRICE COMPARISON CARD ── */
-    .price-card {
-      background: var(--card-bg);
-      border-radius: 24px;
-      padding: 28px 32px;
-      box-shadow: var(--shadow);
-      margin-bottom: 16px;
-      animation: fadeUp 0.5s ease 0.1s both;
-    }
-
-    .section-title {
-      font-family: 'Sora', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-light);
-      margin-bottom: 20px;
-    }
-
-    .price-compare {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .price-col {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .price-col.them { opacity: 0.65; }
-
-    .price-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-light);
-      font-family: 'Sora', sans-serif;
-    }
-
-    .price-value {
-      font-family: 'Sora', sans-serif;
-      font-size: 26px;
-      font-weight: 800;
-      color: var(--text-dark);
-      line-height: 1;
-    }
-
-    .price-col.them .price-value {
-      text-decoration: line-through;
-      color: var(--text-light);
-      font-size: 22px;
-    }
-
-    .price-col.us .price-value {
-      color: var(--blue);
-    }
-
-    .price-period {
-      font-size: 12px;
-      color: var(--text-light);
-    }
-
-    .price-arrow {
-      font-size: 20px;
-      color: var(--text-light);
-    }
-
-    .price-annual-note {
-      font-size: 12px;
-      color: var(--text-light);
-      margin-top: 4px;
-    }
-
-    /* Sub-compare row for annual */
-    .price-sub-compare {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 12px;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px dashed #e2e8f0;
-    }
-
-    /* ── WELLHUB PLANS ── */
-    .wellhub-card {
-      background: var(--card-bg);
-      border-radius: 24px;
-      padding: 28px 32px;
-      box-shadow: var(--shadow);
-      margin-bottom: 16px;
-      animation: fadeUp 0.5s ease 0.15s both;
-    }
-
-    .wellhub-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 10px;
-    }
-
-    .wellhub-plan-item {
-      border: 1.5px solid #e2e8f0;
-      border-radius: 14px;
-      padding: 14px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      cursor: default;
-    }
-
-    .wellhub-plan-item:hover {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(18,85,204,0.08);
-    }
-
-    .wh-plan-name {
-      font-family: 'Sora', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-dark);
-    }
-
-    .wh-price-row {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .wh-them {
-      font-size: 11px;
-      color: var(--text-light);
-      text-decoration: line-through;
-    }
-
-    .wh-us {
-      font-family: 'Sora', sans-serif;
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--blue);
-    }
-
-    /* ── OWNER CARD ── */
-    .owner-card {
-      background: var(--card-bg);
-      border-radius: 24px;
-      padding: 24px 32px;
-      box-shadow: var(--shadow);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      animation: fadeUp 0.5s ease 0.2s both;
-    }
-
-    .owner-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--blue), var(--teal));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Sora', sans-serif;
-      font-size: 18px;
-      font-weight: 800;
-      color: #fff;
-      flex-shrink: 0;
-    }
-
-    .owner-info { flex: 1; }
-
-    .owner-name {
-      font-family: 'Sora', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-dark);
-    }
-
-    .owner-level {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      margin-top: 4px;
-      font-size: 12px;
-      font-weight: 500;
-      padding: 3px 10px;
-      border-radius: 20px;
-    }
-
-    .owner-level.iniciante { background: #f0f4ff; color: var(--blue); }
-    .owner-level.verificado { background: #e6fff8; color: var(--green); }
-    .owner-level.elite { background: #fff8e0; color: #b07d00; }
-
-    .owner-level svg { width: 12px; height: 12px; }
-
-    /* ── TRUST ITEMS ── */
-    .trust-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 16px;
-      animation: fadeUp 0.5s ease 0.25s both;
-    }
-
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255,255,255,0.13);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 12px;
-      padding: 10px 14px;
-      color: rgba(255,255,255,0.9);
-      font-size: 13px;
-      font-family: 'Sora', sans-serif;
-      font-weight: 500;
-    }
-
-    .trust-item svg { width: 16px; height: 16px; flex-shrink: 0; }
-
-    /* ── CTA BOTTOM BAR ── */
-    .cta-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      z-index: 100;
-      background: rgba(10, 18, 40, 0.85);
-      backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255,255,255,0.1);
-      padding: 16px 24px;
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      animation: slideUp 0.4s ease both;
-    }
-
-    @keyframes slideUp {
-      from { transform: translateY(100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    .cta-bar.visible { display: flex; }
-
-    .cta-price-info { display: flex; flex-direction: column; gap: 2px; }
-
-    .cta-label {
-      font-size: 12px;
-      color: rgba(255,255,255,0.55);
-      font-family: 'Sora', sans-serif;
-    }
-
-    .cta-amount {
-      font-family: 'Sora', sans-serif;
-      font-size: 22px;
-      font-weight: 800;
-      color: #fff;
-    }
-
-    .cta-amount small {
-      font-size: 13px;
-      font-weight: 500;
-      color: rgba(255,255,255,0.6);
-    }
-
-    .cta-btn {
-      background: linear-gradient(135deg, var(--blue), var(--teal));
-      color: #fff;
-      border: none;
-      border-radius: 14px;
-      padding: 14px 28px;
-      font-family: 'Sora', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: opacity 0.2s, transform 0.15s;
-      text-decoration: none;
-      display: inline-block;
-    }
-
-    .cta-btn:hover { opacity: 0.9; transform: scale(1.02); }
-    .cta-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-    /* ── WELLHUB CTA NOTE ── */
-    .wellhub-cta-note {
-      font-size: 12px;
-      color: rgba(255,255,255,0.5);
-      font-family: 'Sora', sans-serif;
-      text-align: center;
-      padding-bottom: 4px;
-    }
-
-    /* Responsive */
-    @media (max-width: 520px) {
-      .hero-card, .price-card, .owner-card, .wellhub-card { padding: 20px; border-radius: 18px; }
-      .service-name { font-size: 20px; }
-      .price-value { font-size: 22px; }
-      .price-compare { gap: 8px; }
-      .wellhub-grid { grid-template-columns: 1fr 1fr; }
-      .cta-amount { font-size: 18px; }
-      .cta-btn { padding: 12px 20px; font-size: 14px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splitpool — Detalhe da Piscina</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;--green:#00A878;--text:#0C2461;--border:rgba(0,160,200,0.22);}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;color:var(--text);overflow-x:hidden;background:#3acde8;}
+.pool-bg{position:fixed;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1572331165267-854da2b021d4?w=1920&q=85') center/cover no-repeat;filter:brightness(1.05) saturate(1.1);}
+.pool-overlay{position:fixed;inset:0;z-index:1;background:rgba(160,225,245,0.08);}
+.shimmer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
+.shimmer canvas{position:absolute;inset:0;width:100%;height:100%;}
+.page{position:relative;z-index:10;}
+nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);background:rgba(255,255,255,0.72);border-bottom:1px solid rgba(0,180,210,0.18);padding:0 5%;}
+.nav-in{max-width:860px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.nav-logo{height:46px;object-fit:contain;flex-shrink:0;}
+.nav-back{display:flex;align-items:center;gap:6px;color:var(--bluedark);text-decoration:none;font-size:14px;font-weight:600;opacity:.7;transition:.2s;}
+.nav-back:hover{opacity:1;color:var(--blue);}
+.nav-back svg{width:16px;height:16px;}
+.page-wrap{padding:88px 5% 140px;min-height:100vh;}
+.container{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
+.card{background:rgba(255,255,255,0.88);border:1px solid rgba(0,180,210,0.18);border-radius:16px;padding:28px;box-shadow:0 4px 24px rgba(0,20,80,0.09);backdrop-filter:blur(12px);}
+#loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:60vh;color:var(--bluedark);}
+.spinner{width:36px;height:36px;border:3px solid rgba(18,85,204,0.15);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#error-state{display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:60vh;text-align:center;}
+#error-state h3{font-size:20px;font-weight:800;color:var(--bluedark);}
+#error-state p{font-size:14px;color:var(--bluedark);opacity:.6;}
+#error-state a{color:var(--blue);font-weight:600;font-size:14px;text-decoration:none;}
+#content-state{display:none;flex-direction:column;gap:14px;}
+.hero-top{display:flex;align-items:flex-start;gap:18px;margin-bottom:20px;}
+.svc-ico{width:68px;height:68px;border-radius:14px;object-fit:cover;flex-shrink:0;box-shadow:0 3px 12px rgba(0,0,0,0.1);background:#e0f0ff;}
+.svc-ico-ph{width:68px;height:68px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;flex-shrink:0;}
+.hero-info{flex:1;}
+.svc-tag{display:inline-block;background:rgba(18,85,204,0.08);border:1px solid rgba(18,85,204,0.2);color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:5px;margin-bottom:7px;}
+.svc-name{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:var(--bluedark);line-height:1.2;margin-bottom:8px;}
+.pool-code{display:inline-flex;align-items:center;gap:6px;background:#f0f6ff;border:1px solid rgba(18,85,204,0.2);border-radius:7px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--blue);}
+.pool-code span{font-weight:500;color:var(--bluedark);opacity:.5;}
+.vagas-row{margin-top:10px;}
+.vagas-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.vagas-pill.ok{background:#e6fff8;color:var(--green);border:1px solid rgba(0,168,120,0.25);}
+.vagas-pill.last{background:#fff8e0;color:#b07000;border:1px solid rgba(180,120,0,0.2);}
+.vagas-pill.full{background:#fff0f0;color:#c0392b;border:1px solid rgba(192,57,43,0.2);}
+.vagas-pill svg{width:13px;height:13px;}
+.desc-text{font-size:14px;line-height:1.75;color:var(--bluedark);opacity:.7;padding-top:18px;border-top:1px solid rgba(0,180,210,0.14);font-weight:500;}
+.section-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.45;margin-bottom:18px;}
+.price-compare{display:grid;grid-template-columns:1fr 28px 1fr;align-items:center;gap:8px;}
+.price-col{display:flex;flex-direction:column;gap:3px;}
+.price-lbl{font-size:12px;font-weight:600;color:var(--bluedark);opacity:.5;}
+.price-val{font-family:'Nunito',sans-serif;font-size:28px;font-weight:900;line-height:1;color:var(--bluedark);}
+.price-col.them .price-val{text-decoration:line-through;opacity:.35;font-size:22px;}
+.price-col.us .price-val{color:var(--blue);}
+.price-mo{font-size:12px;color:var(--bluedark);opacity:.45;font-weight:500;}
+.price-arrow{font-size:18px;color:var(--bluedark);opacity:.3;text-align:center;}
+.price-annual{margin-top:16px;padding-top:16px;border-top:1px dashed rgba(0,180,210,0.2);display:none;grid-template-columns:1fr 28px 1fr;align-items:center;gap:8px;}
+.price-annual.show{display:grid;}
+.pan-val{font-size:14px;font-weight:700;color:var(--bluedark);opacity:.4;text-decoration:line-through;}
+.pan-note{font-size:12px;color:var(--bluedark);opacity:.4;font-weight:500;}
+.wh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:10px;margin-top:4px;}
+.wh-item{border:1.5px solid rgba(0,180,210,0.18);border-radius:12px;padding:14px;transition:.2s;cursor:default;background:rgba(255,255,255,0.6);}
+.wh-item:hover{border-color:var(--blue);background:#fff;box-shadow:0 2px 12px rgba(18,85,204,0.1);}
+.wh-name{font-size:13px;font-weight:800;color:var(--bluedark);margin-bottom:6px;}
+.wh-them{font-size:11px;color:var(--bluedark);opacity:.4;text-decoration:line-through;font-weight:500;}
+.wh-us{font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;color:var(--blue);}
+.wh-mo{font-size:11px;color:var(--bluedark);opacity:.4;font-weight:500;}
+.owner-inner{display:flex;align-items:center;gap:16px;}
+.owner-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;color:#fff;flex-shrink:0;}
+.owner-name{font-size:15px;font-weight:800;color:var(--bluedark);margin-bottom:4px;}
+.owner-level{display:inline-flex;align-items:center;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.owner-level.iniciante{background:rgba(18,85,204,0.07);color:var(--blue);}
+.owner-level.verificado{background:#e6fff8;color:var(--green);}
+.owner-level.elite{background:#fff8e0;color:#b07000;}
+.owner-right{margin-left:auto;text-align:right;font-size:11px;color:var(--bluedark);opacity:.45;font-weight:600;line-height:1.5;}
+.trust-row{display:flex;flex-wrap:wrap;gap:10px;}
+.trust-item{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.75);border:1px solid rgba(0,180,210,0.2);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:var(--bluedark);backdrop-filter:blur(8px);}
+.trust-item svg{width:15px;height:15px;flex-shrink:0;color:var(--blue);}
+.cta-bar{position:fixed;bottom:0;left:0;right:0;z-index:300;background:rgba(255,255,255,0.94);backdrop-filter:blur(20px);border-top:1px solid rgba(0,180,210,0.2);padding:14px 5%;display:none;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 -4px 20px rgba(0,20,80,0.1);}
+.cta-bar.show{display:flex;}
+.cta-label{font-size:11px;font-weight:600;color:var(--bluedark);opacity:.5;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;}
+.cta-amount{font-family:'Nunito',sans-serif;font-size:24px;font-weight:900;color:var(--bluedark);line-height:1;}
+.cta-amount small{font-size:13px;font-weight:600;opacity:.5;font-family:'Inter',sans-serif;}
+.cta-btn{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 18px rgba(18,85,204,0.35);transition:.25s;text-decoration:none;white-space:nowrap;display:inline-block;}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(18,85,204,0.45);}
+.cta-btn.disabled{background:#cbd5e0;box-shadow:none;cursor:not-allowed;}
+@media(max-width:520px){.card{padding:18px;}.svc-name{font-size:18px;}.price-val{font-size:22px;}.wh-grid{grid-template-columns:1fr 1fr;}.cta-amount{font-size:20px;}.cta-btn{padding:12px 18px;font-size:14px;}}
+</style>
 </head>
 <body>
-
-<canvas id="bg-canvas"></canvas>
-
-<!-- NAV -->
+<div class="pool-bg"></div>
+<div class="pool-overlay"></div>
+<div class="shimmer"><canvas id="wc"></canvas></div>
 <nav>
-  <a href="explorar.html" class="nav-back">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M19 12H5M12 5l-7 7 7 7"/>
-    </svg>
-    Voltar
-  </a>
-  <a href="index.html" class="nav-logo">
-    <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="Splitpool" />
-  </a>
+  <div class="nav-in">
+    <a href="explorar.html" class="nav-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Voltar
+    </a>
+    <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="Splitpool" class="nav-logo">
+  </div>
 </nav>
-
-<!-- MAIN -->
-<div class="page-wrapper">
-  <div class="container">
-
-    <!-- LOADING -->
-    <div id="loading-state">
-      <div class="spinner"></div>
-      <span>Carregando piscina...</span>
-    </div>
-
-    <!-- ERROR -->
-    <div id="error-state">
-      <div style="font-size:48px;">🏊</div>
-      <div style="font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:#fff;">Piscina não encontrada</div>
-      <div style="font-size:14px;color:rgba(255,255,255,0.5);">Verifique o link ou volte para explorar.</div>
-      <a href="explorar.html" style="margin-top:8px;color:var(--teal);font-family:'Sora',sans-serif;font-size:14px;font-weight:600;text-decoration:none;">← Explorar piscinas</a>
-    </div>
-
-    <!-- CONTENT -->
-    <div id="content-state">
-
-      <!-- HERO CARD -->
-      <div class="hero-card">
-        <div class="hero-top">
-          <div id="icon-wrap"></div>
-          <div class="hero-info">
-            <div class="service-tag" id="service-tag">Plano Família</div>
-            <div class="service-name" id="service-name">Carregando...</div>
-            <div class="pool-code-badge">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span>Código:</span>
-              <strong id="pool-code">SP-????</strong>
-            </div>
-            <div class="vagas-row">
-              <div class="vagas-pill" id="vagas-pill">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <span id="vagas-text">? vagas disponíveis</span>
-              </div>
+<div class="page">
+<div class="page-wrap">
+<div class="container">
+  <div id="loading-state">
+    <div class="spinner"></div>
+    <span style="font-size:14px;font-weight:600;opacity:.6;">Carregando piscina...</span>
+  </div>
+  <div id="error-state">
+    <div style="font-size:52px;">&#x1F3CA;</div>
+    <h3>Piscina nao encontrada</h3>
+    <p>Verifique o link ou volte para explorar.</p>
+    <a href="explorar.html">Explorar piscinas</a>
+  </div>
+  <div id="content-state">
+    <div class="card">
+      <div class="hero-top">
+        <div id="icon-wrap"></div>
+        <div class="hero-info">
+          <div class="svc-tag" id="svc-tag">Plano Familia</div>
+          <div class="svc-name" id="svc-name">-</div>
+          <div class="pool-code"><span>Codigo </span><strong id="pool-code">SP-????</strong></div>
+          <div class="vagas-row">
+            <div class="vagas-pill ok" id="vagas-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              <span id="vagas-text">? vagas disponiveis</span>
             </div>
           </div>
         </div>
-        <p class="desc-text" id="desc-text"></p>
       </div>
-
-      <!-- PRICE COMPARISON (para serviços não-Wellhub) -->
-      <div class="price-card" id="price-card">
-        <div class="section-title">Comparativo de preço</div>
-        <div class="price-compare">
-          <div class="price-col them">
-            <div class="price-label">Sem Splitpool</div>
-            <div class="price-value" id="price-sem-mensal">—</div>
-            <div class="price-period">por mês</div>
-          </div>
-          <div class="price-arrow">→</div>
-          <div class="price-col us">
-            <div class="price-label">Na Splitpool</div>
-            <div class="price-value" id="price-na-splitpool">—</div>
-            <div class="price-period">por mês</div>
-          </div>
+      <p class="desc-text" id="desc-text"></p>
+    </div>
+    <div class="card" id="price-card">
+      <div class="section-label">Comparativo de preco</div>
+      <div class="price-compare">
+        <div class="price-col them">
+          <div class="price-lbl">Sem Splitpool</div>
+          <div class="price-val" id="price-sem">-</div>
+          <div class="price-mo">por mes</div>
         </div>
-        <!-- Anual (aparece quando disponível) -->
-        <div class="price-sub-compare" id="price-anual-row" style="display:none;">
-          <div class="price-col them">
-            <div class="price-label">Plano anual (÷12)</div>
-            <div class="price-value" id="price-sem-anual" style="font-size:16px;"></div>
-          </div>
-          <div class="price-arrow" style="font-size:14px;"></div>
-          <div class="price-col" style="opacity:0.5;">
-            <div style="font-size:12px;color:var(--text-light);font-family:'Sora',sans-serif;">Mesmo preço Splitpool</div>
-          </div>
+        <div class="price-arrow">&#8594;</div>
+        <div class="price-col us">
+          <div class="price-lbl">Na Splitpool</div>
+          <div class="price-val" id="price-sp">-</div>
+          <div class="price-mo">por mes</div>
         </div>
       </div>
-
-      <!-- WELLHUB PLANS (só para Wellhub) -->
-      <div class="wellhub-card" id="wellhub-card" style="display:none;">
-        <div class="section-title">Escolha seu plano Wellhub</div>
-        <p style="font-size:13px;color:var(--text-mid);margin-bottom:16px;">O dono desta piscina oferece acesso aos planos abaixo. Você escolhe o que preferir no momento do pagamento.</p>
-        <div class="wellhub-grid" id="wellhub-grid"></div>
+      <div class="price-annual" id="price-annual">
+        <div class="price-col">
+          <div class="price-lbl">Plano anual (div 12)</div>
+          <div class="pan-val" id="price-anual-val">-</div>
+        </div>
+        <div></div>
+        <div class="price-col"><div class="pan-note">Mesmo preco Splitpool</div></div>
       </div>
-
-      <!-- OWNER CARD -->
-      <div class="owner-card">
+    </div>
+    <div class="card" id="wellhub-card" style="display:none;">
+      <div class="section-label">Planos disponiveis nesta piscina</div>
+      <p style="font-size:13px;color:var(--bluedark);opacity:.6;font-weight:500;margin-bottom:16px;">Voce escolhe qual plano quer ativar. O dono ja tem acesso corporativo ao Wellhub.</p>
+      <div class="wh-grid" id="wh-grid"></div>
+    </div>
+    <div class="card">
+      <div class="owner-inner">
         <div class="owner-avatar" id="owner-avatar">?</div>
-        <div class="owner-info">
-          <div class="owner-name" id="owner-name">Carregando dono...</div>
-          <div class="owner-level iniciante" id="owner-level">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            Iniciante
-          </div>
+        <div>
+          <div class="owner-name" id="owner-name">-</div>
+          <div class="owner-level iniciante" id="owner-level">Iniciante</div>
         </div>
-        <div style="font-size:12px;color:var(--text-light);font-family:'Sora',sans-serif;text-align:right;">Dono verificado<br>pelo Splitpool</div>
+        <div class="owner-right">Dono verificado<br>pelo Splitpool</div>
       </div>
-
-      <!-- TRUST ITEMS -->
-      <div class="trust-row">
-        <div class="trust-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Pagamento protegido pelo Splitpool
-        </div>
-        <div class="trust-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          72h para confirmar acesso
-        </div>
-        <div class="trust-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Reembolso em 24h se não funcionar
-        </div>
+    </div>
+    <div class="trust-row">
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Pagamento protegido pelo Splitpool
       </div>
-
-    </div><!-- /content-state -->
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        72h para confirmar acesso
+      </div>
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        Reembolso se nao funcionar
+      </div>
+    </div>
   </div>
 </div>
-
-<!-- CTA BAR (bottom fixed) -->
+</div>
+</div>
 <div class="cta-bar" id="cta-bar">
-  <div class="cta-price-info">
+  <div>
     <div class="cta-label">Seu acesso por</div>
-    <div class="cta-amount" id="cta-amount">R$ —<small>/mês</small></div>
+    <div class="cta-amount" id="cta-amount">R$ -<small>/mes</small></div>
   </div>
   <a href="#" class="cta-btn" id="cta-btn">Entrar nesta piscina</a>
 </div>
-
 <script>
-  // ── CANVAS WAVES ──
-  (function() {
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let W, H, t = 0;
-
-    function resize() {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-      const grad = ctx.createLinearGradient(0, 0, W, H);
-      grad.addColorStop(0, '#0a1628');
-      grad.addColorStop(1, '#0f2a5c');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, W, H);
-
-      for (let i = 0; i < 5; i++) {
-        ctx.beginPath();
-        const amp = 40 + i * 18;
-        const freq = 0.003 + i * 0.001;
-        const speed = 0.003 + i * 0.001;
-        const yOff = H * (0.3 + i * 0.14);
-        ctx.moveTo(0, yOff);
-        for (let x = 0; x <= W; x += 4) {
-          const y = yOff + Math.sin(x * freq + t * speed * 60 + i * 1.2) * amp;
-          ctx.lineTo(x, y);
-        }
-        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
-        ctx.fillStyle = `rgba(0,200,215,${0.025 - i * 0.003})`;
-        ctx.fill();
-      }
-      t++;
-      requestAnimationFrame(draw);
-    }
-    draw();
-  })();
-
-  // ── SUPABASE CONFIG ──
-  const SUPABASE_URL = 'https://eawfweuamtwlsilrkgoo.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
-
-  const BASE_ASSETS = 'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/';
-
-  // ── CATALOG (preços reais) ──
-  const CATALOG = {
-    'Microsoft 365 Family': {
-      icon: 'microsoft_icon.png',
-      tag: 'Plano Família',
-      preco_mensal_individual: 51.00,
-      preco_anual_individual: 49.92,
-      preco_splitpool: 25.50,
-    },
-    'Duolingo Super Família': {
-      icon: 'duolingo_icon.png',
-      tag: 'Plano Família',
-      preco_mensal_individual: 14.99,
-      preco_anual_individual: 14.99,
-      preco_splitpool: 7.50,
-    },
-    'Duolingo Max Família': {
-      icon: 'duolingo_icon.png',
-      tag: 'Plano Família',
-      preco_mensal_individual: 33.33,
-      preco_anual_individual: 33.33,
-      preco_splitpool: 16.70,
-    },
-    'Canva Teams': {
-      icon: null,
-      tag: 'Plano Família',
-      preco_mensal_individual: 24.17,
-      preco_anual_individual: 24.17,
-      preco_splitpool: 12.10,
-    },
-    'Notion Team': {
-      icon: 'Notion_icon.png',
-      tag: 'Plano Família',
-      preco_mensal_individual: 50.00,
-      preco_anual_individual: null,
-      preco_splitpool: 25.00,
-    },
-    'Claude Pro': {
-      icon: 'claude-ai_icon.jpg',
-      tag: 'Plano Família',
-      preco_mensal_individual: 100.00,
-      preco_anual_individual: null,
-      preco_splitpool: 50.00,
-    },
-    'Wellhub': {
-      icon: 'wellhub_gympass_icon.png',
-      tag: 'Benefício Corporativo',
-      isWellhub: true,
-      plans: [
-        { name: 'Starter', oficial: 39.99, splitpool: 51.99 },
-        { name: 'Basic', oficial: 69.99, splitpool: 81.99 },
-        { name: 'Basic+', oficial: 99.99, splitpool: 112.99 },
-        { name: 'Silver', oficial: 149.99, splitpool: 169.99 },
-        { name: 'Silver+', oficial: 199.99, splitpool: 225.99 },
-        { name: 'Gold', oficial: 319.99, splitpool: 361.99 },
-        { name: 'Gold+', oficial: 439.99, splitpool: 489.99 },
-        { name: 'Platinum', oficial: 599.99, splitpool: 649.99 },
-        { name: 'Diamond', oficial: 699.99, splitpool: 749.99 },
-        { name: 'Diamond+', oficial: 779.99, splitpool: 829.99 },
-      ]
-    },
-    'TotalPass': {
-      icon: null,
-      tag: 'Benefício Corporativo',
-      preco_mensal_individual: 115.00,
-      preco_anual_individual: null,
-      preco_splitpool: 59.90,
-    },
-    'Alura': {
-      icon: null,
-      tag: 'Benefício Corporativo',
-      preco_mensal_individual: 99.90,
-      preco_anual_individual: 79.92,
-      preco_splitpool: 39.90,
-    },
-  };
-
-  // ── HELPERS ──
-  function fmt(val) {
-    return 'R$ ' + val.toFixed(2).replace('.', ',');
+(function(){
+  var c=document.getElementById('wc'),ctx=c.getContext('2d');
+  var W,H,t=0,lines=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;lines=[];for(var i=0;i<7;i++)lines.push({y:H*(0.08+i*0.13),amp:9+i*3,freq:0.005+i*0.002,speed:0.014+i*0.005,phase:Math.random()*Math.PI*2,alpha:0.16+i*0.025});}
+  function draw(){t+=0.012;ctx.clearRect(0,0,W,H);lines.forEach(function(l){ctx.beginPath();ctx.moveTo(0,l.y);for(var x=0;x<=W;x+=6){var y=l.y+Math.sin(x*l.freq+t*l.speed+l.phase)*l.amp+Math.sin(x*l.freq*1.8+t*l.speed*1.4)*l.amp*0.35;ctx.lineTo(x,y);}ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle='rgba(255,255,255,'+l.alpha+')';ctx.fill();});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+var SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
+var SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
+var BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/';
+var CAT={
+  'Microsoft 365 Family':{icon:'microsoft_icon.png',tag:'Plano Familia',mensal:51.00,anual:49.92,sp:25.50},
+  'Duolingo Super Familia':{icon:'duolingo_icon.png',tag:'Plano Familia',mensal:14.99,anual:14.99,sp:7.50},
+  'Duolingo Max Familia':{icon:'duolingo_icon.png',tag:'Plano Familia',mensal:33.33,anual:33.33,sp:16.70},
+  'Canva Teams':{icon:null,tag:'Plano Familia',mensal:24.17,anual:24.17,sp:12.10},
+  'Notion Team':{icon:'Notion_icon.png',tag:'Plano Familia',mensal:50.00,anual:null,sp:25.00},
+  'Claude Pro':{icon:'claude-ai_icon.jpg',tag:'Plano Familia',mensal:100.00,anual:null,sp:50.00},
+  'Wellhub':{icon:'wellhub_gympass_icon.png',tag:'Beneficio Corporativo',wh:true,plans:[
+    {n:'Starter',of:39.99,sp:51.99},{n:'Basic',of:69.99,sp:81.99},{n:'Basic+',of:99.99,sp:112.99},
+    {n:'Silver',of:149.99,sp:169.99},{n:'Silver+',of:199.99,sp:225.99},{n:'Gold',of:319.99,sp:361.99},
+    {n:'Gold+',of:439.99,sp:489.99},{n:'Platinum',of:599.99,sp:649.99},
+    {n:'Diamond',of:699.99,sp:749.99},{n:'Diamond+',of:779.99,sp:829.99}
+  ]},
+  'TotalPass':{icon:null,tag:'Beneficio Corporativo',mensal:115.00,anual:null,sp:59.90},
+  'Alura':{icon:null,tag:'Beneficio Corporativo',mensal:99.90,anual:79.92,sp:39.90}
+};
+function fmt(v){return'R$ '+v.toFixed(2).replace('.',',');}
+function code(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var s='';for(var i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
+function showErr(){document.getElementById('loading-state').style.display='none';document.getElementById('error-state').style.display='flex';}
+function load(){
+  var ps=new URLSearchParams(window.location.search);
+  var id=ps.get('id');
+  if(!id){showErr();return;}
+  fetch(SBU+'/rest/v1/piscinas?id=eq.'+id+'&select=*',{headers:{'apikey':SBK,'Authorization':'Bearer '+SBK}})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d||!d.length){showErr();return;}
+    var p=d[0];
+    fetch(SBU+'/rest/v1/profiles?id=eq.'+p.dono_id+'&select=nome,nivel',{headers:{'apikey':SBK,'Authorization':'Bearer '+SBK}})
+    .then(function(r){return r.json();})
+    .then(function(ud){
+      var nome='Dono',nivel='iniciante';
+      if(ud&&ud.length){nome=ud[0].nome||'Dono';nivel=(ud[0].nivel||'iniciante').toLowerCase();}
+      render(p,nome,nivel);
+    }).catch(function(){render(p,'Dono','iniciante');});
+  }).catch(function(){showErr();});
+}
+function render(p,nomeOwner,nivel){
+  document.getElementById('loading-state').style.display='none';
+  var cs=document.getElementById('content-state');cs.style.display='flex';
+  var cat=CAT[p.servico]||{};
+  var livre=(p.vagas_total||0)-(p.vagas_ocupadas||0);
+  var isWH=!!cat.wh;
+  document.title='Splitpool - '+p.servico;
+  document.getElementById('svc-tag').textContent=cat.tag||'Plano';
+  document.getElementById('svc-name').textContent=p.servico;
+  document.getElementById('pool-code').textContent=code(p.id);
+  var iw=document.getElementById('icon-wrap');
+  if(cat.icon){
+    var img=document.createElement('img');img.src=BASE+cat.icon;img.alt=p.servico;img.className='svc-ico';
+    img.onerror=function(){iw.innerHTML='';var d=document.createElement('div');d.className='svc-ico-ph';d.textContent=p.servico[0];iw.appendChild(d);};
+    iw.appendChild(img);
+  }else{var d=document.createElement('div');d.className='svc-ico-ph';d.textContent=p.servico[0];iw.appendChild(d);}
+  var pill=document.getElementById('vagas-pill'),vt=document.getElementById('vagas-text');
+  if(livre===0){pill.className='vagas-pill full';vt.textContent='Piscina lotada';}
+  else if(livre===1){pill.className='vagas-pill last';vt.textContent='Ultima vaga disponivel';}
+  else{pill.className='vagas-pill ok';vt.textContent=livre+' vagas disponiveis';}
+  document.getElementById('desc-text').textContent=p.descricao||'';
+  if(isWH){
+    document.getElementById('price-card').style.display='none';
+    document.getElementById('wellhub-card').style.display='block';
+    var g=document.getElementById('wh-grid');
+    cat.plans.forEach(function(pl){
+      var di=document.createElement('div');di.className='wh-item';
+      di.innerHTML='<div class="wh-name">'+pl.n+'</div><div class="wh-them">Sem Splitpool: '+fmt(pl.of)+'/mes</div><div class="wh-us">'+fmt(pl.sp)+'<span class="wh-mo">/mes</span></div>';
+      g.appendChild(di);
+    });
+    document.getElementById('cta-amount').innerHTML='A partir de <strong>R$ 51,99</strong><small>/mes</small>';
+  }else{
+    var sv=cat.mensal||p.preco_por_vaga,spv=cat.sp||p.preco_por_vaga,av=cat.anual;
+    document.getElementById('price-sem').textContent=fmt(sv);
+    document.getElementById('price-sp').textContent=fmt(spv);
+    if(av&&av!==sv){document.getElementById('price-annual').classList.add('show');document.getElementById('price-anual-val').textContent=fmt(av);}
+    document.getElementById('cta-amount').innerHTML=fmt(spv)+'<small>/mes</small>';
   }
-
-  function generatePoolCode(id) {
-    // Hash simples do UUID → 4 chars alfanuméricos
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-      hash = ((hash << 5) - hash) + id.charCodeAt(i);
-      hash |= 0;
-    }
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = '';
-    let n = Math.abs(hash);
-    for (let i = 0; i < 4; i++) {
-      code += chars[n % chars.length];
-      n = Math.floor(n / chars.length);
-    }
-    return 'SP-' + code;
-  }
-
-  // ── LOAD DATA ──
-  async function loadPiscina() {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
-
-    if (!id) { showError(); return; }
-
-    try {
-      // Buscar piscina
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/piscinas?id=eq.${id}&select=*`,
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-      );
-      const data = await res.json();
-      if (!data || data.length === 0) { showError(); return; }
-      const piscina = data[0];
-
-      // Buscar nome do dono
-      let nomeOwner = 'Dono';
-      let levelOwner = 'iniciante';
-      try {
-        const uRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/profiles?id=eq.${piscina.dono_id}&select=nome,nivel`,
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-        );
-        const uData = await uRes.json();
-        if (uData && uData.length > 0) {
-          nomeOwner = uData[0].nome || 'Dono';
-          levelOwner = (uData[0].nivel || 'iniciante').toLowerCase();
-        }
-      } catch(e) {
-        // fallback silencioso — exibe "Dono" sem nível real
-      }
-
-      renderPiscina(piscina, nomeOwner, levelOwner);
-
-    } catch(e) {
-      console.error(e);
-      showError();
-    }
-  }
-
-  function showError() {
-    document.getElementById('loading-state').style.display = 'none';
-    document.getElementById('error-state').style.display = 'flex';
-  }
-
-  function renderPiscina(p, nomeOwner, levelOwner) {
-    document.getElementById('loading-state').style.display = 'none';
-    document.getElementById('content-state').style.display = 'block';
-
-    const cat = CATALOG[p.servico] || {};
-    const vagasLivres = (p.vagas_total || 0) - (p.vagas_ocupadas || 0);
-    const isWellhub = cat.isWellhub || false;
-
-    // Título
-    document.title = `Splitpool — ${p.servico}`;
-
-    // Service tag
-    document.getElementById('service-tag').textContent = cat.tag || 'Plano';
-
-    // Nome
-    document.getElementById('service-name').textContent = p.servico;
-
-    // Código
-    document.getElementById('pool-code').textContent = generatePoolCode(p.id);
-
-    // Ícone
-    const iconWrap = document.getElementById('icon-wrap');
-    if (cat.icon) {
-      const img = document.createElement('img');
-      img.src = BASE_ASSETS + cat.icon;
-      img.alt = p.servico;
-      img.className = 'service-icon';
-      iconWrap.appendChild(img);
-    } else {
-      const div = document.createElement('div');
-      div.className = 'service-icon-placeholder';
-      div.textContent = p.servico.charAt(0);
-      iconWrap.appendChild(div);
-    }
-
-    // Vagas
-    const vagasPill = document.getElementById('vagas-pill');
-    const vagasText = document.getElementById('vagas-text');
-    vagasText.textContent = vagasLivres === 0
-      ? 'Piscina lotada'
-      : vagasLivres === 1
-        ? '1 vaga disponível'
-        : `${vagasLivres} vagas disponíveis`;
-
-    if (vagasLivres === 0) {
-      vagasPill.className = 'vagas-pill full';
-    } else if (vagasLivres === 1) {
-      vagasPill.className = 'vagas-pill limited';
-    } else {
-      vagasPill.className = 'vagas-pill available';
-    }
-
-    // Descrição
-    document.getElementById('desc-text').textContent = p.descricao || '';
-
-    // Preços
-    if (isWellhub) {
-      document.getElementById('price-card').style.display = 'none';
-      document.getElementById('wellhub-card').style.display = 'block';
-      const grid = document.getElementById('wellhub-grid');
-      cat.plans.forEach(plan => {
-        const div = document.createElement('div');
-        div.className = 'wellhub-plan-item';
-        div.innerHTML = `
-          <div class="wh-plan-name">${plan.name}</div>
-          <div class="wh-price-row">
-            <div class="wh-them">Sem Splitpool: ${fmt(plan.oficial)}/mês</div>
-            <div class="wh-us">${fmt(plan.splitpool)}<span style="font-size:11px;font-weight:400;color:#718096">/mês</span></div>
-          </div>`;
-        grid.appendChild(div);
-      });
-      // CTA Wellhub
-      document.getElementById('cta-amount').innerHTML = 'A partir de <strong>R$ 51,99</strong><small>/mês</small>';
-      document.getElementById('cta-bar').classList.add('visible');
-      document.getElementById('cta-btn').setAttribute('href', `checkout.html?piscina=${p.id}`);
-      // nota extra
-      const note = document.createElement('div');
-      note.className = 'wellhub-cta-note';
-      note.textContent = 'Você escolhe o plano no checkout';
-      document.getElementById('cta-bar').insertAdjacentElement('afterbegin', note);
-      // reajustar layout do cta-bar para nota
-      document.getElementById('cta-bar').style.flexDirection = 'column';
-      document.getElementById('cta-bar').style.alignItems = 'stretch';
-      const inner = document.createElement('div');
-      inner.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:16px;';
-      const ci = document.getElementById('cta-bar');
-      const btn = document.getElementById('cta-btn');
-      const priceInfo = document.getElementById('cta-price-info');
-      inner.appendChild(priceInfo);
-      inner.appendChild(btn);
-      ci.appendChild(inner);
-    } else {
-      const precoSemMensal = cat.preco_mensal_individual || p.preco_por_vaga;
-      const precoSemAnual = cat.preco_anual_individual;
-      const precoSplitpool = cat.preco_splitpool || p.preco_por_vaga;
-
-      document.getElementById('price-sem-mensal').textContent = fmt(precoSemMensal);
-      document.getElementById('price-na-splitpool').textContent = fmt(precoSplitpool);
-
-      if (precoSemAnual && precoSemAnual !== precoSemMensal) {
-        document.getElementById('price-anual-row').style.display = 'grid';
-        document.getElementById('price-sem-anual').textContent = fmt(precoSemAnual);
-      }
-
-      // CTA
-      document.getElementById('cta-amount').innerHTML = `${fmt(precoSplitpool)}<small>/mês</small>`;
-      document.getElementById('cta-btn').setAttribute('href', vagasLivres > 0 ? `checkout.html?piscina=${p.id}` : '#');
-      if (vagasLivres === 0) {
-        document.getElementById('cta-btn').setAttribute('disabled', 'true');
-        document.getElementById('cta-btn').textContent = 'Piscina lotada';
-        document.getElementById('cta-btn').style.background = '#cbd5e0';
-      }
-      document.getElementById('cta-bar').classList.add('visible');
-    }
-
-    // Owner
-    const primeiroNome = nomeOwner.split(' ')[0];
-    document.getElementById('owner-avatar').textContent = primeiroNome.charAt(0).toUpperCase();
-    document.getElementById('owner-name').textContent = primeiroNome;
-
-    const levelEl = document.getElementById('owner-level');
-    const levelMap = {
-      iniciante: { label: 'Iniciante', cls: 'iniciante' },
-      verificado: { label: 'Verificado ✓', cls: 'verificado' },
-      elite: { label: '⭐ Elite', cls: 'elite' },
-    };
-    const lv = levelMap[levelOwner] || levelMap.iniciante;
-    levelEl.className = `owner-level ${lv.cls}`;
-    levelEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>${lv.label}`;
-  }
-
-  // INIT
-  loadPiscina();
+  var btn=document.getElementById('cta-btn');
+  if(livre>0){btn.href='checkout.html?piscina='+p.id;btn.textContent='Entrar nesta piscina';}
+  else{btn.href='#';btn.className='cta-btn disabled';btn.textContent='Piscina lotada';}
+  document.getElementById('cta-bar').classList.add('show');
+  var pn=nomeOwner.split(' ')[0];
+  document.getElementById('owner-avatar').textContent=pn[0].toUpperCase();
+  document.getElementById('owner-name').textContent=pn;
+  var lv=document.getElementById('owner-level');
+  var lm={iniciante:{c:'iniciante',l:'Iniciante'},verificado:{c:'verificado',l:'Verificado'},elite:{c:'elite',l:'Elite'}};
+  var lvi=lm[nivel]||lm.iniciante;lv.className='owner-level '+lvi.c;lv.textContent=lvi.l;
+}
+load();
 </script>
 </body>
 </html>
