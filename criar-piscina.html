@@ -307,22 +307,11 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 
       <!-- VENCIMENTO DO CARTÃO -->
       <div class="field" style="margin-bottom:1.5rem;">
-        <label>💳 Data de vencimento do seu cartão</label>
-        <div class="field-hint" style="margin-bottom:10px;">Precisamos saber para quando o plano pode ser renovado automaticamente e para avisar você com antecedência.</div>
-        <div class="card-input-row" style="grid-template-columns:1fr 1fr 1fr;">
-          <div class="field" style="margin-bottom:0;">
-            <label style="font-size:12px;opacity:.6;">Dia</label>
-            <select id="cartao-dia"></select>
-          </div>
-          <div class="field" style="margin-bottom:0;">
-            <label style="font-size:12px;opacity:.6;">Mês</label>
-            <select id="cartao-mes"></select>
-          </div>
-          <div class="field" style="margin-bottom:0;">
-            <label style="font-size:12px;opacity:.6;">Ano</label>
-            <select id="cartao-ano"></select>
-          </div>
-        </div>
+        <label>💳 Dia de vencimento do seu cartão</label>
+        <div class="field-hint" style="margin-bottom:10px;">Precisamos saber para avisar você com antecedência antes de cada renovação.</div>
+        <select id="cartao-dia" style="max-width:200px;">
+          <option value="">Selecione o dia</option>
+        </select>
       </div>
 
       <!-- O QUE ACONTECE APÓS PUBLICAR -->
@@ -663,15 +652,8 @@ function irPasso2(){
 
 function popularSelectsCartao(){
   const dia=document.getElementById('cartao-dia')
-  const mes=document.getElementById('cartao-mes')
-  const ano=document.getElementById('cartao-ano')
-  if(mes.options.length>1) return
-  dia.innerHTML='<option value="">Dia</option>'
-  for(let i=1;i<=31;i++){const v=String(i).padStart(2,'0');dia.innerHTML+=`<option value="${v}">${v}</option>`}
-  mes.innerHTML='<option value="">Mês</option>'
-  for(let i=1;i<=12;i++){const v=String(i).padStart(2,'0');mes.innerHTML+=`<option value="${v}">${v}</option>`}
-  ano.innerHTML='<option value="">Ano</option>'
-  for(let i=0;i<8;i++){const y=2025+i;ano.innerHTML+=`<option value="${y}">${y}</option>`}
+  if(dia.options.length>1) return
+  for(let i=1;i<=31;i++){const v=String(i).padStart(2,'0');dia.innerHTML+=`<option value="${v}">Dia ${v}</option>`}
 }
 
 function irPasso3(){
@@ -705,9 +687,7 @@ async function publicarPiscina(){
   if(!document.getElementById('aceite').checked){showMsg('Aceite os termos para publicar.','error');return}
   if(!comprovanteFile){showMsg('Envie o comprovante do plano ativo antes de publicar.','error');return}
   const dia=document.getElementById('cartao-dia').value
-  const mes=document.getElementById('cartao-mes').value
-  const ano=document.getElementById('cartao-ano').value
-  if(!dia||!mes||!ano){showMsg('Informe a data completa de vencimento do seu cartão.','error');return}
+  if(!dia){showMsg('Informe o dia de vencimento do seu cartão.','error');return}
 
   const btn=document.getElementById('btn-publicar')
   btn.disabled=true;btn.textContent='Enviando...'
@@ -737,7 +717,7 @@ async function publicarPiscina(){
     preco_por_vaga:isWH?0:svc.precoVenda,
     status:'pendente',
     icone_url:null,
-    cartao_vencimento:`${ano}-${mes}-${dia}`,
+    cartao_vencimento:dia,
     comprovante_url:comprovanteUrl
   })
 
