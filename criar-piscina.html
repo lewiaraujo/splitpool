@@ -476,11 +476,13 @@ sb.auth.getSession().then(({data})=>{
   const email=data.session.user.email
   nomeUsuario=email.split('@')[0].charAt(0).toUpperCase()+email.split('@')[0].slice(1)
   document.getElementById('nav-user').textContent=email.split('@')[0]
-  // Carrega piscinas existentes do dono para bloquear duplicatas
+  // Renderiza grid vazio logo (sem bloqueios ainda)
+  renderSvcs()
+  // Carrega piscinas existentes para bloquear duplicatas
   sb.from('piscinas').select('servico').eq('dono_id',userId).neq('status','encerrada').then(({data:d})=>{
     piscinasExistentes=(d||[]).map(p=>p.servico.toLowerCase())
-    renderSvcs()
-  })
+    renderSvcs() // re-renderiza com bloqueios
+  }).catch(()=>{ /* mantém grid sem bloqueios */ })
 })
 
 function renderSvcs(){
@@ -592,6 +594,14 @@ function selecionarTipo(tipo){
   document.getElementById('tipo-familia').classList.toggle('sel',tipo==='familia')
   document.getElementById('tipo-corporativo').classList.toggle('sel',tipo==='corporativo')
   renderSvcs()
+  // Garantir visibilidade do grid
+  const grid=document.getElementById('svc-grid')
+  if(grid) grid.style.display='grid'
+  // Scroll suave para a seção de serviços
+  setTimeout(()=>{
+    const h2=document.querySelector('#panel-1 h2:nth-of-type(2)')
+    if(h2) h2.scrollIntoView({behavior:'smooth',block:'start'})
+  },50)
 }
 
 function selecionarSvc(nome){
