@@ -358,6 +358,8 @@ const ICONES = {
 let todasPiscinas = []
 let categoriaAtual = 'todos'
 let piscinaAtual = null
+let isWH_atual = false
+let isTP_atual = false
 
 // Verifica autenticação
 sb.auth.getSession().then(({ data }) => {
@@ -531,6 +533,17 @@ function abrirModal(id) {
   const livre = p.vagas_total - p.vagas_ocupadas
   const isWH = p.servico.toLowerCase().includes('wellhub')
   const isTP = p.servico.toLowerCase().includes('totalpass')
+  isWH_atual = isWH
+  isTP_atual = isTP
+
+  // Reset completo — garante que não sobra cache de modal anterior
+  document.getElementById('m-price-block').style.display='none'
+  document.getElementById('m-wh-block').style.display='none'
+  document.getElementById('m-tp-block').style.display='none'
+  document.getElementById('m-beneficio-block').style.display='none'
+  document.getElementById('m-wh-grid').innerHTML=''
+  document.getElementById('m-tp-grid').innerHTML=''
+  document.getElementById('m-anual-row').classList.remove('show')
 
   document.getElementById('m-ico').innerHTML = getIcone(p.servico, p.icone_url)
   document.getElementById('m-titulo').textContent = p.servico
@@ -616,17 +629,19 @@ function fecharModal() {
   document.getElementById('modal-detalhe').classList.remove('open')
   piscinaAtual = null
   whPlanoSelecionado = null
+  isWH_atual = false
+  isTP_atual = false
 }
 
 function entrarPiscina() {
   if (!piscinaAtual) return
-  const isWH = piscinaAtual.servico.toLowerCase().includes('wellhub')
-  if(isWH && !whPlanoSelecionado) {
-    document.getElementById('m-wh-hint').textContent = '⚠️ Escolha um plano antes de continuar'
+  if((isWH_atual || isTP_atual) && !whPlanoSelecionado) {
+    const hint = isTP_atual ? document.getElementById('m-tp-hint') : document.getElementById('m-wh-hint')
+    if(hint) hint.textContent = '⚠️ Escolha um plano antes de continuar'
     return
   }
   let url = `checkout.html?piscina=${piscinaAtual.id}`
-  if((isWH||isTP) && whPlanoSelecionado) url += `&plano=${encodeURIComponent(whPlanoSelecionado.n)}&valor=${whPlanoSelecionado.sp}`
+  if((isWH_atual || isTP_atual) && whPlanoSelecionado) url += `&plano=${encodeURIComponent(whPlanoSelecionado.n)}&valor=${whPlanoSelecionado.sp}`
   window.location.href = url
 }
 
