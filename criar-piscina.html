@@ -718,8 +718,7 @@ function irPasso2(){
   document.getElementById('panel-2-wellhub').style.display=isWH?'block':'none'
   document.getElementById('panel-2-totalpass').style.display=isTP?'block':'none'
   if(isWH){renderWellhubGrid();atualizarCalcWH();gerarDescricaoWH()}
-  if(isTP){renderTotalPassGrid();atualizarCalcTP();gerarDescricaoTP()}
-  if(isWH){renderWellhubGrid();atualizarCalcWH();gerarDescricaoWH()}
+  else if(isTP){renderTotalPassGrid();atualizarCalcTP();gerarDescricaoTP()}
   else{popularSelects()}
   goStep(2)
 }
