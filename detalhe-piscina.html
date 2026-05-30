@@ -158,8 +158,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);-
       </div>
     </div>
     <div class="card" id="wellhub-card" style="display:none;">
-      <div class="section-label">Planos disponiveis nesta piscina</div>
-      <p style="font-size:13px;color:var(--bluedark);opacity:.6;font-weight:500;margin-bottom:16px;">Voce escolhe qual plano quer ativar. O dono ja tem acesso corporativo ao Wellhub.</p>
+      <div class="section-label" id="wh-card-title">Planos disponiveis nesta piscina</div>
+      <p style="font-size:13px;color:var(--bluedark);opacity:.6;font-weight:500;margin-bottom:16px;" id="wh-card-desc">Voce escolhe qual plano quer ativar. O dono ja tem acesso corporativo ao beneficio.</p>
       <div class="wh-grid" id="wh-grid"></div>
     </div>
     <div class="card">
@@ -222,9 +222,21 @@ var CAT={
     {n:'Gold+',of:439.99,sp:489.99},{n:'Platinum',of:599.99,sp:649.99},
     {n:'Diamond',of:699.99,sp:749.99},{n:'Diamond+',of:779.99,sp:829.99}
   ]},
-  'TotalPass':{icon:'logo_totalpass_icon_fundo%20transparente.png',tag:'Benefício Corporativo',beneficio:true,mensal:115.00,anual:null,sp:59.90},
+  'TotalPass':{icon:'logo_totalpass_icon_fundo%20transparente.png',tag:'Benefício Corporativo',beneficio:true,isTotalPass:true,mensal:115.00,anual:null,sp:51.90},
   'Alura':{icon:'logo_alura.png',tag:'Benefício Corporativo',mensal:99.90,anual:79.92,sp:39.90}
 };
+const TP_PLANS=[
+  {n:'TP GO',of:39.90,sp:51.90,rep:8.00,desc:'2.000+ academias e parceiros'},
+  {n:'TP1',of:59.90,sp:74.90,rep:10.00,desc:'6.000+ academias e parceiros'},
+  {n:'TP1+',of:89.90,sp:109.90,rep:13.00,desc:'13.000+ academias + Smart Fit'},
+  {n:'TP2',of:119.90,sp:144.90,rep:17.00,desc:'20.000+ academias + Smart Fit + terapia'},
+  {n:'TP3',of:199.90,sp:234.90,rep:23.00,desc:'28.000+ academias + saude integrada'},
+  {n:'TP4',of:299.90,sp:344.90,rep:30.00,desc:'30.000+ academias + espacos premium'},
+  {n:'TP5',of:399.90,sp:449.90,rep:33.00,desc:'32.000+ academias + premium'},
+  {n:'TP5+',of:499.90,sp:554.90,rep:37.00,desc:'33.000+ academias + premium'},
+  {n:'TP6',of:599.90,sp:659.90,rep:40.00,desc:'34.500+ academias + premium'},
+  {n:'TP7',of:699.90,sp:769.90,rep:46.00,desc:'35.000+ academias + premium'}
+]
 function fmt(v){return'R$ '+v.toFixed(2).replace('.',',');}
 function code(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var s='';for(var i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
 function showErr(){document.getElementById('loading-state').style.display='none';document.getElementById('error-state').style.display='flex';}
@@ -267,16 +279,24 @@ function render(p,nomeOwner,nivel){
   else if(livre===1){pill.className='vagas-pill last';vt.textContent='Ultima vaga disponivel';}
   else{pill.className='vagas-pill ok';vt.textContent=livre+' vagas disponiveis';}
   document.getElementById('desc-text').textContent=p.descricao||'';
-  if(isWH){
+  var isTP=!!(cat.isTotalPass);
+  if(isWH||isTP){
     document.getElementById('price-card').style.display='none';
     document.getElementById('wellhub-card').style.display='block';
     var g=document.getElementById('wh-grid');
-    cat.plans.forEach(function(pl){
+    var planos=isWH?cat.plans:TP_PLANS;
+    var minPreco=isWH?51.99:51.90;
+    planos.forEach(function(pl){
       var di=document.createElement('div');di.className='wh-item';
-      di.innerHTML='<div class="wh-name">'+pl.n+'</div><div class="wh-them">Sem Splitpool: '+fmt(pl.of)+'/mes</div><div class="wh-us">'+fmt(pl.sp)+'<span class="wh-mo">/mes</span></div>';
+      if(isTP){
+        di.innerHTML='<div class="wh-name">'+pl.n+'</div><div class="wh-access" style="font-size:9px;font-weight:700;color:#00875A;margin-bottom:3px;">✓ Acesso livre, sem vinculo</div><div class="wh-us">'+fmt(pl.sp)+'<span class="wh-mo">/mes</span></div>';
+      } else {
+        di.innerHTML='<div class="wh-name">'+pl.n+'</div><div class="wh-them">Sem Splitpool: '+fmt(pl.of)+'/mes</div><div class="wh-us">'+fmt(pl.sp)+'<span class="wh-mo">/mes</span></div>';
+      }
       g.appendChild(di);
     });
-    document.getElementById('cta-amount').innerHTML='A partir de <strong>R$ 51,99</strong><small>/mes</small>';
+    var minP=planos.reduce(function(a,b){return a.sp<b.sp?a:b;});
+    document.getElementById('cta-amount').innerHTML='A partir de <strong>'+fmt(minP.sp)+'</strong><small>/mes</small>';
   }else{
     var sv=cat.mensal||p.preco_por_vaga,spv=cat.sp||p.preco_por_vaga,av=cat.anual;
     document.getElementById('price-sem').textContent=fmt(sv);

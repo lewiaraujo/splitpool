@@ -202,7 +202,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
       <!-- Acesso livre (Wellhub/TotalPass) -->
       <div id="bloco-acesso" style="display:none;">
         <div class="acesso-livre">
-          <div class="acesso-livre-ico">🏋️</div>
+          <div class="acesso-livre-ico" id="acesso-ico">🏋️</div>
           <div>
             <div class="acesso-livre-title">✓ Acesso livre, sem vínculo empregatício</div>
             <div class="acesso-livre-desc">Normalmente restrito a funcionários de empresas parceiras. Pela Splitpool, qualquer pessoa pode entrar — sem precisar checar elegibilidade.</div>
@@ -366,10 +366,22 @@ const CAT={
   'Canva Teams':{icon:'Logo-Canva.png',mensal:24.17,anual:24.17,sp:14.90},
   'Notion Team':{icon:'Notion_icon.png',mensal:50.00,anual:null,sp:29.90},
   'Wellhub':{icon:'wellhub_gympass_icon.png',beneficio:true},
-  'TotalPass':{icon:'logo_totalpass_icon_fundo%20transparente.png',beneficio:true,sp:59.90,mensal:115.00},
+  'TotalPass':{icon:'logo_totalpass_icon_fundo%20transparente.png',beneficio:true,isTotalPass:true,sp:51.90,mensal:115.00},
   'Alura':{icon:'logo_alura.png',mensal:99.90,anual:79.92,sp:39.90},
 }
 
+const TP_PLANS=[
+  {n:'TP GO',of:39.90,sp:51.90,rep:8.00,desc:'2.000+ academias e parceiros'},
+  {n:'TP1',of:59.90,sp:74.90,rep:10.00,desc:'6.000+ academias e parceiros'},
+  {n:'TP1+',of:89.90,sp:109.90,rep:13.00,desc:'13.000+ academias + Smart Fit'},
+  {n:'TP2',of:119.90,sp:144.90,rep:17.00,desc:'20.000+ academias + Smart Fit + terapia'},
+  {n:'TP3',of:199.90,sp:234.90,rep:23.00,desc:'28.000+ academias + saude integrada'},
+  {n:'TP4',of:299.90,sp:344.90,rep:30.00,desc:'30.000+ academias + espacos premium'},
+  {n:'TP5',of:399.90,sp:449.90,rep:33.00,desc:'32.000+ academias + premium'},
+  {n:'TP5+',of:499.90,sp:554.90,rep:37.00,desc:'33.000+ academias + premium'},
+  {n:'TP6',of:599.90,sp:659.90,rep:40.00,desc:'34.500+ academias + premium'},
+  {n:'TP7',of:699.90,sp:769.90,rep:46.00,desc:'35.000+ academias + premium'}
+]
 function fmt(v){return'R$ '+Number(v).toFixed(2).replace('.',',')}
 function poolCode(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var s='';for(var i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
 
@@ -446,14 +458,15 @@ function render(p,planoNome,planoValor){
   document.title='Splitpool — Checkout · '+p.servico
 
   // Preço
+  const isTP = !!(cat && cat.isTotalPass)
   if(isBeneficio){
     document.getElementById('bloco-compare').style.display='none'
     document.getElementById('bloco-acesso').style.display='block'
-    if(isWH && planoNome && planoValor){
+    if((isWH||isTP) && planoNome && planoValor){
       precoFinal=parseFloat(planoValor)
       document.getElementById('ac-preco').innerHTML=fmt(precoFinal)+'<span>/mês</span>'
       document.getElementById('plano-sel').style.display='flex'
-      document.getElementById('plano-sel-nome').textContent='Wellhub '+planoNome
+      document.getElementById('plano-sel-nome').textContent=(isTP?'TotalPass ':'Wellhub ')+planoNome
       document.getElementById('plano-sel-preco').textContent=fmt(precoFinal)
     }else{
       precoFinal=cat.sp||p.preco_por_vaga

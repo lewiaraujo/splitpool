@@ -265,7 +265,13 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
         <div class="m-wh-grid" id="m-wh-grid"></div>
         <div class="m-wh-hint" id="m-wh-hint">Selecione um plano para continuar</div>
       </div>
-      <!-- benefício corporativo (TotalPass) — sem comparativo -->
+      <!-- benefício corporativo (TotalPass grid) -->
+      <div id="m-tp-block" style="display:none;">
+        <div class="m-wh-title">Escolha seu plano TotalPass — acesso aberto a qualquer pessoa</div>
+        <div class="m-wh-grid" id="m-tp-grid"></div>
+        <div class="m-wh-hint" id="m-tp-hint">Selecione um plano para continuar</div>
+      </div>
+      <!-- benefício corporativo genérico — sem comparativo -->
       <div id="m-beneficio-block" style="display:none;" class="m-price-block">
         <div class="m-price-label">Benefício corporativo — acesso aberto</div>
         <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
@@ -484,6 +490,18 @@ const CAT_MODAL = {
   'TotalPass':{mensal:115.00,anual:null,sp:59.90},
   'Alura':{mensal:99.90,anual:79.92,sp:39.90},
 }
+const TP_PLANS=[
+  {n:'TP GO',of:39.90,sp:51.90,rep:8.00,desc:'2.000+ academias e parceiros'},
+  {n:'TP1',of:59.90,sp:74.90,rep:10.00,desc:'6.000+ academias e parceiros'},
+  {n:'TP1+',of:89.90,sp:109.90,rep:13.00,desc:'13.000+ academias + Smart Fit'},
+  {n:'TP2',of:119.90,sp:144.90,rep:17.00,desc:'20.000+ academias + Smart Fit + terapia'},
+  {n:'TP3',of:199.90,sp:234.90,rep:23.00,desc:'28.000+ academias + saude integrada'},
+  {n:'TP4',of:299.90,sp:344.90,rep:30.00,desc:'30.000+ academias + espacos premium'},
+  {n:'TP5',of:399.90,sp:449.90,rep:33.00,desc:'32.000+ academias + premium'},
+  {n:'TP5+',of:499.90,sp:554.90,rep:37.00,desc:'33.000+ academias + premium'},
+  {n:'TP6',of:599.90,sp:659.90,rep:40.00,desc:'34.500+ academias + premium'},
+  {n:'TP7',of:699.90,sp:769.90,rep:46.00,desc:'35.000+ academias + premium'}
+]
 const WH_PLANS = [
   {n:'Starter',of:39.99,sp:51.99},{n:'Basic',of:69.99,sp:81.99},{n:'Basic+',of:99.99,sp:112.99},
   {n:'Silver',of:149.99,sp:169.99},{n:'Silver+',of:199.99,sp:225.99},{n:'Gold',of:319.99,sp:361.99},
@@ -512,6 +530,7 @@ function abrirModal(id) {
   whPlanoSelecionado = null
   const livre = p.vagas_total - p.vagas_ocupadas
   const isWH = p.servico.toLowerCase().includes('wellhub')
+  const isTP = p.servico.toLowerCase().includes('totalpass')
 
   document.getElementById('m-ico').innerHTML = getIcone(p.servico, p.icone_url)
   document.getElementById('m-titulo').textContent = p.servico
@@ -539,9 +558,25 @@ function abrirModal(id) {
     document.getElementById('m-price-block').style.display='block'
     document.getElementById('m-wh-block').style.display='none'
     const isBeneficio = ['TotalPass'].some(s => p.servico.toLowerCase().includes(s.toLowerCase()))
-    if(isBeneficio){
+    if(isTP){
       document.getElementById('m-price-block').style.display='none'
       document.getElementById('m-beneficio-block').style.display='block'
+      document.getElementById('m-wh-block').style.display='none'
+      // Mostrar grid TotalPass
+      document.getElementById('m-tp-block').style.display='block'
+      document.getElementById('m-tp-hint').textContent='Selecione um plano para continuar'
+      const g=document.getElementById('m-tp-grid')
+      g.innerHTML=TP_PLANS.map(function(pl,i){return(
+        '<div class="m-wh-item" onclick="selecionarWhPlano(this,TP_PLANS['+i+'])">'+
+        '<div class="m-wh-name">'+pl.n+'</div>'+
+        '<div class="m-wh-access">✓ Acesso livre, sem vinculo</div>'+
+        '<div class="m-wh-us">'+fmtR(pl.sp)+'<span class="m-wh-mo">/mes</span></div>'+
+        '</div>'
+      )}).join('')
+    } else if(isBeneficio){
+      document.getElementById('m-price-block').style.display='none'
+      document.getElementById('m-beneficio-block').style.display='block'
+      document.getElementById('m-tp-block').style.display='none'
       const spv = cat ? cat.sp : p.preco_por_vaga
       document.getElementById('m-beneficio-preco').textContent = fmtR(spv)
     } else {
@@ -566,7 +601,7 @@ function abrirModal(id) {
   if(livre <= 0){
     btn.disabled = true
     btn.textContent = 'Sem vagas disponíveis'
-  } else if(isWH){
+  } else if(isWH || isTP){
     btn.disabled = true
     btn.textContent = 'Selecione um plano acima 👆'
   } else {
@@ -591,7 +626,7 @@ function entrarPiscina() {
     return
   }
   let url = `checkout.html?piscina=${piscinaAtual.id}`
-  if(isWH && whPlanoSelecionado) url += `&plano=${encodeURIComponent(whPlanoSelecionado.n)}&valor=${whPlanoSelecionado.sp}`
+  if((isWH||isTP) && whPlanoSelecionado) url += `&plano=${encodeURIComponent(whPlanoSelecionado.n)}&valor=${whPlanoSelecionado.sp}`
   window.location.href = url
 }
 

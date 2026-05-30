@@ -397,12 +397,24 @@ const SVCS_FAMILIA=[
     ]
   },
 ]
+const TP_PLANS=[
+  {n:'TP GO',of:39.90,sp:51.90,rep:8.00,desc:'2.000+ academias e parceiros'},
+  {n:'TP1',of:59.90,sp:74.90,rep:10.00,desc:'6.000+ academias e parceiros'},
+  {n:'TP1+',of:89.90,sp:109.90,rep:13.00,desc:'13.000+ academias + Smart Fit'},
+  {n:'TP2',of:119.90,sp:144.90,rep:17.00,desc:'20.000+ academias + Smart Fit + terapia'},
+  {n:'TP3',of:199.90,sp:234.90,rep:23.00,desc:'28.000+ academias + saude integrada'},
+  {n:'TP4',of:299.90,sp:344.90,rep:30.00,desc:'30.000+ academias + espacos premium'},
+  {n:'TP5',of:399.90,sp:449.90,rep:33.00,desc:'32.000+ academias + premium'},
+  {n:'TP5+',of:499.90,sp:554.90,rep:37.00,desc:'33.000+ academias + premium'},
+  {n:'TP6',of:599.90,sp:659.90,rep:40.00,desc:'34.500+ academias + premium'},
+  {n:'TP7',of:699.90,sp:769.90,rep:46.00,desc:'35.000+ academias + premium'}
+]
 const SVCS_CORP=[
   {nome:'Wellhub',sub:'Benefício corporativo',img:BASE+'wellhub_gympass_icon.png',especial:'wellhub'},
   {
-    nome:'TotalPass',sub:'Benefício corporativo',img:BASE+'logo_totalpass_icon_fundo%20transparente.png',
-    precoVenda:59.90,repasse:42.00,
-    planos:[{nome:'Corporativo (vaga de dependente)',custo:0,vagas:2,desc:'Acesso a 35.000+ academias e estúdios no Brasil'}]
+    nome:'TotalPass',sub:'Beneficio corporativo',img:BASE+'logo_totalpass_icon_fundo%20transparente.png',
+    precoVenda:51.90,repasse:8.00,especial:'totalpass',
+    planos:[{nome:'TP GO',custo:0,vagas:2,desc:'Membro escolhe o plano no checkout — acesso livre sem vinculo'}]
   },
   {
     nome:'Alura',sub:'Educação corporativa',img:BASE+'logo_alura.png',
@@ -643,6 +655,7 @@ function popularSelectsCartao(){
 function irPasso3(){
   const svc=getSvc()
   const isWH=svc?.especial==='wellhub'
+  const isTP=svc?.especial==='totalpass'
   if(isWH&&whPlanosSel.size===0){showMsg('Selecione pelo menos um plano Wellhub.','error');return}
   hideMsg()
   renderResumo()
@@ -653,6 +666,7 @@ function irPasso3(){
 function renderResumo(){
   const svc=getSvc()
   const isWH=svc?.especial==='wellhub'
+  const isTP=svc?.especial==='totalpass'
   const vagas=isWH?document.getElementById('wh-vagas').value:document.getElementById('vagas-total').value
   const custo=planoAtual?.custo||0
   const ganho=isWH?`R$${(parseInt(vagas)*8).toFixed(0)}–R$${(parseInt(vagas)*35).toFixed(0)}/mês`:
@@ -679,6 +693,7 @@ async function publicarPiscina(){
 
   const svc=getSvc()
   const isWH=svc?.especial==='wellhub'
+  const isTP=svc?.especial==='totalpass'
   const vagas=parseInt(isWH?document.getElementById('wh-vagas').value:document.getElementById('vagas-total').value)
   const desc=isWH?document.getElementById('wh-desc-auto').textContent:document.getElementById('desc-auto').textContent
 
