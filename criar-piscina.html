@@ -264,7 +264,6 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
           </select>
           <div class="field-hint">Quantas vagas de dependente você tem disponíveis</div>
         </div>
-        <!-- Descrição automática Wellhub -->
         <div>
           <div class="desc-label">📋 Descrição gerada automaticamente <span style="font-size:11px;color:var(--teal);font-weight:600;">✨</span></div>
           <div class="desc-auto" id="wh-desc-auto">Selecione os planos e vagas para gerar a descrição.</div>
@@ -277,6 +276,41 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
           <div class="calc-row"><span>Recebimento máximo (planos premium)</span><span class="val blue" id="wh-calc-max">R$70,00/mês</span></div>
           <div class="calc-row"><span>Seu custo mensal</span><span class="val green">R$0,00 — empresa paga ✓</span></div>
           <div class="calc-row"><span>Recebimento líquido estimado</span><span class="val green" id="wh-calc-lucro">R$16–70/mês</span></div>
+        </div>
+      </div>
+
+      <!-- TOTALPASS — mesmo modelo Wellhub -->
+      <div id="panel-2-totalpass" style="display:none;">
+        <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">TotalPass — Configure sua piscina</h2>
+        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:.75rem;font-weight:500;">Sua empresa paga. Você oferta vagas de dependente.</p>
+        <div class="info-box">
+          <strong>Como funciona:</strong> o membro escolhe qual plano TotalPass quer ao entrar. O Splitpool cuida do pagamento e do acesso. Você recebe por cada vaga ativada, independente do plano escolhido pelo membro.
+        </div>
+        <p style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:10px;opacity:.8;">Selecione quais planos você permite:</p>
+        <div class="wellhub-grid" id="totalpass-grid"></div>
+        <div class="field">
+          <label>Número de vagas disponíveis</label>
+          <select id="tp-vagas" onchange="atualizarCalcTP();gerarDescricaoTP()">
+            <option value="1">1 vaga</option>
+            <option value="2" selected>2 vagas</option>
+            <option value="3">3 vagas</option>
+            <option value="4">4 vagas</option>
+            <option value="5">5 vagas</option>
+          </select>
+          <div class="field-hint">Quantas vagas de dependente você tem disponíveis</div>
+        </div>
+        <div>
+          <div class="desc-label">📋 Descrição gerada automaticamente <span style="font-size:11px;color:var(--teal);font-weight:600;">✨</span></div>
+          <div class="desc-auto" id="tp-desc-auto">Selecione os planos e vagas para gerar a descrição.</div>
+        </div>
+        <div class="calc-box">
+          <div class="calc-title">🧮 Sua projeção de recebimentos — TotalPass</div>
+          <div class="motivacao mot-100">Custo zero para você — todo recebimento é renda adicional 💰</div>
+          <div class="calc-row"><span>Vagas disponíveis</span><span class="val blue" id="tp-calc-vagas">2</span></div>
+          <div class="calc-row"><span>Recebimento mínimo (TP GO)</span><span class="val blue" id="tp-calc-min">R$16,00/mês</span></div>
+          <div class="calc-row"><span>Recebimento máximo (TP7)</span><span class="val blue" id="tp-calc-max">R$92,00/mês</span></div>
+          <div class="calc-row"><span>Seu custo mensal</span><span class="val green">R$0,00 — empresa paga ✓</span></div>
+          <div class="calc-row"><span>Recebimento líquido estimado</span><span class="val green" id="tp-calc-lucro">R$16–92/mês</span></div>
         </div>
       </div>
 
@@ -473,7 +507,47 @@ function onComprovanteSelected(input){
   document.getElementById('upload-ok').textContent='✓ '+file.name+' selecionado'
 }
 
-function renderWellhubGrid(){
+let tpPlanosSel=new Set()
+
+function renderTotalPassGrid(){
+  document.getElementById('totalpass-grid').innerHTML=TP_PLANS.map(p=>`
+    <div class="wh-card ${tpPlanosSel.has(p.n)?'sel':''}" onclick="toggleTPPlano('${p.n}',this)">
+      <div class="wh-plan">${p.n}</div>
+      <div class="wh-price-official">R$${p.of.toFixed(2).replace('.',',')} /mês (TotalPass)</div>
+      <div class="wh-price-final">R$${p.sp.toFixed(2).replace('.',',')}<span style="font-size:11px;font-weight:500;opacity:.6">/mês</span></div>
+      <div class="wh-repasse">Você recebe R$${p.rep.toFixed(2).replace('.',',')}/vaga</div>
+      <div class="wh-academias">${p.desc}</div>
+    </div>`).join('')
+}
+
+function toggleTPPlano(nome,el){
+  tpPlanosSel.has(nome)?tpPlanosSel.delete(nome):tpPlanosSel.add(nome)
+  el.classList.toggle('sel')
+  atualizarCalcTP()
+  gerarDescricaoTP()
+}
+
+function atualizarCalcTP(){
+  const vagas=parseInt(document.getElementById('tp-vagas')?.value||2)
+  const sel=TP_PLANS.filter(p=>tpPlanosSel.has(p.n))
+  if(!sel.length) return
+  const minR=Math.min(...sel.map(p=>p.rep))*vagas
+  const maxR=Math.max(...sel.map(p=>p.rep))*vagas
+  if(document.getElementById('tp-calc-vagas')){
+    document.getElementById('tp-calc-vagas').textContent=vagas
+    document.getElementById('tp-calc-min').textContent=`R$${minR.toFixed(2).replace('.',',')}/mês`
+    document.getElementById('tp-calc-max').textContent=`R$${maxR.toFixed(2).replace('.',',')}/mês`
+    document.getElementById('tp-calc-lucro').textContent=`R$${minR.toFixed(0)}–R$${maxR.toFixed(0)}/mês`
+  }
+}
+
+function gerarDescricaoTP(){
+  const vagas=document.getElementById('tp-vagas')?.value||2
+  const planos=Array.from(tpPlanosSel)
+  const planosStr=planos.length>0?planos.join(', '):'TP GO ao TP7'
+  const el=document.getElementById('tp-desc-auto')
+  if(el) el.textContent=`${nomeUsuario}, dono desta piscina TotalPass, oferece ${vagas} vaga${vagas>1?'s':''} de dependente via benefício corporativo. O membro pode escolher entre os planos ${planosStr}. Acesso liberado em até 24h após confirmação do pagamento. 🏋️`
+}
   document.getElementById('wellhub-grid').innerHTML=WH_PLANOS.map(p=>`
     <div class="wh-card ${whPlanosSel.has(p.nome)?'sel':''} ${p.popular?'popular':''}" onclick="toggleWHPlano('${p.nome}',this)">
       <div class="wh-plan">${p.nome}</div>
@@ -639,8 +713,12 @@ function irPasso2(){
   if(!tipoSelecionado){showMsg('Selecione o tipo de piscina.','error');return}
   hideMsg()
   const isWH=svc.especial==='wellhub'
-  document.getElementById('panel-2-familia').style.display=isWH?'none':'block'
+  const isTP=svc.especial==='totalpass'
+  document.getElementById('panel-2-familia').style.display=(isWH||isTP)?'none':'block'
   document.getElementById('panel-2-wellhub').style.display=isWH?'block':'none'
+  document.getElementById('panel-2-totalpass').style.display=isTP?'block':'none'
+  if(isWH){renderWellhubGrid();atualizarCalcWH();gerarDescricaoWH()}
+  if(isTP){renderTotalPassGrid();atualizarCalcTP();gerarDescricaoTP()}
   if(isWH){renderWellhubGrid();atualizarCalcWH();gerarDescricaoWH()}
   else{popularSelects()}
   goStep(2)
@@ -657,6 +735,7 @@ function irPasso3(){
   const isWH=svc?.especial==='wellhub'
   const isTP=svc?.especial==='totalpass'
   if(isWH&&whPlanosSel.size===0){showMsg('Selecione pelo menos um plano Wellhub.','error');return}
+  if(isTP&&tpPlanosSel.size===0){showMsg('Selecione pelo menos um plano TotalPass.','error');return}
   hideMsg()
   renderResumo()
   popularSelectsCartao()
@@ -667,17 +746,19 @@ function renderResumo(){
   const svc=getSvc()
   const isWH=svc?.especial==='wellhub'
   const isTP=svc?.especial==='totalpass'
-  const vagas=isWH?document.getElementById('wh-vagas').value:document.getElementById('vagas-total').value
+  const vagas=isWH?document.getElementById('wh-vagas').value:isTP?document.getElementById('tp-vagas').value:document.getElementById('vagas-total').value
   const custo=planoAtual?.custo||0
   const ganho=isWH?`R$${(parseInt(vagas)*8).toFixed(0)}–R$${(parseInt(vagas)*35).toFixed(0)}/mês`:
+    isTP?`R$${(parseInt(vagas)*8).toFixed(0)}–R$${(parseInt(vagas)*46).toFixed(0)}/mês`:
     (()=>{const v=parseInt(vagas);const l=tipoSelecionado==='corporativo'?svc.repasse*v:(svc.repasse*v)-custo;return`R$${Math.max(0,l).toFixed(2).replace('.',',')}/mês (estimado)`})()
   const planoNome=planoAtual?.nome||'—'
   document.getElementById('resumo-grid').innerHTML=`
     <div class="resumo-item"><div class="resumo-label">Serviço</div><div class="resumo-val">${svc.nome}</div></div>
     <div class="resumo-item"><div class="resumo-label">Tipo</div><div class="resumo-val">${tipoSelecionado==='corporativo'?'Benefício corporativo':'Plano família'}</div></div>
-    ${!isWH?`<div class="resumo-item"><div class="resumo-label">Plano</div><div class="resumo-val" style="font-size:13px;">${planoNome}</div></div>`:''}
+    ${!isWH&&!isTP?`<div class="resumo-item"><div class="resumo-label">Plano</div><div class="resumo-val" style="font-size:13px;">${planoNome}</div></div>`:''}
     <div class="resumo-item"><div class="resumo-label">Vagas ofertadas</div><div class="resumo-val">${vagas} vaga${vagas>1?'s':''}</div></div>
     ${isWH?`<div class="resumo-item"><div class="resumo-label">Planos permitidos</div><div class="resumo-val" style="font-size:12px;">${Array.from(whPlanosSel).join(', ')}</div></div>`:''}
+    ${isTP?`<div class="resumo-item"><div class="resumo-label">Planos permitidos</div><div class="resumo-val" style="font-size:12px;">${Array.from(tpPlanosSel).join(', ')}</div></div>`:''}
     <div class="resumo-item" style="border:1.5px solid rgba(0,200,100,0.3);background:rgba(0,200,100,0.08);"><div class="resumo-label" style="color:#00875A;">Recebimento estimado</div><div class="resumo-val" style="color:#00875A;">${ganho}</div></div>`
 }
 
@@ -694,8 +775,8 @@ async function publicarPiscina(){
   const svc=getSvc()
   const isWH=svc?.especial==='wellhub'
   const isTP=svc?.especial==='totalpass'
-  const vagas=parseInt(isWH?document.getElementById('wh-vagas').value:document.getElementById('vagas-total').value)
-  const desc=isWH?document.getElementById('wh-desc-auto').textContent:document.getElementById('desc-auto').textContent
+  const vagas=parseInt(isWH?document.getElementById('wh-vagas').value:isTP?document.getElementById('tp-vagas').value:document.getElementById('vagas-total').value)
+  const desc=isWH?document.getElementById('wh-desc-auto').textContent:isTP?document.getElementById('tp-desc-auto').textContent:document.getElementById('desc-auto').textContent
 
   // Upload do comprovante no Supabase Storage
   let comprovanteUrl=null
