@@ -332,12 +332,21 @@ const ICONES = {
   'Spotify':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Spotify_icon.png',
   'YouTube':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/youtube_icon.png',
   'Claude':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/claude-ai_icon.jpg',
+  'Claude Pro':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/claude-ai_icon.jpg',
   'iCloud':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/icloud%20icon.jpg',
   'Apple Music':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Apple_Music_icon.png',
   'Microsoft 365':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/microsoft_icon.png',
+  'Microsoft 365 Family':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/microsoft_icon.png',
   'Duolingo':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/duolingo_icon.png',
+  'Duolingo Super':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/duolingo_icon.png',
+  'Duolingo Super Família':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/duolingo_icon.png',
   'Notion':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Notion_icon.png',
+  'Notion Team':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Notion_icon.png',
   'Wellhub':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/wellhub_gympass_icon.png',
+  'Canva':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Logo-Canva.png',
+  'Canva Teams':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Logo-Canva.png',
+  'TotalPass':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/logo_totalpass_icon_fundo%20transparente.png',
+  'Alura':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/logo_alura.png',
 }
 
 let todasPiscinas = []
@@ -396,7 +405,7 @@ function setCategoria(cat, el) {
   renderizar()
 }
 
-const BLOCKLIST = ['spotify','youtube','apple one','netflix']
+const BLOCKLIST = ['spotify','youtube','apple one','netflix','claude pro']
 
 function renderizar() {
   const busca = document.getElementById('busca').value.toLowerCase()
@@ -472,8 +481,6 @@ const CAT_MODAL = {
   'Canva':{mensal:24.17,anual:24.17,sp:12.10},
   'Notion Team':{mensal:50.00,anual:null,sp:25.00},
   'Notion':{mensal:50.00,anual:null,sp:25.00},
-  'Claude Pro':{mensal:100.00,anual:null,sp:50.00},
-  'Claude':{mensal:100.00,anual:null,sp:50.00},
   'TotalPass':{mensal:115.00,anual:null,sp:59.90},
   'Alura':{mensal:99.90,anual:79.92,sp:39.90},
 }

@@ -358,17 +358,16 @@ const sb=createClient(SBU,SBK)
 const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/'
 
 const CAT={
-  'Microsoft 365 Family':{icon:'boia%20pato%20logo%20microsoft.png',mensal:51.00,sp:25.50},
-  'Microsoft 365':{icon:'boia%20pato%20logo%20microsoft.png',mensal:51.00,sp:25.50},
-  'Duolingo Super Família':{icon:'boia%20melancia%20logoduolingo.png',mensal:14.99,sp:7.50},
-  'Duolingo Super':{icon:'boia%20melancia%20logoduolingo.png',mensal:14.99,sp:7.50},
-    'Duolingo Max':{icon:'boia%20melancia%20logoduolingo.png',mensal:33.33,sp:16.70},
-  'Canva Teams':{icon:'Logo-Canva.png',mensal:24.17,sp:12.10},
-  'Notion Team':{icon:'Notion_icon.png',mensal:50.00,sp:25.00},
-  'Claude Pro':{icon:'claude-ai_icon.jpg',mensal:100.00,sp:50.00},
+  'Microsoft 365 Family':{icon:'microsoft_icon.png',mensal:51.00,anual:49.92,sp:19.90},
+  'Microsoft 365':{icon:'microsoft_icon.png',mensal:51.00,anual:49.92,sp:19.90},
+  'Duolingo Super':{icon:'duolingo_icon.png',mensal:69.90,anual:37.49,sp:9.90},
+  'Duolingo Super Família':{icon:'duolingo_icon.png',mensal:69.90,anual:37.49,sp:9.90},
+  'Duolingo Super Familia':{icon:'duolingo_icon.png',mensal:69.90,anual:37.49,sp:9.90},
+  'Canva Teams':{icon:'Logo-Canva.png',mensal:24.17,anual:24.17,sp:14.90},
+  'Notion Team':{icon:'Notion_icon.png',mensal:50.00,anual:null,sp:29.90},
   'Wellhub':{icon:'wellhub_gympass_icon.png',beneficio:true},
-  'TotalPass':{icon:null,beneficio:true,sp:59.90},
-  'Alura':{icon:'logo_alura.png',mensal:99.90,sp:39.90},
+  'TotalPass':{icon:'logo_totalpass_icon_fundo%20transparente.png',beneficio:true,sp:59.90,mensal:115.00},
+  'Alura':{icon:'logo_alura.png',mensal:99.90,anual:79.92,sp:39.90},
 }
 
 function fmt(v){return'R$ '+Number(v).toFixed(2).replace('.',',')}
