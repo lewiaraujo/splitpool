@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splitpool — Meus Planos</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;--green:#00A878;--text:#0C2461;}
+body{font-family:'Inter',sans-serif;color:var(--text);overflow-x:hidden;background:#3acde8;}
+.pool-bg{position:fixed;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1572331165267-854da2b021d4?w=1920&q=85') center/cover no-repeat;filter:brightness(1.05) saturate(1.1);}
+.pool-overlay{position:fixed;inset:0;z-index:1;background:rgba(160,225,245,0.08);}
+.shimmer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
+.shimmer canvas{position:absolute;inset:0;width:100%;height:100%;}
+.page{position:relative;z-index:10;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);background:rgba(255,255,255,0.72);border-bottom:1px solid rgba(0,180,210,0.18);padding:0 5%;}
+.nav-in{max-width:900px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.nav-logo{height:46px;object-fit:contain;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{font-size:13px;font-weight:600;color:var(--bluedark);opacity:.65;}
+.nav-btn{font-size:13px;font-weight:700;color:var(--blue);background:transparent;border:1.5px solid rgba(18,85,204,0.25);border-radius:8px;padding:7px 14px;cursor:pointer;font-family:inherit;transition:.2s;text-decoration:none;}
+.nav-btn:hover{background:rgba(18,85,204,0.06);}
+.nav-btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+.nav-btn.primary:hover{background:var(--bluedark);}
+
+.page-wrap{padding:88px 5% 60px;min-height:100vh;}
+.container{max-width:860px;margin:0 auto;}
+
+.page-header{margin-bottom:24px;}
+.page-title{font-family:'Nunito',sans-serif;font-size:26px;font-weight:900;color:var(--bluedark);margin-bottom:4px;}
+.page-sub{font-size:14px;color:var(--bluedark);opacity:.55;font-weight:500;}
+
+.card{background:rgba(255,255,255,0.90);border:1px solid rgba(0,180,210,0.18);border-radius:16px;padding:24px;box-shadow:0 4px 24px rgba(0,20,80,0.09);backdrop-filter:blur(12px);}
+
+/* LOADING */
+#loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:50vh;color:var(--bluedark);}
+.spinner{width:36px;height:36px;border:3px solid rgba(18,85,204,0.15);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* EMPTY STATE */
+#empty-state{display:none;flex-direction:column;align-items:center;gap:20px;padding:48px 20px;}
+.empty-ico{font-size:52px;}
+.empty-title{font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;color:var(--bluedark);}
+.empty-sub{font-size:14px;color:var(--bluedark);opacity:.55;font-weight:500;text-align:center;max-width:340px;line-height:1.7;}
+.empty-sugestoes{width:100%;max-width:600px;}
+.sugestao-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-bottom:14px;}
+.sugestoes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.sug-card{background:rgba(255,255,255,0.88);border:1px solid rgba(0,180,210,0.18);border-radius:12px;padding:14px;cursor:pointer;transition:.2s;text-align:center;}
+.sug-card:hover{border-color:var(--blue);box-shadow:0 2px 12px rgba(18,85,204,0.1);}
+.sug-ico{width:40px;height:40px;border-radius:10px;object-fit:cover;margin:0 auto 8px;}
+.sug-ico-ph{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;margin:0 auto 8px;}
+.sug-nome{font-size:12px;font-weight:700;color:var(--bluedark);}
+.sug-preco{font-size:11px;color:var(--blue);font-weight:600;margin-top:2px;}
+
+/* PLANOS */
+#planos-state{display:none;flex-direction:column;gap:14px;}
+
+.resumo-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:4px;}
+.resumo-item{background:rgba(255,255,255,0.88);border:1px solid rgba(0,180,210,0.18);border-radius:12px;padding:14px;text-align:center;}
+.resumo-val{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:var(--bluedark);}
+.resumo-lbl{font-size:11px;color:var(--bluedark);opacity:.45;font-weight:600;margin-top:2px;text-transform:uppercase;letter-spacing:.05em;}
+
+/* PLANO CARD */
+.plano-card{position:relative;overflow:hidden;}
+.plano-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.plano-ico{width:52px;height:52px;border-radius:12px;object-fit:cover;flex-shrink:0;background:#f0f6ff;}
+.plano-ico-ph{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0;}
+.plano-nome{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;color:var(--bluedark);}
+.plano-cod{display:inline-flex;align-items:center;gap:4px;background:#f0f6ff;border:1px solid rgba(18,85,204,0.2);border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--blue);margin-top:4px;}
+.plano-preco{margin-left:auto;text-align:right;flex-shrink:0;}
+.plano-preco-val{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:var(--blue);}
+.plano-preco-mo{font-size:11px;color:var(--bluedark);opacity:.45;font-weight:500;}
+
+/* STATUS BADGE */
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.status-badge.aguardando{background:#fff8e0;color:#b07000;border:1px solid rgba(180,120,0,0.2);}
+.status-badge.ativo{background:#e6fff8;color:#00875A;border:1px solid rgba(0,168,120,0.25);}
+.status-badge.suspenso{background:#fff0f0;color:#c0392b;border:1px solid rgba(192,57,43,0.2);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;}
+
+/* PLANO BODY */
+.plano-body{border-top:1px solid rgba(0,180,210,0.12);padding-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.plano-meta{display:flex;flex-direction:column;gap:4px;}
+.plano-meta-row{font-size:13px;color:var(--bluedark);opacity:.6;font-weight:500;}
+.plano-meta-row strong{opacity:1;color:var(--bluedark);}
+
+/* BOTÃO CONFIRMAR */
+.btn-confirmar{background:linear-gradient(135deg,var(--green),#009060);color:#fff;border:none;padding:12px 22px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 3px 14px rgba(0,168,120,0.3);transition:.2s;white-space:nowrap;}
+.btn-confirmar:hover{transform:translateY(-1px);box-shadow:0 5px 20px rgba(0,168,120,0.4);}
+.btn-confirmar:disabled{background:#93C5FD;box-shadow:none;cursor:not-allowed;transform:none;}
+
+/* CONFIRMAR MODAL */
+.confirmar-overlay{position:fixed;inset:0;background:rgba(5,20,70,0.55);backdrop-filter:blur(8px);z-index:400;display:none;align-items:center;justify-content:center;padding:1rem;}
+.confirmar-overlay.open{display:flex;}
+.confirmar-modal{background:#fff;border-radius:20px;padding:28px;max-width:420px;width:100%;box-shadow:0 8px 32px rgba(0,20,80,.2);animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.conf-title{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;color:var(--bluedark);margin-bottom:8px;}
+.conf-sub{font-size:13px;color:var(--bluedark);opacity:.6;line-height:1.7;font-weight:500;margin-bottom:20px;}
+.conf-warning{background:#fff8e0;border:1px solid rgba(180,120,0,0.2);border-radius:10px;padding:12px;font-size:12px;color:#8a5c00;font-weight:500;line-height:1.6;margin-bottom:20px;}
+.conf-btns{display:flex;gap:10px;}
+.conf-btn-sim{flex:1;padding:13px;border-radius:10px;background:linear-gradient(135deg,var(--green),#009060);color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;}
+.conf-btn-sim:hover{opacity:.9;}
+.conf-btn-nao{flex:1;padding:13px;border-radius:10px;background:transparent;color:var(--bluedark);border:1.5px solid rgba(18,85,204,0.2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;}
+.conf-btn-nao:hover{background:rgba(18,85,204,0.05);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bluedark);color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;transition:transform .3s ease;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.success{background:var(--green);}
+
+@media(max-width:520px){
+  .plano-body{flex-direction:column;align-items:flex-start;}
+  .btn-confirmar{width:100%;}
+  .resumo-bar{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="pool-bg"></div>
+<div class="pool-overlay"></div>
+<div class="shimmer"><canvas id="wc"></canvas></div>
+
+<nav>
+  <div class="nav-in">
+    <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="Splitpool" class="nav-logo">
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <a href="explorar.html" class="nav-btn">Explorar</a>
+      <button class="nav-btn" onclick="sair()">Sair</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+<div class="page-wrap">
+<div class="container">
+
+  <div id="loading-state">
+    <div class="spinner"></div>
+    <span style="font-size:14px;font-weight:600;opacity:.6;">Carregando seus planos...</span>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="empty-state">
+    <div class="card" style="width:100%;text-align:center;">
+      <div class="empty-ico">🏊</div>
+      <div class="empty-title" style="margin-top:12px;">Você ainda não está em nenhuma piscina</div>
+      <div class="empty-sub" style="margin:8px auto 20px;">Explore os serviços disponíveis e entre em uma piscina para começar a economizar.</div>
+      <a href="explorar.html" style="display:inline-block;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;padding:13px 28px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;box-shadow:0 4px 16px rgba(18,85,204,0.3);">Explorar piscinas →</a>
+    </div>
+    <div class="empty-sugestoes" id="sugestoes-wrap" style="display:none;">
+      <div class="sugestao-label">Piscinas abertas agora</div>
+      <div class="sugestoes-grid" id="sugestoes-grid"></div>
+    </div>
+  </div>
+
+  <!-- PLANOS STATE -->
+  <div id="planos-state">
+    <div class="page-header">
+      <div class="page-title">Meus planos</div>
+      <div class="page-sub">Acompanhe suas assinaturas e confirme acessos</div>
+    </div>
+
+    <div class="resumo-bar" id="resumo-bar"></div>
+    <div id="planos-list"></div>
+
+    <div style="margin-top:8px;text-align:center;">
+      <a href="explorar.html" style="font-size:13px;font-weight:600;color:var(--blue);text-decoration:none;opacity:.8;">+ Entrar em mais piscinas</a>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<!-- MODAL CONFIRMAR ACESSO -->
+<div class="confirmar-overlay" id="conf-overlay">
+  <div class="confirmar-modal">
+    <div class="conf-title">Confirmar acesso recebido?</div>
+    <div class="conf-sub">Ao confirmar, você está informando que recebeu o acesso ao serviço e ele está funcionando corretamente. O repasse ao dono será liberado.</div>
+    <div class="conf-warning">⚠️ Após confirmar, não será possível solicitar reembolso por falta de acesso. Só confirme se o serviço estiver de fato funcionando.</div>
+    <div class="conf-btns">
+      <button class="conf-btn-nao" onclick="fecharConf()">Ainda não</button>
+      <button class="conf-btn-sim" onclick="confirmarAcesso()">Sim, estou com acesso ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const c=document.getElementById('wc'),ctx=c.getContext('2d');
+  let W,H,t=0,lines=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;lines=[];for(let i=0;i<7;i++)lines.push({y:H*(0.08+i*0.13),amp:9+i*3,freq:0.005+i*0.002,speed:0.014+i*0.005,phase:Math.random()*Math.PI*2,alpha:0.16+i*0.025});}
+  function draw(){t+=0.012;ctx.clearRect(0,0,W,H);lines.forEach(l=>{ctx.beginPath();ctx.moveTo(0,l.y);for(let x=0;x<=W;x+=6){const y=l.y+Math.sin(x*l.freq+t*l.speed+l.phase)*l.amp+Math.sin(x*l.freq*1.8+t*l.speed*1.4)*l.amp*0.35;ctx.lineTo(x,y);}ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=`rgba(255,255,255,${l.alpha})`;ctx.fill();});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+
+const SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
+const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
+const {createClient}=supabase;
+const sb=createClient(SBU,SBK);
+const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/';
+
+const ICONES={
+  'Microsoft 365':BASE+'microsoft_icon.png',
+  'Microsoft 365 Family':BASE+'microsoft_icon.png',
+  'Duolingo Super':BASE+'duolingo_icon.png',
+  'Duolingo Super Família':BASE+'duolingo_icon.png',
+  'Canva Teams':BASE+'Logo-Canva.png',
+  'Notion Team':BASE+'Notion_icon.png',
+  'Wellhub':BASE+'wellhub_gympass_icon.png',
+  'TotalPass':BASE+'logo_totalpass_icon_fundo%20transparente.png',
+  'Alura':BASE+'logo_alura.png',
+  'Claude Pro':BASE+'claude-ai_icon.jpg',
+};
+
+function fmt(v){return'R$ '+Number(v).toFixed(2).replace('.',',');}
+function poolCode(id){let h=(id*2654435761)>>>0;const ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
+function getIco(servico){
+  const url=ICONES[servico];
+  if(url) return`<img src="${url}" alt="${servico}" class="plano-ico" onerror="this.className='';this.outerHTML='<div class=\\'plano-ico-ph\\'>${servico[0]}</div>'">`;
+  return`<div class="plano-ico-ph">${servico[0]}</div>`;
+}
+function getSugIco(servico){
+  const url=ICONES[servico];
+  if(url) return`<img src="${url}" alt="${servico}" class="sug-ico" onerror="this.className='';this.outerHTML='<div class=\\'sug-ico-ph\\'>${servico[0]}</div>'">`;
+  return`<div class="sug-ico-ph">${servico[0]}</div>`;
+}
+
+let userId=null;
+let assinaturaParaConfirmar=null;
+
+function showToast(msg,tipo=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast'+(tipo?' '+tipo:'');
+  setTimeout(()=>t.classList.add('show'),10);
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+function fecharConf(){
+  document.getElementById('conf-overlay').classList.remove('open');
+  assinaturaParaConfirmar=null;
+}
+
+function abrirConf(id){
+  assinaturaParaConfirmar=id;
+  document.getElementById('conf-overlay').classList.add('open');
+}
+
+async function confirmarAcesso(){
+  if(!assinaturaParaConfirmar) return;
+  const btn=document.querySelector('.conf-btn-sim');
+  btn.disabled=true;btn.textContent='Confirmando...';
+  const {error}=await sb.from('assinaturas')
+    .update({status:'ativo',confirmado_em:new Date().toISOString()})
+    .eq('id',assinaturaParaConfirmar).eq('membro_id',userId);
+  fecharConf();
+  btn.disabled=false;btn.textContent='Sim, estou com acesso ✓';
+  if(error){showToast('Erro ao confirmar. Tente novamente.'); return;}
+  showToast('Acesso confirmado! Repasse liberado ao dono.','success');
+  setTimeout(()=>carregarPlanos(),1200);
+}
+
+function sair(){
+  sb.auth.signOut().then(()=>window.location.href='index.html');
+}
+
+function renderPlano(a){
+  const statusMap={
+    aguardando_acesso:{label:'Aguardando acesso',cls:'aguardando'},
+    ativo:{label:'Ativo',cls:'ativo'},
+    suspenso:{label:'Suspenso',cls:'suspenso'},
+  };
+  const st=statusMap[a.status]||statusMap.aguardando_acesso;
+  const dataEntrada=new Date(a.created_at).toLocaleDateString('pt-BR');
+  const proxPag=a.proximo_pagamento
+    ?new Date(a.proximo_pagamento).toLocaleDateString('pt-BR')
+    :'—';
+  const nomeExibir=a.plano_nome?`${a.servico} — ${a.plano_nome}`:a.servico;
+
+  return`<div class="card plano-card" id="plano-${a.id}">
+    <div class="plano-header">
+      ${getIco(a.servico)}
+      <div style="flex:1;min-width:0;">
+        <div class="plano-nome">${nomeExibir}</div>
+        <div class="plano-cod">${poolCode(a.piscina_id)}</div>
+        <div style="margin-top:8px;">
+          <span class="status-badge ${st.cls}">
+            <span class="status-dot"></span>${st.label}
+          </span>
+        </div>
+      </div>
+      <div class="plano-preco">
+        <div class="plano-preco-val">${fmt(a.valor)}</div>
+        <div class="plano-preco-mo">/mês</div>
+      </div>
+    </div>
+    <div class="plano-body">
+      <div class="plano-meta">
+        <div class="plano-meta-row">Entrada: <strong>${dataEntrada}</strong></div>
+        <div class="plano-meta-row">Próximo pagamento: <strong>${proxPag}</strong></div>
+        ${a.status==='aguardando_acesso'?'<div class="plano-meta-row" style="color:#b07000;">⏳ Confirme após receber o acesso ao serviço</div>':''}
+      </div>
+      ${a.status==='aguardando_acesso'?`<button class="btn-confirmar" onclick="abrirConf(${a.id})">✓ Confirmar acesso</button>`:''}
+    </div>
+  </div>`;
+}
+
+async function carregarSugestoes(){
+  const {data}=await sb.from('piscinas')
+    .select('id,servico,preco_por_vaga,vagas_total,vagas_ocupadas')
+    .eq('status','aberta')
+    .limit(6);
+  if(!data||!data.length) return;
+  const wrap=document.getElementById('sugestoes-wrap');
+  const grid=document.getElementById('sugestoes-grid');
+  grid.innerHTML=data.filter(p=>p.vagas_total-p.vagas_ocupadas>0).map(p=>`
+    <div class="sug-card" onclick="window.location.href='explorar.html'">
+      ${getSugIco(p.servico)}
+      <div class="sug-nome">${p.servico}</div>
+      <div class="sug-preco">${fmt(p.preco_por_vaga)}/mês</div>
+    </div>`).join('');
+  if(grid.innerHTML) wrap.style.display='block';
+}
+
+async function carregarPlanos(){
+  const {data,error}=await sb.from('assinaturas')
+    .select('*')
+    .eq('membro_id',userId)
+    .order('created_at',{ascending:false});
+
+  document.getElementById('loading-state').style.display='none';
+
+  if(!data||!data.length||error){
+    document.getElementById('empty-state').style.display='flex';
+    carregarSugestoes();
+    return;
+  }
+
+  document.getElementById('planos-state').style.display='flex';
+
+  // Resumo
+  const total=data.reduce((s,a)=>s+Number(a.valor),0);
+  const ativos=data.filter(a=>a.status==='ativo').length;
+  const aguardando=data.filter(a=>a.status==='aguardando_acesso').length;
+  document.getElementById('resumo-bar').innerHTML=`
+    <div class="resumo-item"><div class="resumo-val">${data.length}</div><div class="resumo-lbl">Planos ativos</div></div>
+    <div class="resumo-item"><div class="resumo-val">${fmt(total)}</div><div class="resumo-lbl">Total/mês</div></div>
+    <div class="resumo-item"><div class="resumo-val" style="color:var(--green);">${ativos}</div><div class="resumo-lbl">Confirmados</div></div>
+    <div class="resumo-item"><div class="resumo-val" style="color:#b07000;">${aguardando}</div><div class="resumo-lbl">Aguardando</div></div>`;
+
+  document.getElementById('planos-list').innerHTML=data.map(renderPlano).join('');
+}
+
+async function init(){
+  const {data:sess}=await sb.auth.getSession();
+  if(!sess.session){window.location.href='cadastro.html';return;}
+  userId=sess.session.user.id;
+  const email=sess.session.user.email;
+  document.getElementById('nav-user').textContent=email.split('@')[0];
+  document.title='Splitpool — Meus Planos';
+  carregarPlanos();
+}
+
+document.getElementById('conf-overlay').addEventListener('click',function(e){
+  if(e.target===this) fecharConf();
+});
+
+init();
+</script>
+</body>
+</html>

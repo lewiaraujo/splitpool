@@ -495,15 +495,32 @@ async function confirmarPagamento(){
       alert('Preencha todos os campos do cartão.');return
     }
   }
-
   btn.disabled=true
   btn.textContent='Processando...'
-
-  // Simulação de pagamento — 2s de delay
   await new Promise(r=>setTimeout(r,2000))
 
-  // Registrar membro na piscina (simulado — tabela membros futura)
-  // Por ora apenas mostra sucesso
+  // Salvar assinatura no Supabase
+  const {data:sess}=await sb.auth.getSession()
+  if(sess.session && piscinaData){
+    const ps=new URLSearchParams(window.location.search)
+    const planoNome=ps.get('plano')||null
+    const proxPag=new Date()
+    proxPag.setDate(proxPag.getDate()+30)
+    await sb.from('assinaturas').insert({
+      membro_id:sess.session.user.id,
+      piscina_id:piscinaData.id,
+      servico:piscinaData.servico,
+      valor:precoFinal,
+      plano_nome:planoNome,
+      status:'aguardando_acesso',
+      proximo_pagamento:proxPag.toISOString()
+    })
+    // Incrementar vagas_ocupadas
+    await sb.from('piscinas')
+      .update({vagas_ocupadas:piscinaData.vagas_ocupadas+1})
+      .eq('id',piscinaData.id)
+  }
+
   mostrarSucesso()
 }
 
