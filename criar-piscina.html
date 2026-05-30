@@ -550,6 +550,8 @@ function gerarDescricaoTP(){
   const el=document.getElementById('tp-desc-auto')
   if(el) el.textContent=`${nomeUsuario}, dono desta piscina TotalPass, oferece ${vagas} vaga${vagas>1?'s':''} de dependente via benefício corporativo. O membro pode escolher entre os planos ${planosStr}. Acesso liberado em até 24h após confirmação do pagamento. 🏋️`
 }
+
+function renderWellhubGrid(){
   document.getElementById('wellhub-grid').innerHTML=WH_PLANOS.map(p=>`
     <div class="wh-card ${whPlanosSel.has(p.nome)?'sel':''} ${p.popular?'popular':''}" onclick="toggleWHPlano('${p.nome}',this)">
       <div class="wh-plan">${p.nome}</div>
