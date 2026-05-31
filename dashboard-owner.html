@@ -389,13 +389,15 @@ function renderPool(pool,assins,vault){
   var aguardando=assins.filter(function(a){return a.status==='aguardando_acesso';});
   var receitaMes=ativos.reduce(function(s,a){return s+Number(a.valor||0);},0);
   var aReceber=aguardando.reduce(function(s,a){return s+Number(a.valor||0);},0);
+  // Mostrar TODOS os membros (ativos + aguardando + suspensos)
+  var todosAssins=assins;
 
   // Membros
   var membrosHTML='';
-  if(!assins.length){
+  if(!todosAssins.length){
     membrosHTML='<tr><td colspan="4" class="no-members">Nenhum membro nesta piscina ainda.</td></tr>';
   } else {
-    assins.forEach(function(a){
+    todosAssins.forEach(function(a){
       membrosHTML+='<tr>'
         +'<td><div class="member-nome">'+(a.profiles&&a.profiles.nome?a.profiles.nome:'—')+'</div>'
         +'<div class="member-email">'+(a.profiles&&a.profiles.email?a.profiles.email:'')+'</div></td>'
@@ -447,7 +449,7 @@ function renderPool(pool,assins,vault){
     // BODY
     +'<div class="pool-body"><div class="pool-body-inner">'
     +'<div class="tabs">'
-    +'<button class="tab-btn active" onclick="switchTab(this,\'tm-'+pool.id+'\')">👥 Membros ('+assins.length+')</button>'
+    +'<button class="tab-btn active" onclick="switchTab(this,\'tm-'+pool.id+'\')">👥 Membros ('+todosAssins.length+')</button>'
     +'<button class="tab-btn" onclick="switchTab(this,\'tv-'+pool.id+'\')">🔐 Credenciais</button>'
     +'</div>'
 

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Splitpool — Meus Planos</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -106,7 +107,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .conf-btn-nao{flex:1;padding:13px;border-radius:10px;background:transparent;color:var(--bluedark);border:1.5px solid rgba(18,85,204,0.2);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;}
 .conf-btn-nao:hover{background:rgba(18,85,204,0.05);}
 
-/* TOAST */
+/* CREDENCIAIS */
+.cred-box{background:#e6fff8;border:1px solid rgba(0,168,120,0.25);border-radius:10px;padding:12px 14px;margin-top:12px;display:flex;gap:10px;align-items:flex-start;}
+.cred-ico{font-size:1.3rem;flex-shrink:0;margin-top:1px;}
+.cred-content{flex:1;}
+.cred-title{font-size:12px;font-weight:700;color:#00522a;margin-bottom:6px;}
+.cred-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.cred-label{font-size:11px;font-weight:700;color:#00875A;opacity:.7;width:44px;flex-shrink:0;}
+.cred-val{font-size:13px;font-weight:600;color:#003d1a;background:rgba(255,255,255,0.7);border:1px solid rgba(0,168,120,0.2);border-radius:6px;padding:4px 10px;flex:1;font-family:'Inter',monospace;}
+.cred-copy{background:transparent;border:none;cursor:pointer;color:#00875A;font-size:11px;font-weight:700;padding:4px 8px;border-radius:5px;transition:.2s;}
+.cred-copy:hover{background:rgba(0,168,120,0.1);}
+.cred-aguardando{background:#fff8e0;border:1px solid rgba(180,120,0,0.2);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:12px;color:#8a5c00;font-weight:500;line-height:1.5;display:flex;gap:8px;align-items:center;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bluedark);color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;transition:transform .3s ease;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .toast.success{background:var(--green);}
@@ -234,6 +245,7 @@ function getSugIco(servico){
 }
 
 let userId=null;
+let credenciaisMap={}; // piscina_id → credenciais descriptografadas
 let assinaturaParaConfirmar=null;
 
 function showToast(msg,tipo=''){
@@ -284,6 +296,32 @@ function renderPlano(a){
     :'—';
   const nomeExibir=a.plano_nome?`${a.servico} — ${a.plano_nome}`:a.servico;
 
+  // Credenciais (só para membros ativos)
+  let credHTML='';
+  if(a.status==='ativo'){
+    const cred=credenciaisMap[a.piscina_id];
+    if(cred && cred.email){
+      credHTML=`<div class="cred-box">
+        <div class="cred-ico">🔑</div>
+        <div class="cred-content">
+          <div class="cred-title">Credenciais de acesso</div>
+          <div class="cred-row">
+            <span class="cred-label">Login</span>
+            <span class="cred-val" id="ce-${a.id}">${cred.email}</span>
+            <button class="cred-copy" onclick="copiarCred('ce-${a.id}','Login')">Copiar</button>
+          </div>
+          <div class="cred-row">
+            <span class="cred-label">Senha</span>
+            <span class="cred-val" id="cs-${a.id}">${cred.senha}</span>
+            <button class="cred-copy" onclick="copiarCred('cs-${a.id}','Senha')">Copiar</button>
+          </div>
+        </div>
+      </div>`;
+    } else {
+      credHTML=`<div class="cred-aguardando">⏳ O dono ainda não cadastrou as credenciais de acesso. Você será notificado.</div>`;
+    }
+  }
+
   return`<div class="card plano-card" id="plano-${a.id}">
     <div class="plano-header">
       ${getIco(a.servico)}
@@ -309,6 +347,7 @@ function renderPlano(a){
       </div>
       ${a.status==='aguardando_acesso'?`<button class="btn-confirmar" onclick="abrirConf(${a.id})">✓ Confirmar acesso</button>`:''}
     </div>
+    ${credHTML}
   </div>`;
 }
 
@@ -343,6 +382,24 @@ async function carregarPlanos(){
     return;
   }
 
+  // Buscar credenciais das piscinas onde é membro ativo
+  const ativoIds=data.filter(a=>a.status==='ativo').map(a=>a.piscina_id);
+  credenciaisMap={};
+  if(ativoIds.length>0){
+    const {data:creds}=await sb.from('credenciais')
+      .select('*')
+      .in('piscina_id',ativoIds);
+    (creds||[]).forEach(c=>{
+      try{
+        // Descriptografar usando a chave do dono (dono_id)
+        const chave=c.dono_id.substring(0,32);
+        const bytes=CryptoJS.AES.decrypt(c.dados_enc,chave);
+        const dec=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        if(dec) credenciaisMap[c.piscina_id]=dec;
+      }catch(e){}
+    });
+  }
+
   document.getElementById('planos-state').style.display='flex';
 
   // Resumo
@@ -356,6 +413,12 @@ async function carregarPlanos(){
     <div class="resumo-item"><div class="resumo-val" style="color:#b07000;">${aguardando}</div><div class="resumo-lbl">Aguardando</div></div>`;
 
   document.getElementById('planos-list').innerHTML=data.map(renderPlano).join('');
+}
+
+function copiarCred(elId, label){
+  const txt=document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(txt).catch(()=>{});
+  showToast(label+' copiado!','success');
 }
 
 async function init(){

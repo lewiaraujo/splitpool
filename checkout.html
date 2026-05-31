@@ -497,6 +497,24 @@ async function confirmarPagamento(){
   }
   btn.disabled=true
   btn.textContent='Processando...'
+
+  // Verificar se usuário já está nesta piscina
+  const {data:sess}=await sb.auth.getSession()
+  if(sess.session && piscinaData){
+    const {data:jaExiste}=await sb.from('assinaturas')
+      .select('id')
+      .eq('membro_id', sess.session.user.id)
+      .eq('piscina_id', piscinaData.id)
+      .in('status', ['ativo','aguardando_acesso'])
+      .limit(1)
+
+    if(jaExiste && jaExiste.length > 0){
+      btn.disabled=false
+      btn.textContent='Confirmar pagamento via PIX'
+      alert('Você já está nesta piscina! Acesse "Meus Planos" para ver seu plano ativo.')
+      return
+    }
+  }
   await new Promise(r=>setTimeout(r,2000))
 
   // Salvar assinatura no Supabase
