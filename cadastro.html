@@ -170,6 +170,22 @@ input::placeholder{color:#8BAAC8;}
       <button onclick="toggleMode()"><span id="toggle-btn">Entrar</span></button>
     </div>
 
+    <div class="toggle-row" id="forgot-row" style="margin-top:8px;display:none;">
+      <button onclick="toggleForgot()">Esqueci minha senha</button>
+    </div>
+
+    <!-- PAINEL RECUPERAÇÃO DE SENHA -->
+    <div id="forgot-panel" style="display:none;margin-top:14px;">
+      <div style="font-size:13px;color:#5580B0;margin-bottom:10px;text-align:center;line-height:1.6;">
+        Digite seu e-mail e enviaremos um link para redefinir sua senha.
+      </div>
+      <input type="email" id="forgot-email" placeholder="seu@email.com" style="width:100%;padding:13px 16px;border-radius:10px;font-size:14px;outline:none;font-family:inherit;background:#F0F6FF;border:1.5px solid rgba(0,180,210,0.35);color:#0A3080;margin-bottom:10px;">
+      <button class="btn-primary" onclick="enviarReset()">Enviar link de recuperação</button>
+      <div style="text-align:center;margin-top:10px;">
+        <button onclick="toggleForgot()" style="font-size:13px;color:#1255CC;background:none;border:none;cursor:pointer;font-family:inherit;font-weight:600;">← Voltar ao login</button>
+      </div>
+    </div>
+
     <div class="terms">
       Ao continuar, você concorda com os
       <a href="/termos">Termos</a> e a
@@ -197,7 +213,30 @@ input::placeholder{color:#8BAAC8;}
     document.getElementById('btn-submit').textContent = isLogin ? 'Entrar' : 'Criar conta'
     document.getElementById('toggle-text').textContent = isLogin ? 'Não tem conta? ' : 'Já tem conta? '
     document.getElementById('toggle-btn').textContent = isLogin ? 'Criar conta' : 'Entrar'
+    document.getElementById('forgot-row').style.display = isLogin ? 'block' : 'none'
+    document.getElementById('forgot-panel').style.display = 'none'
+    document.getElementById('form').style.display = 'flex'
     hideMsg()
+  }
+
+  function toggleForgot() {
+    const panel = document.getElementById('forgot-panel')
+    const form = document.getElementById('form')
+    const showing = panel.style.display !== 'none'
+    panel.style.display = showing ? 'none' : 'block'
+    form.style.display = showing ? 'flex' : 'none'
+    document.getElementById('forgot-email').value = document.getElementById('email').value || ''
+    hideMsg()
+  }
+
+  async function enviarReset() {
+    const email = document.getElementById('forgot-email').value.trim()
+    if (!email) { showMsg('Digite seu e-mail.', 'error'); return }
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/splitpool/cadastro.html?reset=true'
+    })
+    if (error) showMsg(error.message, 'error')
+    else showMsg('✅ Link enviado! Verifique seu e-mail.', 'success')
   }
 
   function showMsg(text, type) {
@@ -244,6 +283,31 @@ input::placeholder{color:#8BAAC8;}
 
   sb.auth.getSession().then(({ data }) => {
     if (data.session) window.location.href = '/splitpool/explorar.html'
+  })
+
+  // Detectar link de reset de senha
+  sb.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      document.getElementById('card-title').textContent = 'Redefinir senha'
+      document.getElementById('card-sub').textContent = 'Digite sua nova senha'
+      document.getElementById('form').innerHTML = `
+        <input type="password" id="new-password" placeholder="Nova senha (mínimo 6 caracteres)" required minlength="6">
+        <button type="submit" class="btn-primary">Salvar nova senha</button>
+      `
+      document.getElementById('form').onsubmit = async function(e) {
+        e.preventDefault()
+        const newPass = document.getElementById('new-password').value
+        const { error } = await sb.auth.updateUser({ password: newPass })
+        if (error) showMsg(error.message, 'error')
+        else {
+          showMsg('✅ Senha atualizada! Redirecionando...', 'success')
+          setTimeout(() => window.location.href = '/splitpool/explorar.html', 2000)
+        }
+      }
+      document.getElementById('forgot-row').style.display = 'none'
+      document.getElementById('btn-google').style.display = 'none'
+      document.getElementById('toggle-row').style.display = 'none'
+    }
   })
 </script>
 </body>
