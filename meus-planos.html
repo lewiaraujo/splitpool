@@ -296,18 +296,30 @@ function renderPlano(a){
     :'—';
   const nomeExibir=a.plano_nome?`${a.servico} — ${a.plano_nome}`:a.servico;
 
-  // Credenciais (só para membros ativos)
-  let credHTML='';
-  if(a.status==='ativo'){
+  // Bloco de acesso baseado no estado
+  let acessoHTML='';
+  let confirmarBtn='';
+
+  if(a.status==='aguardando_acesso'){
+    if(!a.acesso_enviado_em){
+      // Dono ainda não enviou
+      acessoHTML=`<div style="background:#fff8e0;border:1px solid rgba(180,120,0,0.2);border-radius:10px;padding:14px 16px;margin-top:12px;">
+        <div style="font-size:13px;font-weight:700;color:#8a5c00;margin-bottom:4px;">⏳ Aguardando o dono adicionar seu acesso</div>
+        <div style="font-size:12px;color:#8a5c00;opacity:.8;line-height:1.6;">O dono vai adicionar o email <strong>${a.email_servico||'seu email'}</strong> no ${a.servico}. Você receberá um convite em breve.</div>
+      </div>`;
+    } else {
+      // Dono enviou — mostrar aviso urgente para confirmar
+      acessoHTML=`<div style="background:#fff3cd;border:2px solid #f59e0b;border-radius:10px;padding:14px 16px;margin-top:12px;">
+        <div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:6px;">🔔 O dono enviou seu acesso — confirme agora!</div>
+        <div style="font-size:12px;color:#92400e;line-height:1.7;margin-bottom:10px;">Verifique seu email <strong>${a.email_servico||''}</strong> e acesse o ${a.servico}.<br><strong>⚠️ Se você não confirmar em 72h, o dono pode cancelar sua vaga e ela será liberada para outra pessoa — sem reembolso.</strong></div>
+      </div>`;
+      confirmarBtn=`<button class="btn-confirmar" style="margin-top:10px;" onclick="abrirConf(${a.id})">✓ Confirmar que recebi o acesso</button>`;
+    }
+  } else if(a.status==='ativo'){
+    // Credenciais para ativo (manter compatibilidade com vault existente)
     const cred=credenciaisMap[a.piscina_id];
-    if(cred && cred.email){
-      const linkConviteBtn=cred.link_convite
-        ?`<div class="cred-row" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,168,120,0.15);">
-            <span class="cred-label" style="width:auto;margin-right:8px;">🔗</span>
-            <a href="${cred.link_convite}" target="_blank" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 3px 10px rgba(18,85,204,0.25);">Aceitar convite →</a>
-          </div>`
-        :'';
-      credHTML=`<div class="cred-box">
+    if(cred&&cred.email){
+      acessoHTML=`<div class="cred-box">
         <div class="cred-ico">🔑</div>
         <div class="cred-content">
           <div class="cred-title">Credenciais de acesso</div>
@@ -321,11 +333,8 @@ function renderPlano(a){
             <span class="cred-val" id="cs-${a.id}">${cred.senha}</span>
             <button class="cred-copy" onclick="copiarCred('cs-${a.id}','Senha')">Copiar</button>
           </div>
-          ${linkConviteBtn}
         </div>
       </div>`;
-    } else {
-      credHTML=`<div class="cred-aguardando">⏳ O dono ainda não cadastrou as credenciais de acesso. Você será notificado.</div>`;
     }
   }
 
@@ -350,11 +359,10 @@ function renderPlano(a){
       <div class="plano-meta">
         <div class="plano-meta-row">Entrada: <strong>${dataEntrada}</strong></div>
         <div class="plano-meta-row">Próximo pagamento: <strong>${proxPag}</strong></div>
-        ${a.status==='aguardando_acesso'?'<div class="plano-meta-row" style="color:#b07000;">⏳ Confirme após receber o acesso ao serviço</div>':''}
       </div>
-      ${a.status==='aguardando_acesso'?`<button class="btn-confirmar" onclick="abrirConf(${a.id})">✓ Confirmar acesso</button>`:''}
+      ${confirmarBtn}
     </div>
-    ${credHTML}
+    ${acessoHTML}
   </div>`;
 }
 
@@ -377,7 +385,7 @@ async function carregarSugestoes(){
 
 async function carregarPlanos(){
   const {data,error}=await sb.from('assinaturas')
-    .select('*')
+    .select('*,acesso_enviado_em,email_servico')
     .eq('membro_id',userId)
     .order('created_at',{ascending:false});
 

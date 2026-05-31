@@ -315,6 +315,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
         </div>
       </div>
 
+      <!-- EMAIL DO SERVIÇO -->
+      <div id="email-servico-box" style="background:#f0f9ff;border:1.5px solid rgba(0,180,210,0.3);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:4px;">📧 Qual email você usa neste serviço?</div>
+        <div style="font-size:12px;color:var(--bluedark);opacity:.6;margin-bottom:10px;line-height:1.5;" id="email-servico-hint">O dono vai usar esse email para te adicionar. Confirme que é o email correto para este serviço.</div>
+        <input type="email" id="email-servico-input" placeholder="seu@email.com" style="width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid rgba(0,180,210,0.3);font-family:inherit;font-size:14px;color:var(--bluedark);background:#fff;outline:none;">
+        <div style="font-size:11px;color:#b07000;font-weight:600;margin-top:6px;">⚠️ Use o email da sua conta no serviço, não necessariamente o email do Splitpool.</div>
+      </div>
+
       <!-- TRUST -->
       <div class="trust-row" style="margin-bottom:16px;">
         <div class="trust-item">
@@ -429,6 +437,12 @@ async function load(){
   const {data:sess}=await sb.auth.getSession()
   if(!sess.session){window.location.href='cadastro.html';return}
 
+  // Pré-preencher email do serviço com email do perfil
+  const {data:profile}=await sb.from('profiles').select('email').eq('id',sess.session.user.id).single()
+  if(profile&&profile.email){
+    document.getElementById('email-servico-input').value=profile.email
+  }
+
   try{
     const r=await fetch(SBU+'/rest/v1/piscinas?id=eq.'+id+'&select=*',
       {headers:{'apikey':SBK,'Authorization':'Bearer '+SBK}})
@@ -498,6 +512,15 @@ async function confirmarPagamento(){
   btn.disabled=true
   btn.textContent='Processando...'
 
+  // Validar email do serviço
+  const emailServico=document.getElementById('email-servico-input').value.trim()
+  if(!emailServico||!emailServico.includes('@')){
+    btn.disabled=false
+    btn.textContent='Confirmar pagamento via PIX'
+    alert('Informe o email que você usa no '+piscinaData.servico+' para receber o acesso.')
+    return
+  }
+
   // Verificar sessão e validações
   const {data:sess}=await sb.auth.getSession()
   if(sess.session && piscinaData){
@@ -538,6 +561,7 @@ async function confirmarPagamento(){
       valor:precoFinal,
       plano_nome:planoNome,
       status:'aguardando_acesso',
+      email_servico:emailServico,
       proximo_pagamento:proxPag.toISOString()
     })
     // Incrementar vagas_ocupadas de forma atômica no banco

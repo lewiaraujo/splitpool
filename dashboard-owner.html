@@ -343,6 +343,16 @@ function vagasBar(ocp,tot){
   return`<div class="vagas-bar-wrap"><div class="vagas-bar"><div class="vagas-fill ${cls}" style="width:${pct}%"></div></div><span class="pool-meta-txt">${ocp}/${tot} vagas</span></div>`;
 }
 
+/* ── MARCAR ACESSO ENVIADO ── */
+async function marcarAcessoEnviado(assinaturaId){
+  var {error}=await sb.from('assinaturas')
+    .update({acesso_enviado_em:new Date().toISOString()})
+    .eq('id',assinaturaId);
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Acesso marcado como enviado! Membro será notificado.','success');
+  setTimeout(function(){carregarDashboard();},900);
+}
+
 /* ── TOGGLE EDITAR VAULT ── */
 function toggleEditarVault(piscinaId){
   var el=document.getElementById('vault-edit-'+piscinaId);
@@ -403,12 +413,22 @@ function renderPool(pool,assins,vault){
   // Membros
   var membrosHTML='';
   if(!todosAssins.length){
-    membrosHTML='<tr><td colspan="4" class="no-members">Nenhum membro nesta piscina ainda.</td></tr>';
+    membrosHTML='<tr><td colspan="5" class="no-members">Nenhum membro nesta piscina ainda.</td></tr>';
   } else {
     todosAssins.forEach(function(a){
+      var emailServico=a.email_servico||'—';
+      var acessoBtn='';
+      if(a.status==='aguardando_acesso'&&!a.acesso_enviado_em){
+        acessoBtn='<button class="btn-sm primary" style="padding:5px 10px;font-size:11px;" onclick="marcarAcessoEnviado('+a.id+')">✓ Marcar acesso enviado</button>';
+      } else if(a.acesso_enviado_em){
+        acessoBtn='<span style="font-size:11px;color:var(--green);font-weight:700;">✓ Acesso enviado</span>';
+      }
       membrosHTML+='<tr>'
         +'<td><div class="member-nome">'+(a.profiles&&a.profiles.nome?a.profiles.nome:'—')+'</div>'
         +'<div class="member-email">'+(a.profiles&&a.profiles.email?a.profiles.email:'')+'</div></td>'
+        +'<td><div style="font-size:12px;font-weight:700;color:var(--blue);">'+emailServico+'</div>'
+        +'<div style="font-size:10px;color:var(--bluedark);opacity:.4;">email no serviço</div>'
+        +acessoBtn+'</td>'
         +'<td>'+(a.plano_nome||pool.servico)+'</td>'
         +'<td>'+fmt(a.valor)+'/mês</td>'
         +'<td>'+getMemberBadge(a.status)+'</td>'
@@ -477,7 +497,7 @@ function renderPool(pool,assins,vault){
     // Tab membros
     +'<div id="tm-'+pool.id+'" class="tab-pane active">'
     +'<table class="members-table">'
-    +'<thead><tr><th>Membro</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead>'
+    +'<thead><tr><th>Membro</th><th>Email no serviço</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead>'
     +'<tbody>'+membrosHTML+'</tbody>'
     +'</table></div>'
 
@@ -538,7 +558,7 @@ async function carregarDashboard(){
   var ids=piscinas.map(function(p){return p.id;});
 
   var {data:assins}=await sb.from('assinaturas')
-    .select('*')
+    .select('*,acesso_enviado_em,email_servico,profiles(nome,email)')
     .in('piscina_id',ids);
 
   // Buscar profiles dos membros separadamente para evitar problema de RLS no JOIN
