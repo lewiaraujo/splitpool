@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splitpool — Dashboard do Dono</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;--green:#00A878;--text:#0C2461;}
+body{font-family:'Inter',sans-serif;color:var(--text);overflow-x:hidden;background:#3acde8;}
+
+/* ── FUNDO: idêntico ao meus-planos.html ── */
+.pool-bg{position:fixed;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1572331165267-854da2b021d4?w=1920&q=85') center/cover no-repeat;filter:brightness(1.05) saturate(1.1);}
+.pool-overlay{position:fixed;inset:0;z-index:1;background:rgba(160,225,245,0.08);}
+.shimmer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
+.shimmer canvas{position:absolute;inset:0;width:100%;height:100%;}
+.page{position:relative;z-index:10;}
+
+/* ── NAV: idêntico ao meus-planos.html ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);background:rgba(255,255,255,0.72);border-bottom:1px solid rgba(0,180,210,0.18);padding:0 5%;}
+.nav-in{max-width:960px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.nav-logo{height:46px;object-fit:contain;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{font-size:13px;font-weight:600;color:var(--bluedark);opacity:.65;}
+.nav-btn{font-size:13px;font-weight:700;color:var(--blue);background:transparent;border:1.5px solid rgba(18,85,204,0.25);border-radius:8px;padding:7px 14px;cursor:pointer;font-family:inherit;transition:.2s;text-decoration:none;}
+.nav-btn:hover{background:rgba(18,85,204,0.06);}
+.nav-btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+.nav-btn.primary:hover{background:var(--bluedark);}
+
+/* ── LAYOUT ── */
+.page-wrap{padding:88px 5% 60px;min-height:100vh;}
+.container{max-width:960px;margin:0 auto;}
+.page-header{margin-bottom:24px;}
+.page-title{font-family:'Nunito',sans-serif;font-size:26px;font-weight:900;color:var(--bluedark);margin-bottom:4px;}
+.page-sub{font-size:14px;color:var(--bluedark);opacity:.55;font-weight:500;}
+
+/* ── CARD BASE: idêntico ao meus-planos.html ── */
+.card{background:rgba(255,255,255,0.90);border:1px solid rgba(0,180,210,0.18);border-radius:16px;padding:24px;box-shadow:0 4px 24px rgba(0,20,80,0.09);backdrop-filter:blur(12px);}
+
+/* ── LOADING ── */
+#loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:50vh;color:var(--bluedark);}
+.spinner{width:36px;height:36px;border:3px solid rgba(18,85,204,0.15);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── DASH CONTENT ── */
+#dash-content{display:none;flex-direction:column;gap:20px;}
+
+/* ── RESUMO (mesmo estilo resumo-bar do meus-planos) ── */
+.resumo-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+.resumo-item{background:rgba(255,255,255,0.88);border:1px solid rgba(0,180,210,0.18);border-radius:12px;padding:16px;text-align:center;box-shadow:0 2px 10px rgba(0,20,80,0.06);}
+.resumo-val{font-family:'Nunito',sans-serif;font-size:24px;font-weight:900;color:var(--bluedark);}
+.resumo-val.green{color:var(--green);}
+.resumo-val.blue{color:var(--blue);}
+.resumo-val.teal{color:#009eb0;}
+.resumo-lbl{font-size:11px;color:var(--bluedark);opacity:.45;font-weight:600;margin-top:3px;text-transform:uppercase;letter-spacing:.05em;line-height:1.3;}
+
+/* ── POOL CARD ── */
+.pool-card{background:rgba(255,255,255,0.90);border:1px solid rgba(0,180,210,0.18);border-radius:16px;box-shadow:0 4px 24px rgba(0,20,80,0.09);backdrop-filter:blur(12px);overflow:hidden;}
+.pool-header{display:flex;align-items:center;gap:14px;padding:20px 24px;cursor:pointer;user-select:none;transition:.15s;}
+.pool-header:hover{background:rgba(0,180,210,0.04);}
+.pool-ico{width:52px;height:52px;border-radius:12px;object-fit:cover;flex-shrink:0;background:#f0f6ff;}
+.pool-ico-ph{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;}
+.pool-info{flex:1;min-width:0;}
+.pool-nome{font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;color:var(--bluedark);}
+.pool-meta-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px;}
+.pool-meta-txt{font-size:12px;color:var(--bluedark);opacity:.5;font-weight:500;}
+.pool-right{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.pool-receita-val{font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;color:var(--green);text-align:right;}
+.pool-receita-lbl{font-size:10px;color:var(--bluedark);opacity:.4;font-weight:600;text-align:right;text-transform:uppercase;letter-spacing:.04em;}
+.chevron{font-size:11px;color:var(--bluedark);opacity:.35;transition:transform .3s;}
+.pool-card.open .chevron{transform:rotate(180deg);}
+
+/* ── VAGAS BAR ── */
+.vagas-bar-wrap{display:flex;align-items:center;gap:6px;}
+.vagas-bar{width:60px;height:5px;background:#e0ecff;border-radius:99px;overflow:hidden;}
+.vagas-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--teal),var(--blue));}
+.vagas-fill.full{background:linear-gradient(90deg,var(--green),#009060);}
+.vagas-fill.warn{background:linear-gradient(90deg,#f6ad55,#e8922a);}
+
+/* ── BADGES (mesmo padrão meus-planos) ── */
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;}
+.badge-aberta{background:#e6fff8;color:#00875A;border:1px solid rgba(0,168,120,0.25);}
+.badge-pendente{background:#fff8e0;color:#b07000;border:1px solid rgba(180,120,0,0.2);}
+.badge-encerrada{background:#fff0f0;color:#c0392b;border:1px solid rgba(192,57,43,0.2);}
+.badge-pausada{background:#f3f4f6;color:#6b7280;border:1px solid rgba(0,0,0,0.1);}
+.badge-ativo{background:#e6fff8;color:#00875A;border:1px solid rgba(0,168,120,0.25);}
+.badge-aguardando{background:#fff8e0;color:#b07000;border:1px solid rgba(180,120,0,0.2);}
+.badge-suspenso{background:#fff0f0;color:#c0392b;border:1px solid rgba(192,57,43,0.2);}
+
+/* ── POOL BODY ── */
+.pool-body{display:none;border-top:1px solid rgba(0,180,210,0.12);}
+.pool-card.open .pool-body{display:block;}
+.pool-body-inner{padding:0 24px 24px;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;padding:16px 0 12px;}
+.tab-btn{padding:7px 16px;border-radius:8px;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--bluedark);opacity:.5;transition:.2s;}
+.tab-btn.active{background:rgba(18,85,204,0.1);color:var(--blue);opacity:1;}
+.tab-btn:hover:not(.active){background:rgba(0,0,0,0.04);opacity:.75;}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+
+/* ── MEMBERS TABLE ── */
+.members-table{width:100%;border-collapse:collapse;font-size:13px;}
+.members-table th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--bluedark);opacity:.35;padding:0 10px 8px 0;}
+.members-table td{padding:10px 10px 10px 0;border-top:1px solid rgba(0,180,210,0.1);vertical-align:middle;}
+.member-nome{font-weight:700;color:var(--bluedark);}
+.member-email{font-size:11px;color:var(--bluedark);opacity:.45;margin-top:2px;}
+.no-members{text-align:center;padding:24px 0;color:var(--bluedark);opacity:.35;font-size:13px;}
+
+/* ── VAULT ── */
+.vault-form{background:#f5f9ff;border:1.5px dashed rgba(18,85,204,0.2);border-radius:12px;padding:18px;}
+.vault-notice{display:flex;gap:8px;font-size:12px;color:var(--bluedark);opacity:.6;line-height:1.6;margin-bottom:14px;font-weight:500;}
+.vault-saved{background:#e6fff8;border:1px solid rgba(0,168,120,0.25);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:center;margin-bottom:14px;}
+.vault-saved-txt{font-size:13px;color:#00522a;font-weight:600;}
+.vault-saved-sub{font-size:11px;color:#00875A;opacity:.7;margin-top:2px;font-weight:500;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--bluedark);opacity:.45;}
+.form-group input{padding:10px 12px;border:1.5px solid rgba(18,85,204,0.18);border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:#fff;outline:none;transition:.2s;font-weight:500;}
+.form-group input:focus{border-color:var(--teal);}
+.form-group input::placeholder{color:var(--bluedark);opacity:.3;}
+
+/* ── ACTIONS ── */
+.pool-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid rgba(0,180,210,0.1);}
+.btn-sm{padding:8px 16px;border-radius:8px;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:5px;text-decoration:none;}
+.btn-sm.primary{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;box-shadow:0 3px 12px rgba(18,85,204,0.25);}
+.btn-sm.primary:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(18,85,204,0.35);}
+.btn-sm.ghost{background:#f0f4ff;color:var(--blue);border:1.5px solid rgba(18,85,204,0.15);}
+.btn-sm.ghost:hover{background:#e4ecff;}
+.btn-sm.danger{background:#fff0f0;color:#c0392b;border:1.5px solid rgba(192,57,43,0.15);}
+.btn-sm.danger:hover{background:#ffe0e0;}
+.btn-sm.reativar{background:#e6fff8;color:#00875A;border:1.5px solid rgba(0,168,120,0.2);}
+.btn-sm.reativar:hover{background:#d0ffef;}
+
+/* ── EMPTY STATE ── */
+#empty-state{display:none;flex-direction:column;align-items:center;gap:20px;padding:48px 20px;}
+
+/* ── MODAL (mesmo do meus-planos) ── */
+.overlay{position:fixed;inset:0;background:rgba(5,20,70,0.55);backdrop-filter:blur(8px);z-index:400;display:none;align-items:center;justify-content:center;padding:1rem;}
+.overlay.open{display:flex;}
+.modal-box{background:#fff;border-radius:20px;padding:28px;max-width:420px;width:100%;box-shadow:0 8px 32px rgba(0,20,80,.2);animation:mIn .2s ease;}
+@keyframes mIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.modal-title{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;color:var(--bluedark);margin-bottom:8px;}
+.modal-sub{font-size:13px;color:var(--bluedark);opacity:.6;line-height:1.7;font-weight:500;margin-bottom:20px;}
+.modal-btns{display:flex;gap:10px;}
+.modal-btn{flex:1;padding:13px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;}
+.modal-btn.confirm{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;}
+.modal-btn.confirm:hover{opacity:.9;}
+.modal-btn.cancel{background:transparent;color:var(--bluedark);border:1.5px solid rgba(18,85,204,0.2);}
+.modal-btn.cancel:hover{background:rgba(18,85,204,0.04);}
+
+/* ── TOAST (idêntico meus-planos) ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bluedark);color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;transition:transform .3s ease;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.success{background:var(--green);}
+.toast.error{background:#c0392b;}
+
+/* ── SECTION LABEL ── */
+.section-lbl{font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;color:var(--bluedark);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+
+@media(max-width:600px){
+  .form-row{grid-template-columns:1fr;}
+  .pool-right{flex-direction:column;align-items:flex-end;gap:6px;}
+  .resumo-bar{grid-template-columns:1fr 1fr;}
+  .nav-right .nav-btn:nth-child(3){display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="pool-bg"></div>
+<div class="pool-overlay"></div>
+<div class="shimmer"><canvas id="wc"></canvas></div>
+
+<nav>
+  <div class="nav-in">
+    <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="Splitpool" class="nav-logo">
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <a href="criar-piscina.html" class="nav-btn primary">+ Nova piscina</a>
+      <a href="meus-planos.html" class="nav-btn">Meus planos</a>
+      <button class="nav-btn" onclick="sair()">Sair</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+<div class="page-wrap">
+<div class="container">
+
+  <!-- LOADING -->
+  <div id="loading-state">
+    <div class="spinner"></div>
+    <span style="font-size:14px;font-weight:600;opacity:.6;">Carregando seu dashboard...</span>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="empty-state">
+    <div class="card" style="width:100%;text-align:center;">
+      <div style="font-size:52px;">🏊</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;color:var(--bluedark);margin-top:12px;">Você ainda não tem piscinas</div>
+      <div style="font-size:14px;color:var(--bluedark);opacity:.55;font-weight:500;margin:8px auto 20px;max-width:360px;line-height:1.7;">Crie sua primeira piscina e comece a receber repasses toda semana.</div>
+      <a href="criar-piscina.html" style="display:inline-block;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;padding:13px 28px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;box-shadow:0 4px 16px rgba(18,85,204,0.3);">Criar primeira piscina →</a>
+    </div>
+  </div>
+
+  <!-- DASH CONTENT -->
+  <div id="dash-content">
+
+    <div class="page-header">
+      <div class="page-title">Dashboard do Dono</div>
+      <div class="page-sub">Acompanhe sua receita, membros e gerencie suas piscinas</div>
+    </div>
+
+    <div class="resumo-bar" id="resumo-bar"></div>
+
+    <div>
+      <div class="section-lbl">🏊 Minhas Piscinas</div>
+      <div id="pools-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Confirmar</div>
+    <div class="modal-sub" id="modal-sub">Tem certeza?</div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="modal-btn confirm" id="modal-confirm-btn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── CANVAS WAVES: cópia exata do meus-planos.html ── */
+(function(){
+  const c=document.getElementById('wc'),ctx=c.getContext('2d');
+  let W,H,t=0,lines=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;lines=[];for(let i=0;i<7;i++)lines.push({y:H*(0.08+i*0.13),amp:9+i*3,freq:0.005+i*0.002,speed:0.014+i*0.005,phase:Math.random()*Math.PI*2,alpha:0.16+i*0.025});}
+  function draw(){t+=0.012;ctx.clearRect(0,0,W,H);lines.forEach(l=>{ctx.beginPath();ctx.moveTo(0,l.y);for(let x=0;x<=W;x+=6){const y=l.y+Math.sin(x*l.freq+t*l.speed+l.phase)*l.amp+Math.sin(x*l.freq*1.8+t*l.speed*1.4)*l.amp*0.35;ctx.lineTo(x,y);}ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=`rgba(255,255,255,${l.alpha})`;ctx.fill();});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+
+/* ── SUPABASE ── */
+const SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
+const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
+const {createClient}=supabase;
+const sb=createClient(SBU,SBK);
+
+/* ── ICONS ── */
+const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/';
+const ICONES={
+  'Microsoft 365 Family':BASE+'microsoft_icon.png',
+  'Duolingo Super Família':BASE+'duolingo_icon.png',
+  'Canva Teams':BASE+'Logo-Canva.png',
+  'Notion Team':BASE+'Notion_icon.png',
+  'Claude Pro':BASE+'claude-ai_icon.jpg',
+  'Wellhub':BASE+'wellhub_gympass_icon.png',
+  'TotalPass':BASE+'logo_totalpass_icon_fundo%20transparente.png',
+  'Alura':BASE+'logo_alura.png',
+};
+
+let userId=null;
+
+/* ── UTILS ── */
+function fmt(v){return'R$ '+Number(v||0).toFixed(2).replace('.',',');}
+
+function showToast(msg,tipo){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(tipo?' '+tipo:'');
+  setTimeout(()=>t.classList.add('show'),10);
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+function fecharModal(){document.getElementById('modal-overlay').classList.remove('open');}
+
+function abrirModal(titulo,sub,onConfirm){
+  document.getElementById('modal-title').textContent=titulo;
+  document.getElementById('modal-sub').textContent=sub;
+  document.getElementById('modal-confirm-btn').onclick=()=>{fecharModal();onConfirm();};
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)fecharModal();});
+
+function sair(){sb.auth.signOut().then(()=>window.location.href='index.html');}
+
+/* ── VAULT ── */
+function deriveKey(uid){return uid.substring(0,32);}
+function encryptVault(uid,email,senha){
+  return CryptoJS.AES.encrypt(JSON.stringify({email,senha}),deriveKey(uid)).toString();
+}
+function decryptVault(uid,dados_enc){
+  try{
+    const b=CryptoJS.AES.decrypt(dados_enc,deriveKey(uid));
+    return JSON.parse(b.toString(CryptoJS.enc.Utf8));
+  }catch(e){return null;}
+}
+
+/* ── ICON HTML ── */
+function getIco(servico){
+  const url=ICONES[servico];
+  if(url) return`<img src="${url}" alt="${servico}" class="pool-ico" onerror="this.outerHTML='<div class=\\'pool-ico-ph\\'>${servico[0]}</div>'">`;
+  return`<div class="pool-ico-ph">${servico[0]}</div>`;
+}
+
+/* ── BADGE STATUS PISCINA ── */
+function getBadge(status){
+  const cls={aberta:'badge-aberta',pendente:'badge-pendente',encerrada:'badge-encerrada',pausada:'badge-pausada'}[status]||'badge-pausada';
+  const label={aberta:'Aberta',pendente:'Pendente',encerrada:'Encerrada',pausada:'Pausada'}[status]||status;
+  return`<span class="status-badge ${cls}"><span class="status-dot"></span>${label}</span>`;
+}
+
+/* ── BADGE STATUS MEMBRO ── */
+function getMemberBadge(status){
+  const cls={ativo:'badge-ativo',aguardando_acesso:'badge-aguardando',suspenso:'badge-suspenso'}[status]||'badge-pausada';
+  const label={ativo:'Ativo',aguardando_acesso:'Aguardando',suspenso:'Suspenso'}[status]||status;
+  return`<span class="status-badge ${cls}"><span class="status-dot"></span>${label}</span>`;
+}
+
+/* ── VAGAS BAR ── */
+function vagasBar(ocp,tot){
+  const pct=tot>0?Math.round((ocp/tot)*100):0;
+  const cls=pct>=100?'full':pct>=75?'warn':'';
+  return`<div class="vagas-bar-wrap"><div class="vagas-bar"><div class="vagas-fill ${cls}" style="width:${pct}%"></div></div><span class="pool-meta-txt">${ocp}/${tot} vagas</span></div>`;
+}
+
+/* ── SAVE VAULT ── */
+async function saveVault(piscinaId){
+  const email=document.getElementById('ve-'+piscinaId).value.trim();
+  const senha=document.getElementById('vs-'+piscinaId).value;
+  if(!email||!senha){showToast('Preencha e-mail e senha.','error');return;}
+  const dados_enc=encryptVault(userId,email,senha);
+  const {error}=await sb.from('credenciais')
+    .upsert({piscina_id:piscinaId,dono_id:userId,dados_enc,updated_at:new Date().toISOString()},{onConflict:'piscina_id'});
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Credenciais salvas com segurança! 🔒','success');
+  setTimeout(()=>carregarDashboard(),900);
+}
+
+/* ── TOGGLE STATUS ── */
+function toggleStatus(piscinaId,novoStatus,nome){
+  const verbo=novoStatus==='pausada'?'pausar':'reativar';
+  abrirModal(
+    verbo.charAt(0).toUpperCase()+verbo.slice(1)+' piscina',
+    'Deseja '+verbo+' a piscina de '+nome+'?',
+    async function(){
+      const {error}=await sb.from('piscinas').update({status:novoStatus}).eq('id',piscinaId);
+      if(error){showToast('Erro: '+error.message,'error');return;}
+      showToast('Piscina '+(novoStatus==='pausada'?'pausada':'reativada')+'!','success');
+      setTimeout(()=>carregarDashboard(),900);
+    }
+  );
+}
+
+/* ── TOGGLE CARD ── */
+function toggleCard(id){
+  document.getElementById('pc-'+id).classList.toggle('open');
+}
+
+/* ── SWITCH TAB ── */
+function switchTab(btn,paneId){
+  var card=btn.closest('.pool-card');
+  card.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  card.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+}
+
+/* ── RENDER POOL CARD ── */
+function renderPool(pool,assins,vault){
+  var ativos=assins.filter(function(a){return a.status==='ativo';});
+  var aguardando=assins.filter(function(a){return a.status==='aguardando_acesso';});
+  var receitaMes=ativos.reduce(function(s,a){return s+Number(a.valor||0);},0);
+  var aReceber=aguardando.reduce(function(s,a){return s+Number(a.valor||0);},0);
+
+  // Membros
+  var membrosHTML='';
+  if(!assins.length){
+    membrosHTML='<tr><td colspan="4" class="no-members">Nenhum membro nesta piscina ainda.</td></tr>';
+  } else {
+    assins.forEach(function(a){
+      membrosHTML+='<tr>'
+        +'<td><div class="member-nome">'+(a.profiles&&a.profiles.nome?a.profiles.nome:'—')+'</div>'
+        +'<div class="member-email">'+(a.profiles&&a.profiles.email?a.profiles.email:'')+'</div></td>'
+        +'<td>'+(a.plano_nome||pool.servico)+'</td>'
+        +'<td>'+fmt(a.valor)+'/mês</td>'
+        +'<td>'+getMemberBadge(a.status)+'</td>'
+        +'</tr>';
+    });
+  }
+
+  // Vault
+  var vaultSalvoHTML='';
+  if(vault&&vault.email){
+    vaultSalvoHTML='<div class="vault-saved">'
+      +'<span style="font-size:1.3rem;">🔐</span>'
+      +'<div>'
+      +'<div class="vault-saved-txt">Login: '+vault.email+'</div>'
+      +'<div class="vault-saved-sub">Senha salva · criptografada AES-256</div>'
+      +'</div></div>';
+  }
+
+  // Botão pausar/reativar
+  var toggleBtn='';
+  if(pool.status==='aberta'){
+    toggleBtn='<button class="btn-sm danger" onclick="toggleStatus('+pool.id+',\'pausada\',\''+pool.servico+'\')">⏸ Pausar</button>';
+  } else if(pool.status==='pausada'){
+    toggleBtn='<button class="btn-sm reativar" onclick="toggleStatus('+pool.id+',\'aberta\',\''+pool.servico+'\')">▶ Reativar</button>';
+  }
+
+  return '<div class="pool-card" id="pc-'+pool.id+'">'
+
+    // HEADER
+    +'<div class="pool-header" onclick="toggleCard('+pool.id+')">'
+    +getIco(pool.servico)
+    +'<div class="pool-info">'
+    +'<div class="pool-nome">'+pool.servico+'</div>'
+    +'<div class="pool-meta-row">'+getBadge(pool.status)+vagasBar(pool.vagas_ocupadas,pool.vagas_total)+'</div>'
+    +'</div>'
+    +'<div class="pool-right">'
+    +'<div>'
+    +'<div class="pool-receita-val">'+fmt(receitaMes)+'</div>'
+    +'<div class="pool-receita-lbl">receita/mês</div>'
+    +(aReceber>0?'<div style="font-size:11px;color:#b07000;font-weight:600;text-align:right;">+'+fmt(aReceber)+' a receber</div>':'')
+    +'</div>'
+    +'<div class="chevron">▼</div>'
+    +'</div>'
+    +'</div>'
+
+    // BODY
+    +'<div class="pool-body"><div class="pool-body-inner">'
+    +'<div class="tabs">'
+    +'<button class="tab-btn active" onclick="switchTab(this,\'tm-'+pool.id+'\')">👥 Membros ('+assins.length+')</button>'
+    +'<button class="tab-btn" onclick="switchTab(this,\'tv-'+pool.id+'\')">🔐 Credenciais</button>'
+    +'</div>'
+
+    // Tab membros
+    +'<div id="tm-'+pool.id+'" class="tab-pane active">'
+    +'<table class="members-table">'
+    +'<thead><tr><th>Membro</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead>'
+    +'<tbody>'+membrosHTML+'</tbody>'
+    +'</table></div>'
+
+    // Tab vault
+    +'<div id="tv-'+pool.id+'" class="tab-pane">'
+    +'<div class="vault-form">'
+    +'<div class="vault-notice"><span>🔒</span>Credenciais criptografadas (AES-256) antes de salvar. Membros ativos veem descriptografado em Meus Planos. Nunca armazenamos texto plano.</div>'
+    +vaultSalvoHTML
+    +'<div class="form-row">'
+    +'<div class="form-group"><label>E-mail / Login</label><input type="email" id="ve-'+pool.id+'" placeholder="email@exemplo.com" value="'+(vault&&vault.email?vault.email:'')+'"></div>'
+    +'<div class="form-group"><label>Senha</label><input type="password" id="vs-'+pool.id+'" placeholder="••••••••" value="'+(vault&&vault.senha?vault.senha:'')+'"></div>'
+    +'</div>'
+    +'<button class="btn-sm primary" onclick="saveVault('+pool.id+')">💾 Salvar credenciais</button>'
+    +'</div></div>'
+
+    // Actions
+    +'<div class="pool-actions">'
+    +toggleBtn
+    +'<a href="criar-piscina.html" class="btn-sm ghost">+ Nova piscina</a>'
+    +'</div>'
+
+    +'</div></div>'
+    +'</div>';
+}
+
+/* ── CARREGAR DASHBOARD ── */
+async function carregarDashboard(){
+  var {data:piscinas,error:ep}=await sb.from('piscinas')
+    .select('*')
+    .eq('dono_id',userId)
+    .order('created_at',{ascending:false});
+
+  if(ep){showToast('Erro ao carregar piscinas.','error');return;}
+
+  if(!piscinas||!piscinas.length){
+    document.getElementById('loading-state').style.display='none';
+    document.getElementById('empty-state').style.display='flex';
+    return;
+  }
+
+  var ids=piscinas.map(function(p){return p.id;});
+
+  var {data:assins}=await sb.from('assinaturas')
+    .select('*,profiles(nome,email)')
+    .in('piscina_id',ids);
+
+  var {data:creds}=await sb.from('credenciais')
+    .select('*').eq('dono_id',userId);
+
+  // Agrupar por piscina
+  var assinsByPool={};
+  (assins||[]).forEach(function(a){
+    if(!assinsByPool[a.piscina_id]) assinsByPool[a.piscina_id]=[];
+    assinsByPool[a.piscina_id].push(a);
+  });
+
+  var vaultByPool={};
+  (creds||[]).forEach(function(c){
+    var dec=decryptVault(userId,c.dados_enc);
+    if(dec) vaultByPool[c.piscina_id]=dec;
+  });
+
+  // Resumo
+  var totalReceita=0,totalAReceber=0,piscinasAtivas=0,vagasOcup=0,vagasTotal=0;
+  piscinas.forEach(function(p){
+    var pa=assinsByPool[p.id]||[];
+    totalReceita+=pa.filter(function(a){return a.status==='ativo';}).reduce(function(s,a){return s+Number(a.valor||0);},0);
+    totalAReceber+=pa.filter(function(a){return a.status==='aguardando_acesso';}).reduce(function(s,a){return s+Number(a.valor||0);},0);
+    if(p.status==='aberta') piscinasAtivas++;
+    vagasOcup+=Number(p.vagas_ocupadas||0);
+    vagasTotal+=Number(p.vagas_total||0);
+  });
+
+  document.getElementById('resumo-bar').innerHTML=
+    '<div class="resumo-item"><div class="resumo-val green">'+fmt(totalReceita)+'</div><div class="resumo-lbl">Receita do mês</div></div>'
+    +'<div class="resumo-item"><div class="resumo-val blue">'+fmt(totalAReceber)+'</div><div class="resumo-lbl">A receber</div></div>'
+    +'<div class="resumo-item"><div class="resumo-val teal">'+piscinasAtivas+'</div><div class="resumo-lbl">Piscinas ativas</div></div>'
+    +'<div class="resumo-item"><div class="resumo-val">'+vagasOcup+'/'+vagasTotal+'</div><div class="resumo-lbl">Vagas ocupadas</div></div>';
+
+  document.getElementById('pools-list').innerHTML=
+    piscinas.map(function(p){return renderPool(p,assinsByPool[p.id]||[],vaultByPool[p.id]);}).join('');
+
+  document.getElementById('loading-state').style.display='none';
+  document.getElementById('dash-content').style.display='flex';
+}
+
+/* ── INIT ── */
+async function init(){
+  var {data:sess}=await sb.auth.getSession();
+  if(!sess.session){window.location.href='cadastro.html';return;}
+  userId=sess.session.user.id;
+  var email=sess.session.user.email;
+
+  var {data:profile}=await sb.from('profiles').select('nome').eq('id',userId).single();
+  var nome=profile&&profile.nome?profile.nome:email.split('@')[0];
+  document.getElementById('nav-user').textContent=nome;
+
+  carregarDashboard();
+}
+
+init();
+</script>
+</body>
+</html>
