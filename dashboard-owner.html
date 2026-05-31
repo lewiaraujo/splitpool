@@ -557,9 +557,11 @@ async function carregarDashboard(){
 
   var ids=piscinas.map(function(p){return p.id;});
 
-  var {data:assins}=await sb.from('assinaturas')
-    .select('*,acesso_enviado_em,email_servico,profiles(nome,email)')
+  var {data:assins,error:eassins}=await sb.from('assinaturas')
+    .select('*')
     .in('piscina_id',ids);
+
+  if(eassins) console.error('Erro assinaturas:', eassins.message);
 
   // Buscar profiles dos membros separadamente para evitar problema de RLS no JOIN
   var membroIds=(assins||[]).map(function(a){return a.membro_id;}).filter(function(v,i,s){return s.indexOf(v)===i;});
