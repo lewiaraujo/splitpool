@@ -265,14 +265,15 @@ const sb=createClient(SBU,SBK);
 /* ── ICONS ── */
 const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/';
 const ICONES={
-  'Microsoft 365 Family':BASE+'microsoft_icon.png',
-  'Duolingo Super Família':BASE+'duolingo_icon.png',
-  'Canva Teams':BASE+'Logo-Canva.png',
-  'Notion Team':BASE+'Notion_icon.png',
-  'Claude Pro':BASE+'claude-ai_icon.jpg',
-  'Wellhub':BASE+'wellhub_gympass_icon.png',
-  'TotalPass':BASE+'logo_totalpass_icon_fundo%20transparente.png',
-  'Alura':BASE+'logo_alura.png',
+  'microsoft':BASE+'microsoft_icon.png',
+  'duolingo':BASE+'duolingo_icon.png',
+  'canva':BASE+'Logo-Canva.png',
+  'notion':BASE+'Notion_icon.png',
+  'claude':BASE+'claude-ai_icon.jpg',
+  'wellhub':BASE+'wellhub_gympass_icon.png',
+  'gympass':BASE+'wellhub_gympass_icon.png',
+  'totalpass':BASE+'logo_totalpass_icon_fundo%20transparente.png',
+  'alura':BASE+'logo_alura.png',
 };
 
 let userId=null;
@@ -315,7 +316,8 @@ function decryptVault(uid,dados_enc){
 
 /* ── ICON HTML ── */
 function getIco(servico){
-  const url=ICONES[servico];
+  const key=Object.keys(ICONES).find(k=>servico.toLowerCase().includes(k));
+  const url=key?ICONES[key]:null;
   if(url) return`<img src="${url}" alt="${servico}" class="pool-ico" onerror="this.outerHTML='<div class=\\'pool-ico-ph\\'>${servico[0]}</div>'">`;
   return`<div class="pool-ico-ph">${servico[0]}</div>`;
 }
