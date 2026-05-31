@@ -343,6 +343,12 @@ function vagasBar(ocp,tot){
   return`<div class="vagas-bar-wrap"><div class="vagas-bar"><div class="vagas-fill ${cls}" style="width:${pct}%"></div></div><span class="pool-meta-txt">${ocp}/${tot} vagas</span></div>`;
 }
 
+/* ── TOGGLE EDITAR VAULT ── */
+function toggleEditarVault(piscinaId){
+  var el=document.getElementById('vault-edit-'+piscinaId);
+  if(el) el.style.display=el.style.display==='none'?'block':'none';
+}
+
 /* ── SAVE VAULT ── */
 async function saveVault(piscinaId){
   const email=document.getElementById('ve-'+piscinaId).value.trim();
@@ -478,14 +484,30 @@ function renderPool(pool,assins,vault){
     // Tab vault
     +'<div id="tv-'+pool.id+'" class="tab-pane">'
     +'<div class="vault-form">'
-    +'<div class="vault-notice"><span>🔒</span>Credenciais criptografadas (AES-256) antes de salvar. Membros ativos veem descriptografado em Meus Planos. Nunca armazenamos texto plano.</div>'
+    +'<div class="vault-notice"><span>\U0001F512</span>Credenciais criptografadas (AES-256). Membros ativos veem em Meus Planos.</div>'
     +linkConviteHTML
-    +vaultSalvoHTML
-    +'<div class="form-row">'
-    +'<div class="form-group"><label>E-mail / Login</label><input type="email" id="ve-'+pool.id+'" placeholder="email@exemplo.com" value="'+(vault&&vault.email?vault.email:'')+'"></div>'
-    +'<div class="form-group"><label>Senha</label><input type="password" id="vs-'+pool.id+'" placeholder="••••••••" value="'+(vault&&vault.senha?vault.senha:'')+'"></div>'
-    +'</div>'
-    +'<button class="btn-sm primary" onclick="saveVault('+pool.id+')">💾 Salvar credenciais</button>'
+    +(vault&&vault.email
+      ? '<div class="vault-saved">'
+        +'<span style="font-size:1.3rem;">\U0001F510</span>'
+        +'<div style="flex:1;"><div class="vault-saved-txt">Login: '+vault.email+'</div>'
+        +'<div class="vault-saved-sub">Senha salva · criptografada AES-256</div></div>'
+        +'<button class="btn-sm ghost" style="flex-shrink:0;" onclick="toggleEditarVault('+pool.id+')">✏️ Editar</button>'
+        +'</div>'
+        +'<div id="vault-edit-'+pool.id+'" style="display:none;margin-top:12px;">'
+        +'<div class="form-row">'
+        +'<div class="form-group"><label>E-mail</label><input type="email" id="ve-'+pool.id+'" value="'+vault.email+'"></div>'
+        +'<div class="form-group"><label>Senha</label><input type="password" id="vs-'+pool.id+'" value="'+vault.senha+'"></div>'
+        +'</div>'
+        +'<div style="display:flex;gap:8px;">'
+        +'<button class="btn-sm primary" onclick="saveVault('+pool.id+')">\U0001F4BE Salvar</button>'
+        +'<button class="btn-sm ghost" onclick="toggleEditarVault('+pool.id+')">Cancelar</button>'
+        +'</div></div>'
+      : '<div class="form-row">'
+        +'<div class="form-group"><label>E-mail / Login</label><input type="email" id="ve-'+pool.id+'" placeholder="email@exemplo.com"></div>'
+        +'<div class="form-group"><label>Senha</label><input type="password" id="vs-'+pool.id+'" placeholder="••••••••"></div>'
+        +'</div>'
+        +'<button class="btn-sm primary" onclick="saveVault('+pool.id+')">\U0001F4BE Salvar credenciais</button>'
+    )
     +'</div></div>'
 
     // Actions
