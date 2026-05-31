@@ -498,8 +498,17 @@ async function carregarDashboard(){
   var ids=piscinas.map(function(p){return p.id;});
 
   var {data:assins}=await sb.from('assinaturas')
-    .select('*,profiles(nome,email)')
+    .select('*')
     .in('piscina_id',ids);
+
+  // Buscar profiles dos membros separadamente para evitar problema de RLS no JOIN
+  var membroIds=(assins||[]).map(function(a){return a.membro_id;}).filter(function(v,i,s){return s.indexOf(v)===i;});
+  var profilesMap={};
+  if(membroIds.length>0){
+    var {data:profs}=await sb.from('profiles').select('id,nome,email').in('id',membroIds);
+    (profs||[]).forEach(function(p){profilesMap[p.id]=p;});
+  }
+  (assins||[]).forEach(function(a){a.profiles=profilesMap[a.membro_id]||null;});
 
   var {data:creds}=await sb.from('credenciais')
     .select('*').eq('dono_id',userId);

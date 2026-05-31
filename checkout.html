@@ -515,10 +515,8 @@ async function confirmarPagamento(){
       status:'aguardando_acesso',
       proximo_pagamento:proxPag.toISOString()
     })
-    // Incrementar vagas_ocupadas
-    await sb.from('piscinas')
-      .update({vagas_ocupadas:piscinaData.vagas_ocupadas+1})
-      .eq('id',piscinaData.id)
+    // Incrementar vagas_ocupadas de forma atômica no banco
+    await sb.rpc('incrementar_vagas', {piscina_id_param: piscinaData.id})
   }
 
   mostrarSucesso()
