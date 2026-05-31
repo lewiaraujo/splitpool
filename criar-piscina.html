@@ -339,6 +339,18 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         </div>
       </div>
 
+      <!-- LINK DE CONVITE (só para planos família) -->
+      <div class="field" id="campo-link-convite" style="margin-bottom:1.5rem;display:none;">
+        <label>🔗 Link de convite do plano família</label>
+        <div class="field-hint" style="margin-bottom:10px;">Cole aqui o link que o serviço gera para convidar membros para o plano família. Usamos para verificar que o plano existe.</div>
+        <div style="background:rgba(0,180,210,0.06);border:1px solid rgba(0,180,210,0.2);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--bluedark);opacity:.8;line-height:1.6;">
+          <strong>Onde encontrar:</strong><br>
+          <span id="link-instrucao">Varia por serviço — veja as instruções abaixo.</span>
+        </div>
+        <input type="text" id="link-convite-input" placeholder="https://..." style="width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;">
+        <div class="field-hint" style="margin-top:6px;color:#00875A;font-weight:600;" id="link-hint"></div>
+      </div>
+
       <!-- VENCIMENTO DO CARTÃO -->
       <div class="field" style="margin-bottom:1.5rem;">
         <label>💳 Dia de vencimento do seu cartão</label>
@@ -748,6 +760,24 @@ function irPasso3(){
   if(isWH&&whPlanosSel.size===0){showMsg('Selecione pelo menos um plano Wellhub.','error');return}
   if(isTP&&tpPlanosSel.size===0){showMsg('Selecione pelo menos um plano TotalPass.','error');return}
   hideMsg()
+
+  // Mostrar campo link de convite só para planos família
+  const isCorp=isWH||isTP||tipoSelecionado==='corporativo'
+  const campoLink=document.getElementById('campo-link-convite')
+  campoLink.style.display=isCorp?'none':'block'
+
+  // Instruções por serviço
+  const instrucoes={
+    'Microsoft 365':'No site microsoft365.com → Minha conta → Família → "Convidar alguém" → copie o link gerado.',
+    'Duolingo Super':'No app Duolingo → Perfil → Super Família → "Convidar membros" → copie o link.',
+    'Canva Teams':'No Canva → Configurações do time → "Convidar membros" → copie o link.',
+    'Notion Team':'No Notion → Configurações → Membros → "Convidar" → copie o link.',
+    'Alura':'No painel Alura For Business → Gestão de membros → "Convidar" → copie o link.',
+  }
+  const nome=svc?.nome||''
+  document.getElementById('link-instrucao').textContent=instrucoes[nome]||'Acesse as configurações do plano e copie o link de convite para membros.'
+  document.getElementById('link-hint').textContent=isCorp?'':'✓ Vamos acessar este link para confirmar que seu plano está ativo antes de publicar a piscina.'
+
   renderResumo()
   popularSelectsCartao()
   goStep(3)
@@ -798,6 +828,9 @@ async function publicarPiscina(){
     if(!upErr) comprovanteUrl=path
   }catch(e){}
 
+  // Capturar link de convite (planos família)
+  const linkConvite=document.getElementById('link-convite-input')?.value?.trim()||null
+
   // Salva piscina com status pendente e dados do cartão
   const {error}=await sb.from('piscinas').insert({
     dono_id:userId,
@@ -809,7 +842,8 @@ async function publicarPiscina(){
     status:'pendente',
     icone_url:null,
     cartao_vencimento:dia,
-    comprovante_url:comprovanteUrl
+    comprovante_url:comprovanteUrl,
+    link_convite:linkConvite
   })
 
   if(error){
