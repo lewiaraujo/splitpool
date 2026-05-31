@@ -233,7 +233,7 @@ input::placeholder{color:#8BAAC8;}
     const email = document.getElementById('forgot-email').value.trim()
     if (!email) { showMsg('Digite seu e-mail.', 'error'); return }
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/splitpool/cadastro.html?reset=true'
+      redirectTo: 'https://lewiaraujo.github.io/splitpool/cadastro.html'
     })
     if (error) showMsg(error.message, 'error')
     else showMsg('✅ Link enviado! Verifique seu e-mail.', 'success')
@@ -261,11 +261,25 @@ input::placeholder{color:#8BAAC8;}
 
     if (isLogin) {
       const { error } = await sb.auth.signInWithPassword({ email, password })
-      if (error) showMsg(error.message, 'error')
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) showMsg('E-mail ou senha incorretos.', 'error')
+        else showMsg(error.message, 'error')
+      }
       else window.location.href = '/splitpool/explorar.html'
     } else {
+      // Verificar se email já existe tentando login com senha errada
+      const { data: existing } = await sb.from('profiles').select('id').eq('email', email).limit(1)
+      if (existing && existing.length > 0) {
+        showMsg('Este e-mail já está cadastrado. Clique em "Entrar".', 'error')
+        btn.disabled = false
+        btn.textContent = 'Criar conta'
+        return
+      }
       const { error } = await sb.auth.signUp({ email, password })
-      if (error) showMsg(error.message, 'error')
+      if (error) {
+        if (error.message.includes('already registered')) showMsg('Este e-mail já está cadastrado. Clique em "Entrar".', 'error')
+        else showMsg(error.message, 'error')
+      }
       else showMsg('✅ Conta criada! Verifique seu e-mail para confirmar.', 'success')
     }
 
