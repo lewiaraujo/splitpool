@@ -514,6 +514,14 @@ async function confirmarPagamento(){
       alert('Você já está nesta piscina! Acesse "Meus Planos" para ver seu plano ativo.')
       return
     }
+
+    // Bloquear dono de entrar na própria piscina
+    if(piscinaData.dono_id === sess.session.user.id){
+      btn.disabled=false
+      btn.textContent='Confirmar pagamento via PIX'
+      alert('Você é o dono desta piscina e não pode entrar como membro.')
+      return
+    }
   }
   await new Promise(r=>setTimeout(r,2000))
 
