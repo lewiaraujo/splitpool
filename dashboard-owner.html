@@ -421,6 +421,19 @@ function renderPool(pool,assins,vault){
       +'</div></div>';
   }
 
+  // Link de convite (leitura)
+  var linkConviteHTML='';
+  if(pool.link_convite){
+    linkConviteHTML='<div style="background:#f0f9ff;border:1px solid rgba(0,180,210,0.25);border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center;">'
+      +'<span style="font-size:1.2rem;flex-shrink:0;">🔗</span>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:11px;font-weight:700;color:#009eb0;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Link de convite</div>'
+      +'<div style="font-size:12px;color:var(--bluedark);word-break:break-all;opacity:.7;">'+pool.link_convite+'</div>'
+      +'</div>'
+      +'<a href="'+pool.link_convite+'" target="_blank" style="flex-shrink:0;padding:6px 12px;background:var(--blue);color:#fff;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">Abrir →</a>'
+      +'</div>';
+  }
+
   // Botão pausar/reativar
   var toggleBtn='';
   if(pool.status==='aberta'){
@@ -466,6 +479,7 @@ function renderPool(pool,assins,vault){
     +'<div id="tv-'+pool.id+'" class="tab-pane">'
     +'<div class="vault-form">'
     +'<div class="vault-notice"><span>🔒</span>Credenciais criptografadas (AES-256) antes de salvar. Membros ativos veem descriptografado em Meus Planos. Nunca armazenamos texto plano.</div>'
+    +linkConviteHTML
     +vaultSalvoHTML
     +'<div class="form-row">'
     +'<div class="form-group"><label>E-mail / Login</label><input type="email" id="ve-'+pool.id+'" placeholder="email@exemplo.com" value="'+(vault&&vault.email?vault.email:'')+'"></div>'

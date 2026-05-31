@@ -301,6 +301,12 @@ function renderPlano(a){
   if(a.status==='ativo'){
     const cred=credenciaisMap[a.piscina_id];
     if(cred && cred.email){
+      const linkConviteBtn=cred.link_convite
+        ?`<div class="cred-row" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,168,120,0.15);">
+            <span class="cred-label" style="width:auto;margin-right:8px;">🔗</span>
+            <a href="${cred.link_convite}" target="_blank" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 3px 10px rgba(18,85,204,0.25);">Aceitar convite →</a>
+          </div>`
+        :'';
       credHTML=`<div class="cred-box">
         <div class="cred-ico">🔑</div>
         <div class="cred-content">
@@ -315,6 +321,7 @@ function renderPlano(a){
             <span class="cred-val" id="cs-${a.id}">${cred.senha}</span>
             <button class="cred-copy" onclick="copiarCred('cs-${a.id}','Senha')">Copiar</button>
           </div>
+          ${linkConviteBtn}
         </div>
       </div>`;
     } else {
@@ -397,6 +404,17 @@ async function carregarPlanos(){
         const dec=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
         if(dec) credenciaisMap[c.piscina_id]=dec;
       }catch(e){}
+    });
+
+    // Buscar link_convite das piscinas ativas
+    const {data:piscs}=await sb.from('piscinas')
+      .select('id,link_convite')
+      .in('id',ativoIds);
+    (piscs||[]).forEach(p=>{
+      if(p.link_convite){
+        if(!credenciaisMap[p.id]) credenciaisMap[p.id]={};
+        credenciaisMap[p.id].link_convite=p.link_convite;
+      }
     });
   }
 
