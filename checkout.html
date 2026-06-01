@@ -133,6 +133,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .btn-meus-planos:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(18,85,204,0.45);}
 .success-info{font-size:12px;color:var(--bluedark);opacity:.45;font-weight:500;text-align:center;}
 
+
+@media(max-width:680px){
+  nav{padding:0 16px;}
+  .nav-in{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 0;gap:6px;}
+  .nav-logo{height:32px;}
+  .nav-right{flex-wrap:wrap;gap:6px;width:100%;justify-content:flex-end;}
+  .nav-btn{font-size:11px;padding:5px 10px;}
+}
 @media(max-width:520px){
   .card{padding:16px;}
   .metodo-tabs{grid-template-columns:1fr 1fr;}

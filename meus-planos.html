@@ -127,6 +127,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
   .btn-confirmar{width:100%;}
   .resumo-bar{grid-template-columns:1fr 1fr;}
 }
+
+@media(max-width:680px){
+  nav{padding:0 16px;}
+  .nav-in{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 0;gap:6px;}
+  .nav-logo{height:32px;}
+  .nav-right{flex-wrap:wrap;gap:6px;width:100%;justify-content:flex-end;}
+  .nav-user{font-size:11px;opacity:.6;}
+  .nav-btn{font-size:11px;padding:5px 10px;border-radius:7px;}
+}
 </style>
 </head>
 <body>
@@ -306,6 +315,7 @@ function renderPlano(a){
       acessoHTML=`<div style="background:#fff8e0;border:1px solid rgba(180,120,0,0.2);border-radius:10px;padding:14px 16px;margin-top:12px;">
         <div style="font-size:13px;font-weight:700;color:#8a5c00;margin-bottom:4px;">⏳ Aguardando o dono adicionar seu acesso</div>
         <div style="font-size:12px;color:#8a5c00;opacity:.8;line-height:1.6;">O dono vai adicionar o email <strong>${a.email_servico||'seu email'}</strong> no ${a.servico}. Você receberá um convite em breve.</div>
+        <div style="margin-top:10px;font-size:11px;color:#8a5c00;opacity:.7;">Já recebeu o acesso? <button onclick="abrirConf(${a.id})" style="background:none;border:none;color:var(--blue);font-weight:700;cursor:pointer;font-size:11px;font-family:inherit;">Confirmar agora →</button></div>
       </div>`;
     } else {
       // Dono enviou — mostrar aviso urgente para confirmar
