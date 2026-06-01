@@ -120,7 +120,6 @@
   // CSS inline para ham-dot e mob-lnk-dot
   var style=document.createElement('style');
   style.textContent=[
-    '#ham-btn{position:relative!important;}',
     '#ham-dot{position:absolute;top:5px;right:5px;width:9px;height:9px;',
     'border-radius:50%;background:#e74c3c;display:none;border:2px solid #fff;z-index:2;}',
     '#ham-dot.show{display:block;}',
