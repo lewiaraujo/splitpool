@@ -200,6 +200,26 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 @media(min-width:681px){
   #ham-btn,#mob-menu{display:none!important;}
 }
+
+/* -- ponto vermelho hamburguer -- */
+#ham-btn{position:relative;}
+#ham-dot{position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:#e74c3c;display:none;border:2px solid #fff;}
+#ham-dot.show{display:block;}
+/* -- ponto nos links do mob-menu -- */
+.mob-lnk-notif{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e74c3c;margin-left:6px;vertical-align:middle;}
+/* -- painel notificacoes mobile -- */
+#notif-panel{display:none;position:fixed;top:56px;left:0;right:0;background:#fff;z-index:9997;box-shadow:0 8px 24px rgba(0,20,80,.12);max-height:60vh;overflow-y:auto;}
+#notif-panel.open{display:block;}
+.notif-panel-header{padding:12px 16px 8px;font-size:11px;font-weight:800;color:var(--bluedark);opacity:.4;text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,180,210,0.1);}
+.notif-panel-header button{background:none;border:none;font-size:11px;color:var(--blue);font-weight:700;cursor:pointer;font-family:inherit;}
+.notif-panel-item{padding:12px 16px;border-bottom:1px solid rgba(0,180,210,0.07);display:flex;gap:10px;align-items:flex-start;cursor:pointer;}
+.notif-panel-item.nao-lida{background:#f0f7ff;}
+.notif-panel-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:4px;}
+.notif-panel-dot.lida{background:transparent;}
+.notif-panel-msg{font-size:13px;color:var(--bluedark);line-height:1.5;font-weight:500;}
+.notif-panel-time{font-size:10px;color:var(--bluedark);opacity:.4;margin-top:2px;}
+.notif-panel-empty{padding:20px 16px;text-align:center;font-size:13px;color:var(--bluedark);opacity:.4;}
+
 #ham-btn{
   display:none;
   position:fixed;
@@ -776,12 +796,20 @@ init();
 <!-- MOBILE NAV -->
 
 <div id="mob-name"></div>
-<button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
+<button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span><div id="ham-dot"></div></button>
 <div id="mob-menu">
+  <button class="mob-lnk" id="mob-notif-btn" onclick="toggleNotifPanel()">🔔 Notificações<span id="mob-notif-dot" class="mob-lnk-notif" style="display:none;"></span></button>
   <a class="mob-lnk" href="explorar.html">Explorar</a>
   <a class="mob-lnk" href="meus-planos.html">Meus planos</a>
   <button class="mob-lnk" onclick="sair();toggleMenu()">Sair</button>
   <a class="mob-lnk cta" href="criar-piscina.html">+ Nova piscina</a>
+</div>
+<div id="notif-panel">
+  <div class="notif-panel-header">
+    <span>Notificações</span>
+    <button onclick="marcarTodasLidas()">Marcar todas como lidas</button>
+  </div>
+  <div id="notif-panel-list"><div class="notif-panel-empty">Nenhuma notificação</div></div>
 </div>
 <script>
 /* ── MOB NAV JS ── */
@@ -826,72 +854,56 @@ window.addEventListener('resize', function(){
 });
 </script>
 
-<!-- DROPDOWN NOTIFICACOES -->
-<div id="notif-dropdown" class="notif-dropdown">
-  <div class="notif-header">
-    <span>Notificações</span>
-    <button onclick="marcarTodasLidas()">Marcar todas como lidas</button>
-  </div>
-  <div class="notif-list" id="notif-list">
-    <div class="notif-empty">Nenhuma notificação</div>
-  </div>
-</div>
-
 <script>
 /* -- NOTIFICACOES -- */
-var notifAberto=false;
+var notifPanelAberto=false;
 
-function toggleNotif(){
-  var dd=document.getElementById('notif-dropdown');
-  notifAberto=!notifAberto;
-  dd.classList.toggle('open',notifAberto);
-  if(notifAberto) carregarNotificacoes();
+function toggleNotifPanel(){
+  var p=document.getElementById('notif-panel');
+  notifPanelAberto=!notifPanelAberto;
+  p.classList.toggle('open',notifPanelAberto);
+  if(notifPanelAberto) renderNotifPanel();
 }
 
-document.addEventListener('click',function(e){
-  var dd=document.getElementById('notif-dropdown');
-  var btn=document.getElementById('notif-btn');
-  if(notifAberto&&dd&&btn&&!dd.contains(e.target)&&!btn.contains(e.target)){
-    notifAberto=false;
-    dd.classList.remove('open');
-  }
-});
-
 async function carregarNotificacoes(){
+  if(!userId) return;
   var {data:notifs}=await sb.from('notificacoes')
     .select('*')
     .eq('user_id',userId)
     .order('created_at',{ascending:false})
     .limit(20);
   if(!notifs) return;
-  // Badge
   var naoLidas=notifs.filter(function(n){return !n.lida;}).length;
-  var badge=document.getElementById('notif-badge');
-  if(badge){
-    if(naoLidas>0){badge.textContent=naoLidas>9?'9+':naoLidas;badge.classList.add('show');}
-    else{badge.classList.remove('show');}
-  }
-  // Lista
-  var list=document.getElementById('notif-list');
+  var dot=document.getElementById('ham-dot');
+  if(dot) dot.classList.toggle('show',naoLidas>0);
+  var mdot=document.getElementById('mob-notif-dot');
+  if(mdot) mdot.style.display=naoLidas>0?'inline-block':'none';
+  window._notifs=notifs;
+}
+
+function renderNotifPanel(){
+  var notifs=window._notifs||[];
+  var list=document.getElementById('notif-panel-list');
   if(!list) return;
-  if(!notifs.length){list.innerHTML='<div class="notif-empty">Nenhuma notificação</div>';return;}
+  if(!notifs.length){list.innerHTML='<div class="notif-panel-empty">Nenhuma notificação</div>';return;}
   var icones={membro_entrou:'👤',acesso_confirmado:'✅'};
   list.innerHTML=notifs.map(function(n){
     var ico=icones[n.tipo]||'🔔';
     var tempo=formatarTempo(n.created_at);
-    var cls='notif-item'+(n.lida?'':' nao-lida');
-    var dest=n.link?'onclick="irParaNotif('+n.id+',''+n.link+'')"':'onclick="marcarLida('+n.id+')"';
+    var cls='notif-panel-item'+(n.lida?'':' nao-lida');
+    var dest=n.link?'onclick="irParaNotif('+n.id+',\''+n.link+'\')"':'onclick="marcarLida('+n.id+')"';
     return '<div class="'+cls+'" '+dest+'>'
-      +'<div class="notif-dot'+(n.lida?' lida':'')+'"></div>'
-      +'<div><div class="notif-msg">'+ico+' '+n.mensagem+'</div>'
-      +'<div class="notif-time">'+tempo+'</div></div>'
+      +'<div class="notif-panel-dot'+(n.lida?' lida':'')+'"></div>'
+      +'<div><div class="notif-panel-msg">'+ico+' '+n.mensagem+'</div>'
+      +'<div class="notif-panel-time">'+tempo+'</div></div>'
       +'</div>';
   }).join('');
 }
 
 async function marcarLida(id){
   await sb.from('notificacoes').update({lida:true}).eq('id',id);
-  carregarNotificacoes();
+  await carregarNotificacoes();
+  renderNotifPanel();
 }
 
 async function irParaNotif(id,link){
@@ -901,21 +913,19 @@ async function irParaNotif(id,link){
 
 async function marcarTodasLidas(){
   await sb.from('notificacoes').update({lida:true}).eq('user_id',userId).eq('lida',false);
-  carregarNotificacoes();
+  await carregarNotificacoes();
+  renderNotifPanel();
 }
 
 function formatarTempo(iso){
   var diff=Math.floor((Date.now()-new Date(iso).getTime())/1000);
   if(diff<60) return 'Agora';
-  if(diff<3600) return Math.floor(diff/60)+'min atrás';
-  if(diff<86400) return Math.floor(diff/3600)+'h atrás';
-  return Math.floor(diff/86400)+'d atrás';
+  if(diff<3600) return Math.floor(diff/60)+'min \u00e0 atr\u00e1s';
+  if(diff<86400) return Math.floor(diff/3600)+'h atr\u00e1s';
+  return Math.floor(diff/86400)+'d atr\u00e1s';
 }
 
-// Polling de notificações a cada 30s
-setInterval(function(){
-  if(userId) carregarNotificacoes();
-},30000);
+setInterval(function(){if(userId) carregarNotificacoes();},30000);
 </script>
 
 </body>
