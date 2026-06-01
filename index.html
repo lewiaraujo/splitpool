@@ -388,7 +388,7 @@ footer{padding:2.5rem 5%;border-top:1px solid rgba(255,255,255,.4);background:rg
 
 <script>
 // Verificar se usuário já está logado — redirecionar para explorar
-(function(){
+document.addEventListener('DOMContentLoaded', function(){
   try{
     var raw=localStorage.getItem('sb-eawfweuamtwlsilrkgoo-auth-token');
     if(raw){
@@ -397,12 +397,11 @@ footer{padding:2.5rem 5%;border-top:1px solid rgba(255,255,255,.4);background:rg
         var agora=Math.floor(Date.now()/1000);
         if(v.expires_at>agora){
           window.location.replace('explorar.html');
-          return;
         }
       }
     }
   }catch(e){}
-})();
+});
 
 (function(){
   const c=document.getElementById('wc'),ctx=c.getContext('2d');
