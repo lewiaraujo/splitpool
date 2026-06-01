@@ -163,11 +163,58 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 /* ── SECTION LABEL ── */
 .section-lbl{font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;color:var(--bluedark);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
 
-@media(max-width:600px){
-  .form-row{grid-template-columns:1fr;}
-  .pool-right{flex-direction:column;align-items:flex-end;gap:6px;}
+@media(max-width:768px){
+  /* NAV */
+  .nav-in{height:auto;flex-wrap:wrap;padding:10px 0;gap:8px;}
+  .nav-logo{height:36px;}
+  .nav-right{flex-wrap:wrap;gap:6px;width:100%;}
+  .nav-right .nav-user{font-size:12px;}
+  .nav-right .nav-btn{font-size:12px;padding:6px 10px;}
+
+  /* LAYOUT */
+  .page-wrap{padding:100px 12px 40px;}
+  .page-title{font-size:20px;}
+
+  /* RESUMO */
   .resumo-bar{grid-template-columns:1fr 1fr;}
-  .nav-right .nav-btn:nth-child(3){display:none;}
+  .resumo-val{font-size:18px;}
+
+  /* POOL HEADER */
+  .pool-header{padding:14px 16px;gap:10px;}
+  .pool-ico{width:40px;height:40px;}
+  .pool-nome{font-size:15px;}
+  .pool-right{flex-direction:column;align-items:flex-end;gap:4px;}
+  .pool-receita-val{font-size:16px;}
+  .pool-body-inner{padding:0 14px 18px;}
+
+  /* TABELA MEMBROS — vira cards empilhados */
+  .members-table{display:block;}
+  .members-table thead{display:none;}
+  .members-table tbody{display:block;}
+  .members-table tbody tr{
+    display:block;
+    background:#f8faff;
+    border-radius:10px;
+    border:1px solid rgba(0,180,210,0.12);
+    padding:12px;
+    margin-bottom:10px;
+  }
+  .members-table td{
+    display:block;
+    padding:3px 0;
+    border:none;
+    font-size:13px;
+  }
+
+  /* FORM ROW */
+  .form-row{grid-template-columns:1fr;}
+
+  /* TABS */
+  .tab-btn{font-size:12px;padding:6px 10px;}
+
+  /* POOL ACTIONS */
+  .pool-actions{flex-wrap:wrap;}
+  .btn-sm{font-size:12px;padding:7px 12px;}
 }
 </style>
 </head>
@@ -349,7 +396,7 @@ async function marcarAcessoEnviado(assinaturaId){
     .update({acesso_enviado_em:new Date().toISOString()})
     .eq('id',assinaturaId);
   if(error){showToast('Erro: '+error.message,'error');return;}
-  showToast('Acesso marcado como enviado! Membro será notificado.','success');
+  showToast('Acesso marcado como enviado! Oriente o membro a verificar o email.','success');
   setTimeout(function(){carregarDashboard();},900);
 }
 
