@@ -4,7 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Splitpool — Meus Planos</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+/* hamburger */
+function toggleMenu(){
+  document.getElementById('hamburger-btn').classList.toggle('open');
+  document.getElementById('nav-mob').classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  var btn=document.getElementById('hamburger-btn');
+  var mob=document.getElementById('nav-mob');
+  if(btn&&mob&&!btn.contains(e.target)&&!mob.contains(e.target)){
+    btn.classList.remove('open');mob.classList.remove('open');
+  }
+});
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap');
@@ -131,31 +144,29 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 
 }
 
-
-
-/* ── HAMBURGER MOBILE ── */
-.hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;padding:8px;border:none;background:transparent;border-radius:8px;}
+/* ── NAV MOBILE ── */
+.hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;padding:8px;border:none;background:transparent;flex-shrink:0;}
 .hamburger span{display:block;width:22px;height:2px;background:var(--bluedark);border-radius:2px;transition:.25s;}
 .hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
 .hamburger.open span:nth-child(2){opacity:0;}
 .hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
-.nav-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:rgba(255,255,255,0.98);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,180,210,0.15);padding:12px 16px 16px;flex-direction:column;gap:4px;z-index:200;box-shadow:0 8px 24px rgba(0,20,80,0.08);}
-.nav-dropdown.open{display:flex;}
-.nav-dd-user{font-size:12px;font-weight:700;color:var(--bluedark);opacity:.45;padding:6px 10px 10px;}
-.nav-dd-divider{height:1px;background:rgba(0,180,210,0.12);margin-bottom:6px;}
-.nav-dd-item{display:block;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:var(--bluedark);text-decoration:none;border:none;background:transparent;cursor:pointer;font-family:inherit;text-align:left;transition:.15s;width:100%;}
-.nav-dd-item:hover{background:rgba(18,85,204,0.07);}
-.nav-dd-item.primary{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;text-align:center;margin-top:4px;border-radius:10px;}
-.nav-dd-item.primary:hover{opacity:.9;}
+.nav-mob-overlay{display:none;position:fixed;top:56px;left:0;right:0;background:rgba(255,255,255,0.98);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,180,210,0.15);padding:8px 16px 16px;flex-direction:column;gap:2px;z-index:299;box-shadow:0 8px 24px rgba(0,20,80,0.1);}
+.nav-mob-overlay.open{display:flex;}
+.mob-user{font-size:12px;font-weight:700;color:var(--bluedark);opacity:.4;padding:8px 10px 6px;}
+.mob-divider{height:1px;background:rgba(0,180,210,0.12);margin:4px 0 8px;}
+.mob-item{display:block;padding:12px 12px;border-radius:10px;font-size:15px;font-weight:600;color:var(--bluedark);text-decoration:none;border:none;background:transparent;cursor:pointer;font-family:inherit;text-align:left;width:100%;transition:.15s;}
+.mob-item:hover{background:rgba(18,85,204,0.07);}
+.mob-item.primary{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;text-align:center;margin-top:6px;border-radius:10px;}
 @media(max-width:680px){
-  nav{position:fixed;z-index:300;}
+  nav{position:fixed;top:0;left:0;right:0;z-index:300;}
+  .nav-in{height:56px;}
   .nav-right{display:none;}
   .hamburger{display:flex;}
-  .page,.page-wrap{padding-top:72px!important;}
+  body,main,.page,.page-wrap,.container{padding-top:72px;}
   .toast{max-width:calc(100vw - 32px);white-space:normal;text-align:center;font-size:12px;padding:10px 16px;bottom:16px;}
 }
 @media(min-width:681px){
-  .hamburger,.nav-dropdown{display:none!important;}
+  .hamburger,.nav-mob-overlay{display:none!important;}
 }
 </style>
 </head>
@@ -171,18 +182,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
       <span class="nav-user" id="nav-user"></span>
       <a href="explorar.html" class="nav-btn">Explorar</a>
       <button class="nav-btn" onclick="sair()">Sair</button>
+      <button class="hamburger" id="hamburger-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
     </div>
   </div>
-
-  <button class="hamburger" id="hamburger-btn" onclick="toggleMenu()" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
 </nav>
-<div class="nav-dropdown" id="nav-dropdown">
-  <div class="nav-dd-user" id="nav-user-mobile"></div>
-  <div class="nav-dd-divider"></div>
-    <a class="nav-dd-item" href="explorar.html">Explorar</a>
-    <button class="nav-dd-item" onclick="sair()">Sair</button>
+<div class="nav-mob-overlay" id="nav-mob">
+  <div class="mob-user" id="nav-mob-user"></div>
+  <div class="mob-divider"></div>
+  <a class="mob-item" href="explorar.html">Explorar</a>
+  <button class="mob-item" onclick="sair();toggleMenu()">Sair</button>
 </div>
 
 <div class="page">
