@@ -111,6 +111,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .members-table{width:100%;border-collapse:collapse;font-size:13px;}
 .members-table th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--bluedark);opacity:.35;padding:0 10px 8px 0;}
 .members-table td{padding:10px 10px 10px 0;border-top:1px solid rgba(0,180,210,0.1);vertical-align:middle;}
+@media(max-width:680px){
+  .members-table thead{display:none;}
+  .members-table,.members-table tbody,.members-table tr,.members-table td{display:block;width:100%;box-sizing:border-box;}
+  .members-table tr{background:rgba(255,255,255,0.7);border:1px solid rgba(0,180,210,0.15);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+  .members-table td{padding:4px 0;border-top:none;font-size:13px;}
+  .members-table td[data-label]::before{content:attr(data-label);display:block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--bluedark);opacity:.35;margin-bottom:2px;}
+}
 .member-nome{font-weight:700;color:var(--bluedark);}
 .member-email{font-size:11px;color:var(--bluedark);opacity:.45;margin-top:2px;}
 .no-members{text-align:center;padding:24px 0;color:var(--bluedark);opacity:.35;font-size:13px;}
@@ -118,10 +125,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 /* ── VAULT ── */
 .vault-form{background:#f5f9ff;border:1.5px dashed rgba(18,85,204,0.2);border-radius:12px;padding:18px;}
 .vault-notice{display:flex;gap:8px;font-size:12px;color:var(--bluedark);opacity:.6;line-height:1.6;margin-bottom:14px;font-weight:500;}
-.vault-saved{background:#e6fff8;border:1px solid rgba(0,168,120,0.25);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:center;margin-bottom:14px;}
+.vault-saved{background:#e6fff8;border:1px solid rgba(0,168,120,0.25);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
 .vault-saved-txt{font-size:13px;color:#00522a;font-weight:600;}
 .vault-saved-sub{font-size:11px;color:#00875A;opacity:.7;margin-top:2px;font-weight:500;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+@media(max-width:680px){
+  .form-row{grid-template-columns:1fr;}
+  .vault-saved{flex-direction:column;align-items:flex-start;}
+  .vault-saved .btn-sm{width:100%;justify-content:center;}
+}
 .form-group{display:flex;flex-direction:column;gap:5px;}
 .form-group label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--bluedark);opacity:.45;}
 .form-group input{padding:10px 12px;border:1.5px solid rgba(18,85,204,0.18);border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:#fff;outline:none;transition:.2s;font-weight:500;}
@@ -425,13 +437,12 @@ async function marcarAcessoEnviado(assinaturaId,btn){
     if(btn){btn.disabled=false;btn.textContent='✓ Marcar acesso enviado';}
     return;
   }
-  // Substituir botão e caixa de instrução no DOM imediatamente
   if(btn){
     var prev=btn.previousElementSibling;
     if(prev&&prev.tagName==='DIV') prev.remove();
     var span=document.createElement('span');
     span.style.cssText='font-size:11px;color:var(--green);font-weight:700;display:block;margin-top:4px;';
-    span.textContent='✓ Acesso enviado';
+    span.textContent='✓ Acesso enviado — aguardando confirmação do membro';
     btn.replaceWith(span);
   }
   showToast('Acesso marcado! O membro será notificado para confirmar.','success');
@@ -525,14 +536,14 @@ function renderPool(pool,assins,vault){
         acessoBtn='<span style="font-size:11px;color:var(--green);font-weight:700;">✓ Acesso enviado</span>';
       }
       membrosHTML+='<tr>'
-        +'<td><div class="member-nome">'+(a.profiles&&a.profiles.nome?a.profiles.nome:'—')+'</div>'
+        +'<td data-label="Membro"><div class="member-nome">'+(a.profiles&&a.profiles.nome?a.profiles.nome:'—')+'</div>'
         +'<div class="member-email">'+(a.profiles&&a.profiles.email?a.profiles.email:'')+'</div></td>'
-        +'<td><div style="font-size:12px;font-weight:700;color:var(--blue);">'+emailServico+'</div>'
+        +'<td data-label="Email no serviço"><div style="font-size:12px;font-weight:700;color:var(--blue);">'+emailServico+'</div>'
         +'<div style="font-size:10px;color:var(--bluedark);opacity:.4;">email no serviço</div>'
         +acessoBtn+'</td>'
-        +'<td>'+(a.plano_nome||pool.servico)+'</td>'
-        +'<td>'+fmt(a.valor)+'/mês</td>'
-        +'<td>'+getMemberBadge(a.status)+'</td>'
+        +'<td data-label="Plano">'+(a.plano_nome||pool.servico)+'</td>'
+        +'<td data-label="Valor">'+fmt(a.valor)+'/mês</td>'
+        +'<td data-label="Status">'+getMemberBadge(a.status)+'</td>'
         +'</tr>';
     });
   }
@@ -605,11 +616,11 @@ function renderPool(pool,assins,vault){
     // Tab vault
     +'<div id="tv-'+pool.id+'" class="tab-pane">'
     +'<div class="vault-form">'
-    +'<div class="vault-notice"><span>\U0001F512</span>Credenciais criptografadas (AES-256). Membros ativos veem em Meus Planos.</div>'
+    +'<div class="vault-notice"><span>🔒</span>Credenciais criptografadas (AES-256). Membros ativos veem em Meus Planos.</div>'
     +linkConviteHTML
     +(vault&&vault.email
       ? '<div class="vault-saved">'
-        +'<span style="font-size:1.3rem;">\U0001F510</span>'
+        +'<span style="font-size:1.3rem;">🔐</span>'
         +'<div style="flex:1;"><div class="vault-saved-txt">Login: '+vault.email+'</div>'
         +'<div class="vault-saved-sub">Senha salva · criptografada AES-256</div></div>'
         +'<button class="btn-sm ghost" style="flex-shrink:0;" onclick="toggleEditarVault('+pool.id+')">✏️ Editar</button>'
@@ -620,14 +631,14 @@ function renderPool(pool,assins,vault){
         +'<div class="form-group"><label>Senha</label><input type="password" id="vs-'+pool.id+'" value="'+vault.senha+'"></div>'
         +'</div>'
         +'<div style="display:flex;gap:8px;">'
-        +'<button class="btn-sm primary" onclick="saveVault('+pool.id+')">\U0001F4BE Salvar</button>'
+        +'<button class="btn-sm primary" onclick="saveVault('+pool.id+')">💾 Salvar</button>'
         +'<button class="btn-sm ghost" onclick="toggleEditarVault('+pool.id+')">Cancelar</button>'
         +'</div></div>'
       : '<div class="form-row">'
         +'<div class="form-group"><label>E-mail / Login</label><input type="email" id="ve-'+pool.id+'" placeholder="email@exemplo.com"></div>'
         +'<div class="form-group"><label>Senha</label><input type="password" id="vs-'+pool.id+'" placeholder="••••••••"></div>'
         +'</div>'
-        +'<button class="btn-sm primary" onclick="saveVault('+pool.id+')">\U0001F4BE Salvar credenciais</button>'
+        +'<button class="btn-sm primary" style="width:100%;justify-content:center;" onclick="saveVault('+pool.id+')">💾 Salvar credenciais</button>'
     )
     +'</div></div>'
 
