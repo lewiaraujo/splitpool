@@ -145,7 +145,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 }
 
 /* ── NAV MOBILE ── */
-.hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;padding:8px;border:none;background:transparent;flex-shrink:0;}
+.hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;padding:8px;border:none;background:transparent;position:absolute;right:16px;top:50%;transform:translateY(-50%);}
 .hamburger span{display:block;width:22px;height:2px;background:var(--bluedark);border-radius:2px;transition:.25s;}
 .hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
 .hamburger.open span:nth-child(2){opacity:0;}
@@ -159,7 +159,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .mob-item.primary{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;text-align:center;margin-top:6px;border-radius:10px;}
 @media(max-width:680px){
   nav{position:fixed;top:0;left:0;right:0;z-index:300;}
-  .nav-in{height:56px;}
+  .nav-in{height:56px;position:relative;}
   .nav-right{display:none;}
   .hamburger{display:flex;}
   body,main,.page,.page-wrap,.container{padding-top:72px;}
@@ -182,9 +182,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
       <span class="nav-user" id="nav-user"></span>
       <a href="explorar.html" class="nav-btn">Explorar</a>
       <button class="nav-btn" onclick="sair()">Sair</button>
-      <button class="hamburger" id="hamburger-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
     </div>
+      <button class="hamburger" id="hamburger-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
+
 </nav>
 <div class="nav-mob-overlay" id="nav-mob">
   <div class="mob-user" id="nav-mob-user"></div>
