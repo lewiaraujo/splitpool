@@ -172,13 +172,44 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
   .total-badge{display:none;}
 }
 
-@media(max-width:680px){
-  nav{padding:0 16px;}
+
   .nav-in{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 0;gap:6px;}
   .nav-logo{height:32px;}
   .nav-right{flex-wrap:wrap;gap:6px;width:100%;justify-content:flex-end;}
   .nav-user{font-size:11px;opacity:.6;}
   .nav-btn{font-size:11px;padding:5px 10px;border-radius:7px;}
+}
+
+/* ── MOBILE NAV ── */
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;border-radius:8px;border:none;background:transparent;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--bluedark);border-radius:2px;transition:.3s;}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:rgba(255,255,255,0.98);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,180,210,0.15);padding:12px 20px;flex-direction:column;gap:4px;z-index:200;}
+.nav-dropdown.open{display:flex;}
+.nav-dropdown-item{display:block;padding:11px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--bluedark);text-decoration:none;border:none;background:transparent;cursor:pointer;font-family:inherit;text-align:left;transition:.15s;width:100%;}
+.nav-dropdown-item:hover{background:rgba(18,85,204,0.07);}
+.nav-dropdown-item.primary{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;text-align:center;margin-top:4px;}
+.nav-dropdown-item.primary:hover{opacity:.9;}
+.nav-dropdown-divider{height:1px;background:rgba(0,180,210,0.12);margin:4px 0;}
+@media(max-width:680px){
+  nav{position:fixed;top:0;left:0;right:0;z-index:300;}
+  .nav-in{height:56px;padding:0;}
+  .nav-logo{height:30px;}
+  .nav-right{display:none;}
+  .nav-user-desktop{display:none;}
+  .hamburger{display:flex;}
+  .page-wrap{padding-top:72px;}
+  .page,.page-wrap{padding-top:72px;}
+}
+@media(min-width:681px){
+  .hamburger{display:none!important;}
+  .nav-dropdown{display:none!important;}
+}
+
+@media(max-width:680px){
+  .toast{max-width:calc(100vw - 32px);white-space:normal;text-align:center;font-size:12px;padding:10px 16px;bottom:16px;}
 }
 </style>
 </head>
@@ -198,8 +229,19 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
       <button class="nav-btn outline" onclick="window.location.href='dashboard-owner.html'">Dashboard</button>
       <button class="nav-btn outline" onclick="logout()">Sair</button>
       <button class="nav-btn" onclick="window.location.href='criar-piscina.html'">+ Criar piscina</button>
-    </div>
-  </div>
+  
+  <button class="hamburger" id="hamburger-btn" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+<div class="nav-dropdown" id="nav-dropdown">
+  <span id="nav-user-mobile" style="font-size:13px;font-weight:700;color:var(--bluedark);opacity:.5;padding:8px 14px 4px;"></span>
+  <div class="nav-dropdown-divider"></div>
+  <a class="nav-dropdown-item" href="meus-planos.html">Meus planos</a>
+  <a class="nav-dropdown-item" href="dashboard-owner.html">Dashboard</a>
+  <a class="nav-dropdown-item" onclick="logout()">Sair</a>
+  <a class="nav-dropdown-item primary" href="criar-piscina.html">+ Criar piscina</a>
+</div>
 </nav>
 
 <main>
