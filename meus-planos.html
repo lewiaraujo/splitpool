@@ -5,18 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Splitpool — Meus Planos</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-/* hamburger */
-function toggleMenu(){
-  document.getElementById('hamburger-btn').classList.toggle('open');
-  document.getElementById('nav-mob').classList.toggle('open');
-}
-document.addEventListener('click',function(e){
-  var btn=document.getElementById('hamburger-btn');
-  var mob=document.getElementById('nav-mob');
-  if(btn&&mob&&!btn.contains(e.target)&&!mob.contains(e.target)){
-    btn.classList.remove('open');mob.classList.remove('open');
-  }
-});
+
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
@@ -144,29 +134,58 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 
 }
 
-/* ── NAV MOBILE ── */
-.hamburger{display:none;position:fixed;top:14px;right:16px;z-index:400;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;padding:8px;border:none;background:transparent;width:38px;height:38px;}
-.hamburger span{display:block;width:22px;height:2px;background:#0A3080;border-radius:2px;transition:.25s;margin:0 auto;}
-.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
-.hamburger.open span:nth-child(2){opacity:0;}
-.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
-.nav-mob-overlay{display:none;position:fixed;top:56px;left:0;right:0;background:rgba(255,255,255,0.98);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,180,210,0.15);padding:8px 16px 16px;flex-direction:column;gap:2px;z-index:299;box-shadow:0 8px 24px rgba(0,20,80,0.1);}
-.nav-mob-overlay.open{display:flex;}
-.mob-user{font-size:12px;font-weight:700;color:var(--bluedark);opacity:.4;padding:8px 10px 6px;}
-.mob-divider{height:1px;background:rgba(0,180,210,0.12);margin:4px 0 8px;}
-.mob-item{display:block;padding:12px 12px;border-radius:10px;font-size:15px;font-weight:600;color:var(--bluedark);text-decoration:none;border:none;background:transparent;cursor:pointer;font-family:inherit;text-align:left;width:100%;transition:.15s;}
-.mob-item:hover{background:rgba(18,85,204,0.07);}
-.mob-item.primary{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;text-align:center;margin-top:6px;border-radius:10px;}
+
+}
+
+/* ── MOBILE NAV FINAL ── */
 @media(max-width:680px){
-  nav{position:fixed;top:0;left:0;right:0;z-index:300;}
+  nav{position:fixed;top:0;left:0;right:0;z-index:300;-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(255,255,255,0.95);}
   .nav-in{height:56px;}
   .nav-right{display:none;}
-  .hamburger{display:flex;}
-  body,main,.page,.page-wrap,.container{padding-top:72px;}
-  .toast{max-width:calc(100vw - 32px);white-space:normal;text-align:center;font-size:12px;padding:10px 16px;bottom:16px;}
+  body{padding-top:56px;}
 }
 @media(min-width:681px){
-  .hamburger,.nav-mob-overlay{display:none!important;}
+  #ham-btn,#mob-menu{display:none!important;}
+}
+#ham-btn{
+  display:none;
+  position:fixed;
+  top:10px;right:12px;
+  z-index:9999;
+  width:40px;height:40px;
+  background:rgba(255,255,255,0.95);
+  border:1.5px solid rgba(18,85,204,0.2);
+  border-radius:10px;
+  cursor:pointer;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  -webkit-tap-highlight-color:transparent;
+}
+#ham-btn span{display:block;width:18px;height:2px;background:#0A3080;border-radius:2px;transition:.25s;}
+#ham-btn.open span:nth-child(1){transform:rotate(45deg) translate(4px,4px);}
+#ham-btn.open span:nth-child(2){opacity:0;}
+#ham-btn.open span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px);}
+#mob-menu{
+  display:none;
+  position:fixed;
+  top:56px;left:0;right:0;
+  z-index:9998;
+  background:#fff;
+  border-bottom:1px solid rgba(0,180,210,0.2);
+  box-shadow:0 8px 24px rgba(0,20,80,0.12);
+  flex-direction:column;
+  padding:8px 16px 16px;
+}
+#mob-menu.open{display:flex;}
+.mob-user-name{font-size:12px;font-weight:700;color:#0A3080;opacity:.4;padding:8px 10px 6px;}
+.mob-sep{height:1px;background:rgba(0,180,210,0.15);margin-bottom:8px;}
+.mob-lnk{display:block;padding:13px 12px;border-radius:10px;font-size:15px;font-weight:600;color:#0A3080;text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;}
+.mob-lnk:active{background:rgba(18,85,204,0.08);}
+.mob-lnk.cta{background:linear-gradient(135deg,#1255CC,#0A3080);color:#fff;text-align:center;margin-top:8px;border-radius:10px;}
+@media(max-width:680px){
+  #ham-btn{display:flex;}
 }
 </style>
 </head>
@@ -183,12 +202,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
       <a href="explorar.html" class="nav-btn">Explorar</a>
       <button class="nav-btn" onclick="sair()">Sair</button>
     </div>
-      <button class="hamburger" id="hamburger-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
 
 </nav>
-<div class="nav-mob-overlay" id="nav-mob">
-  <div class="mob-user" id="nav-mob-user"></div>
   <div class="mob-divider"></div>
   <a class="mob-item" href="explorar.html">Explorar</a>
   <button class="mob-item" onclick="sair();toggleMenu()">Sair</button>
@@ -512,6 +528,37 @@ document.getElementById('conf-overlay').addEventListener('click',function(e){
 });
 
 init();
+</script>
+
+<!-- MOBILE NAV -->
+<button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
+<div id="mob-menu">
+  <div class="mob-user-name" id="mob-uname"></div>
+  <div class="mob-sep"></div>
+  <a class="mob-lnk" href="explorar.html">Explorar</a>
+  <button class="mob-lnk" onclick="sair();toggleMenu()">Sair</button>
+</div>
+<script>
+/* ── MOB NAV JS ── */
+function toggleMenu(){
+  var b=document.getElementById('ham-btn');
+  var m=document.getElementById('mob-menu');
+  if(!b||!m)return;
+  b.classList.toggle('open');
+  m.classList.toggle('open');
+}
+document.addEventListener('touchstart',function(e){
+  var b=document.getElementById('ham-btn');
+  var m=document.getElementById('mob-menu');
+  if(b&&m&&m.classList.contains('open')&&!b.contains(e.target)&&!m.contains(e.target)){
+    b.classList.remove('open');m.classList.remove('open');
+  }},{passive:true});
+document.addEventListener('click',function(e){
+  var b=document.getElementById('ham-btn');
+  var m=document.getElementById('mob-menu');
+  if(b&&m&&m.classList.contains('open')&&!b.contains(e.target)&&!m.contains(e.target)){
+    b.classList.remove('open');m.classList.remove('open');
+  }});
 </script>
 </body>
 </html>
