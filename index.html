@@ -387,6 +387,23 @@ footer{padding:2.5rem 5%;border-top:1px solid rgba(255,255,255,.4);background:rg
 </div>
 
 <script>
+// Verificar se usuário já está logado — redirecionar para explorar
+(function(){
+  try{
+    var raw=localStorage.getItem('sb-eawfweuamtwlsilrkgoo-auth-token');
+    if(raw){
+      var v=JSON.parse(raw);
+      if(v&&v.user&&v.user.id&&v.expires_at){
+        var agora=Math.floor(Date.now()/1000);
+        if(v.expires_at>agora){
+          window.location.replace('explorar.html');
+          return;
+        }
+      }
+    }
+  }catch(e){}
+})();
+
 (function(){
   const c=document.getElementById('wc'),ctx=c.getContext('2d');
   let W,H,t=0,lines=[];
