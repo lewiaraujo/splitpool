@@ -151,13 +151,13 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 
 
 /* ── MOBILE NAV FINAL ── */
-@media(max-width:768px){
+@media(max-width:680px){
   nav{position:fixed;top:0;left:0;right:0;z-index:300;}
   .nav-in{height:56px;}
   .nav-right{display:none!important;}
   .nav-user{display:none!important;}
 }
-@media(min-width:769px){
+@media(min-width:681px){
   #ham-btn,#mob-menu{display:none!important;}
 }
 #ham-btn{
@@ -197,7 +197,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 .mob-lnk{display:block;padding:13px 12px;border-radius:10px;font-size:15px;font-weight:600;color:#0A3080;text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;}
 .mob-lnk:active{background:rgba(18,85,204,0.08);}
 .mob-lnk.cta{background:linear-gradient(135deg,#1255CC,#0A3080);color:#fff;text-align:center;margin-top:8px;border-radius:10px;}
-@media(max-width:768px){
+@media(max-width:680px){
   #ham-btn{display:flex;}
 }
 
@@ -214,10 +214,10 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
   opacity:.65;
   white-space:nowrap;
 }
-@media(max-width:768px){
+@media(max-width:680px){
   #mob-name{display:flex;}
 }
-@media(min-width:769px){
+@media(min-width:681px){
   #mob-name{display:none!important;}
 }
 </style>
@@ -493,7 +493,7 @@ const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/'
 const SVCS_FAMILIA=[
   {
     nome:'Microsoft 365',sub:'Family · até 6 pessoas',img:BASE+'microsoft_icon.png',
-    precoVenda:19.90,repasse:12.00,
+    precoVenda:25.50,repasse:15.00,
     planos:[
       {nome:'Family Mensal',custo:60.00,vagas:5,desc:'Word, Excel, PowerPoint, Teams, OneDrive 1TB/pessoa'},
       {nome:'Family Anual',custo:49.92,vagas:5,desc:'Mesmo conteúdo com desconto anual (R$599/ano)'},
@@ -515,7 +515,7 @@ const SVCS_FAMILIA=[
   },
   {
     nome:'Notion Team',sub:'Seats avulsos',img:BASE+'Notion_icon.png',
-    precoVenda:29.90,repasse:18.00,
+    precoVenda:25.00,repasse:15.00,
     planos:[
       {nome:'Team (por seat)',custo:0,vagas:3,desc:'Páginas ilimitadas, histórico de versões, convidados ilimitados'},
     ]
@@ -952,7 +952,7 @@ async function logout(){await sb.auth.signOut();window.location.href='index.html
 <!-- MOBILE NAV -->
 
 <div id="mob-name"></div>
-<button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span><div id="ham-dot"></div></button>
+<button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
 <div id="mob-menu">
   <a class="mob-lnk" href="explorar.html">← Explorar</a>
   <button class="mob-lnk" onclick="logout();toggleMenu()">Sair</button>
@@ -979,7 +979,5 @@ document.addEventListener('click',function(e){
     b.classList.remove('open');m.classList.remove('open');
   }});
 </script>
-
-<script src="notif.js"></script>
 </body>
 </html>
