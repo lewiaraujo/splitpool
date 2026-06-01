@@ -673,7 +673,7 @@ async function init(){
   var {data:profile}=await sb.from('profiles').select('nome').eq('id',userId).single();
   var nome=profile&&profile.nome?profile.nome:email.split('@')[0];
   document.getElementById('nav-user').textContent=nome
-  var m=document.getElementById('nav-user-mobile');if(m)m.textContent=nome;; syncMobileUser();
+  var m=document.getElementById('nav-user-mobile');if(m)m.textContent=nome;
 
   carregarDashboard();
 }
