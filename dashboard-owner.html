@@ -240,7 +240,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
   </div>
 
 </nav>
-</div>
 
 <div class="page">
 <div class="page-wrap">
@@ -730,6 +729,26 @@ document.addEventListener('click',function(e){
   if(b&&m&&m.classList.contains('open')&&!b.contains(e.target)&&!m.contains(e.target)){
     b.classList.remove('open');m.classList.remove('open');
   }});
+</script>
+<script>
+/* Forçar nav-right hidden no mobile via JS */
+if(window.innerWidth <= 680){
+  var nr = document.querySelector('.nav-right');
+  if(nr) nr.style.cssText = 'display:none!important';
+  var nu = document.querySelector('.nav-user');
+  if(nu) nu.style.cssText = 'display:none!important';
+}
+window.addEventListener('resize', function(){
+  var nr = document.querySelector('.nav-right');
+  var nu = document.querySelector('.nav-user');
+  if(window.innerWidth <= 680){
+    if(nr) nr.style.cssText = 'display:none!important';
+    if(nu) nu.style.cssText = 'display:none!important';
+  } else {
+    if(nr) nr.style.cssText = '';
+    if(nu) nu.style.cssText = '';
+  }
+});
 </script>
 </body>
 </html>
