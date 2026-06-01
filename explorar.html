@@ -258,8 +258,8 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
     <a href="index.html"><img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="SplitPool" class="nav-logo"></a>
     <div class="nav-right">
       <span class="nav-user" id="nav-user"></span>
-      <button class="nav-btn" onclick="window.location.href='meus-planos.html'">Meus planos</button>
-      <button class="nav-btn" onclick="window.location.href='dashboard-owner.html'">Dashboard</button>
+      <button class="nav-btn" id="nav-btn-meusplanos" style="position:relative;" onclick="window.location.href='meus-planos.html'">Meus planos</button>
+      <button class="nav-btn" id="nav-btn-dashboard" style="position:relative;" onclick="window.location.href='dashboard-owner.html'">Dashboard</button>
       <button class="nav-btn" onclick="logout()">Sair</button>
       <button class="nav-btn primary" onclick="window.location.href='criar-piscina.html'">+ Criar piscina</button>
     </div>
@@ -788,10 +788,10 @@ document.getElementById('modal-detalhe').addEventListener('click', e => {
 <!-- MOBILE NAV -->
 
 <div id="mob-name"></div>
-<button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
+<button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span><div id="ham-dot"></div></button>
 <div id="mob-menu">
-  <a class="mob-lnk" href="meus-planos.html">Meus planos</a>
-  <a class="mob-lnk" href="dashboard-owner.html">Dashboard</a>
+  <a class="mob-lnk" href="meus-planos.html">Meus planos<span id="mob-dot-meusplanos" class="mob-lnk-dot" style="display:none;"></span></a>
+  <a class="mob-lnk" href="dashboard-owner.html">Dashboard<span id="mob-dot-dashboard" class="mob-lnk-dot" style="display:none;"></span></a>
   <button class="mob-lnk" onclick="logout();toggleMenu()">Sair</button>
   <a class="mob-lnk cta" href="criar-piscina.html">+ Criar piscina</a>
 </div>
@@ -817,5 +817,7 @@ document.addEventListener('click',function(e){
     b.classList.remove('open');m.classList.remove('open');
   }});
 </script>
+
+<script src="notif.js"></script>
 </body>
 </html>

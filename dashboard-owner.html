@@ -152,13 +152,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .btn-sm.reativar{background:#e6fff8;color:#00875A;border:1.5px solid rgba(0,168,120,0.2);}
 .btn-sm.reativar:hover{background:#d0ffef;}
 
-
-/* -- NOTIF INDICATOR -- */
-#ham-btn{position:relative;}
-#ham-dot{position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#e74c3c;display:none;border:2px solid #fff;z-index:2;}
-#ham-dot.show{display:block;}
-.mob-lnk-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e74c3c;margin-left:6px;vertical-align:middle;flex-shrink:0;}
-
 /* ── EMPTY STATE ── */
 #empty-state{display:none;flex-direction:column;align-items:center;gap:20px;padding:48px 20px;}
 
@@ -759,7 +752,6 @@ async function init(){
   var m=document.getElementById('nav-user-mobile');if(m)m.textContent=nome;
 
   carregarDashboard();
-  carregarNotificacoes();
 }
 
 init();
@@ -771,7 +763,6 @@ init();
 <button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span><div id="ham-dot"></div></button>
 <div id="mob-menu">
   <a class="mob-lnk" href="explorar.html">Explorar</a>
-  <a class="mob-lnk" id="mob-link-dashboard" href="dashboard-owner.html">Dashboard<span id="mob-dot-dashboard" class="mob-lnk-dot" style="display:none;"></span></a>
   <a class="mob-lnk" href="meus-planos.html">Meus planos</a>
   <button class="mob-lnk" onclick="sair();toggleMenu()">Sair</button>
   <a class="mob-lnk cta" href="criar-piscina.html">+ Nova piscina</a>
@@ -819,28 +810,6 @@ window.addEventListener('resize', function(){
 });
 </script>
 
-<script>
-/* -- NOTIF POLLING 2s -- */
-async function carregarNotificacoes(){
-  if(!userId) return;
-  var {data:notifs}=await sb.from('notificacoes')
-    .select('id,lida,tipo,link')
-    .eq('user_id',userId)
-    .eq('lida',false)
-    .limit(20);
-  var tem=notifs&&notifs.length>0;
-  // Ponto no hamburguer
-  var dot=document.getElementById('ham-dot');
-  if(dot) dot.classList.toggle('show',tem);
-  // Ponto no item Dashboard (notificacoes de membro_entrou e acesso_confirmado chegam aqui)
-  var ddash=document.getElementById('mob-dot-dashboard');
-  if(ddash){
-    var temDash=notifs&&notifs.some(function(n){return n.tipo==='membro_entrou'||n.tipo==='acesso_confirmado';});
-    ddash.style.display=temDash?'inline-block':'none';
-  }
-}
-setInterval(function(){if(userId) carregarNotificacoes();},2000);
-</script>
-
+<script src="notif.js"></script>
 </body>
 </html>

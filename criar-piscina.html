@@ -952,7 +952,7 @@ async function logout(){await sb.auth.signOut();window.location.href='index.html
 <!-- MOBILE NAV -->
 
 <div id="mob-name"></div>
-<button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
+<button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span><div id="ham-dot"></div></button>
 <div id="mob-menu">
   <a class="mob-lnk" href="explorar.html">← Explorar</a>
   <button class="mob-lnk" onclick="logout();toggleMenu()">Sair</button>
@@ -979,5 +979,7 @@ document.addEventListener('click',function(e){
     b.classList.remove('open');m.classList.remove('open');
   }});
 </script>
+
+<script src="notif.js"></script>
 </body>
 </html>

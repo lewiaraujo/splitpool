@@ -92,13 +92,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .plano-meta-row strong{opacity:1;color:var(--bluedark);}
 
 /* BOTÃO CONFIRMAR */
-
-/* -- NOTIF INDICATOR -- */
-#ham-btn{position:relative;}
-#ham-dot{position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#e74c3c;display:none;border:2px solid #fff;z-index:2;}
-#ham-dot.show{display:block;}
-.mob-lnk-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e74c3c;margin-left:6px;vertical-align:middle;flex-shrink:0;}
-
 .btn-confirmar{background:linear-gradient(135deg,var(--green),#009060);color:#fff;border:none;padding:12px 22px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 3px 14px rgba(0,168,120,0.3);transition:.2s;white-space:nowrap;}
 .btn-confirmar:hover{transform:translateY(-1px);box-shadow:0 5px 20px rgba(0,168,120,0.4);}
 .btn-confirmar:disabled{background:#93C5FD;box-shadow:none;cursor:not-allowed;transform:none;}
@@ -128,7 +121,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .cred-copy{background:transparent;border:none;cursor:pointer;color:#00875A;font-size:11px;font-weight:700;padding:4px 8px;border-radius:5px;transition:.2s;}
 .cred-copy:hover{background:rgba(0,168,120,0.1);}
 .cred-aguardando{background:#fff8e0;border:1px solid rgba(180,120,0,0.2);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:12px;color:#8a5c00;font-weight:500;line-height:1.5;display:flex;gap:8px;align-items:center;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bluedark);color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;transition:transform .3s ease;white-space:nowrap;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bluedark);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;transition:transform .3s ease;white-space:normal;max-width:calc(100vw - 32px);text-align:center;line-height:1.5;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .toast.success{background:var(--green);}
 
@@ -391,7 +384,6 @@ function renderPlano(a){
       acessoHTML=`<div style="background:#fff8e0;border:1px solid rgba(180,120,0,0.2);border-radius:10px;padding:14px 16px;margin-top:12px;">
         <div style="font-size:13px;font-weight:700;color:#8a5c00;margin-bottom:4px;">⏳ Aguardando o dono adicionar seu acesso</div>
         <div style="font-size:12px;color:#8a5c00;opacity:.8;line-height:1.6;">O dono vai adicionar o email <strong>${a.email_servico||'seu email'}</strong> no ${a.servico}. Você receberá um convite em breve.</div>
-        <div style="margin-top:10px;font-size:11px;color:#8a5c00;opacity:.7;">Já recebeu o acesso? <button onclick="abrirConf(${a.id})" style="background:none;border:none;color:var(--blue);font-weight:700;cursor:pointer;font-size:11px;font-family:inherit;">Confirmar agora →</button></div>
       </div>`;
     } else {
       // Dono enviou — mostrar aviso urgente para confirmar
@@ -542,7 +534,6 @@ async function init(){
   var mn=document.getElementById('mob-name');if(mn)mn.textContent=email.split('@')[0];
   document.title='Splitpool — Meus Planos';
   carregarPlanos();
-  carregarNotificacoes();
 }
 
 document.getElementById('conf-overlay').addEventListener('click',function(e){
@@ -558,8 +549,6 @@ init();
 <button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span><div id="ham-dot"></div></button>
 <div id="mob-menu">
   <a class="mob-lnk" href="explorar.html">Explorar</a>
-  <a class="mob-lnk" id="mob-link-meusplanos" href="meus-planos.html">Meus planos<span id="mob-dot-meusplanos" class="mob-lnk-dot" style="display:none;"></span></a>
-  <a class="mob-lnk" href="dashboard-owner.html">Dashboard</a>
   <button class="mob-lnk" onclick="sair();toggleMenu()">Sair</button>
 </div>
 <script>
@@ -585,27 +574,6 @@ document.addEventListener('click',function(e){
   }});
 </script>
 
-<script>
-/* -- NOTIF POLLING 2s -- */
-async function carregarNotificacoes(){
-  if(!userId) return;
-  var {data:notifs}=await sb.from('notificacoes')
-    .select('id,lida,tipo,link')
-    .eq('user_id',userId)
-    .eq('lida',false)
-    .limit(20);
-  var tem=notifs&&notifs.length>0;
-  var dot=document.getElementById('ham-dot');
-  if(dot) dot.classList.toggle('show',tem);
-  // Ponto em Meus Planos quando há acesso_enviado pendente
-  var dmp=document.getElementById('mob-dot-meusplanos');
-  if(dmp){
-    var temMp=notifs&&notifs.some(function(n){return n.tipo==='acesso_enviado';});
-    dmp.style.display=temMp?'inline-block':'none';
-  }
-}
-setInterval(function(){if(userId) carregarNotificacoes();},2000);
-</script>
-
+<script src="notif.js"></script>
 </body>
 </html>
