@@ -219,6 +219,26 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 @media(max-width:680px){
   #ham-btn{display:flex;}
 }
+
+#mob-name{
+  display:none;
+  position:fixed;
+  top:0;right:52px;
+  z-index:9999;
+  height:56px;
+  align-items:center;
+  font-size:13px;
+  font-weight:700;
+  color:var(--bluedark,#0A3080);
+  opacity:.65;
+  white-space:nowrap;
+}
+@media(max-width:680px){
+  #mob-name{display:flex;}
+}
+@media(min-width:681px){
+  #mob-name{display:none!important;}
+}
 </style>
 </head>
 <body>
@@ -690,6 +710,9 @@ async function init(){
   var {data:profile}=await sb.from('profiles').select('nome').eq('id',userId).single();
   var nome=profile&&profile.nome?profile.nome:email.split('@')[0];
   document.getElementById('nav-user').textContent=nome
+  /* Sincronizar nome mobile */
+  var mn=document.getElementById('mob-name');
+  if(mn)mn.textContent=nome;
   var mu=document.getElementById('mob-uname');if(mu)mu.textContent=nome;
   var mob=document.getElementById('nav-mob-user');if(mob)mob.textContent=nome;
   var m=document.getElementById('nav-user-mobile');if(m)m.textContent=nome;
@@ -701,6 +724,8 @@ init();
 </script>
 
 <!-- MOBILE NAV -->
+
+<div id="mob-name"></div>
 <button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
 <div id="mob-menu">
   <a class="mob-lnk" href="explorar.html">Explorar</a>

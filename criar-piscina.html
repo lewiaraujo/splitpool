@@ -200,6 +200,26 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 @media(max-width:680px){
   #ham-btn{display:flex;}
 }
+
+#mob-name{
+  display:none;
+  position:fixed;
+  top:0;right:52px;
+  z-index:9999;
+  height:56px;
+  align-items:center;
+  font-size:13px;
+  font-weight:700;
+  color:var(--bluedark,#0A3080);
+  opacity:.65;
+  white-space:nowrap;
+}
+@media(max-width:680px){
+  #mob-name{display:flex;}
+}
+@media(min-width:681px){
+  #mob-name{display:none!important;}
+}
 </style>
 </head>
 <body>
@@ -546,6 +566,7 @@ sb.auth.getSession().then(({data})=>{
   const email=data.session.user.email
   nomeUsuario=email.split('@')[0].charAt(0).toUpperCase()+email.split('@')[0].slice(1)
   document.getElementById('nav-user').textContent=email.split('@')[0]
+  var mn=document.getElementById('mob-name');if(mn)mn.textContent=email.split('@')[0];
   // Renderiza grid vazio logo (sem bloqueios ainda)
   renderSvcs()
   // Carrega piscinas existentes para bloquear duplicatas
@@ -929,6 +950,8 @@ async function logout(){await sb.auth.signOut();window.location.href='index.html
 </script>
 
 <!-- MOBILE NAV -->
+
+<div id="mob-name"></div>
 <button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
 <div id="mob-menu">
   <a class="mob-lnk" href="explorar.html">← Explorar</a>
