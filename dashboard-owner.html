@@ -418,8 +418,25 @@ function renderPool(pool,assins,vault){
     todosAssins.forEach(function(a){
       var emailServico=a.email_servico||'—';
       var acessoBtn='';
+
+      // Instrução por serviço
+      var instrucoes={
+        'microsoft':'Acesse account.microsoft.com → Serviços e assinaturas → Compartilhar → Convidar por email.',
+        'duolingo':'No app Duolingo → Perfil → Super Família → Convidar membros → insira o email.',
+        'canva':'No Canva → Configurações → Membros → Convidar por email.',
+        'notion':'No Notion → Configurações → Membros → Convidar membro → insira o email.',
+        'alura':'No painel Alura → Pessoas da empresa → Cadastrar pessoas → insira o email.',
+        'wellhub':'No portal Wellhub corporativo → Colaboradores → Adicionar → insira o email.',
+        'totalpass':'No portal TotalPass empresarial → Gestão de colaboradores → Adicionar → insira o email.',
+      };
+      var servicoKey=Object.keys(instrucoes).find(function(k){return pool.servico.toLowerCase().includes(k);})||'';
+      var instrucaoTxt=instrucoes[servicoKey]||'Acesse o painel do serviço e adicione o email do membro.';
+
       if(a.status==='aguardando_acesso'&&!a.acesso_enviado_em){
-        acessoBtn='<button class="btn-sm primary" style="padding:5px 10px;font-size:11px;" onclick="marcarAcessoEnviado('+a.id+')">✓ Marcar acesso enviado</button>';
+        acessoBtn='<div style="background:#f0f9ff;border:1px solid rgba(0,180,210,0.2);border-radius:8px;padding:8px 10px;margin-top:6px;font-size:11px;color:var(--bluedark);line-height:1.5;">'
+          +'<strong>📋 O que fazer:</strong> '+instrucaoTxt
+          +'</div>'
+          +'<button class="btn-sm primary" style="padding:5px 10px;font-size:11px;margin-top:6px;" onclick="marcarAcessoEnviado('+a.id+')">✓ Marcar acesso enviado</button>';
       } else if(a.acesso_enviado_em){
         acessoBtn='<span style="font-size:11px;color:var(--green);font-weight:700;">✓ Acesso enviado</span>';
       }
