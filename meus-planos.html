@@ -93,42 +93,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 
 /* BOTÃO CONFIRMAR */
 
-/* -- NOTIFICACOES -- */
-.notif-btn{position:relative;background:none;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:.2s;}
-.notif-btn:hover{background:rgba(18,85,204,0.08);}
-.notif-badge{position:absolute;top:2px;right:2px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px;}
-.notif-badge.show{display:flex;}
-.notif-dropdown{position:fixed;top:56px;right:16px;width:320px;max-width:calc(100vw - 32px);background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,20,80,.18);z-index:500;display:none;overflow:hidden;}
-.notif-dropdown.open{display:block;}
-.notif-header{padding:14px 16px 10px;font-size:12px;font-weight:800;color:var(--bluedark);opacity:.5;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(0,180,210,0.1);display:flex;justify-content:space-between;align-items:center;}
-.notif-header button{background:none;border:none;font-size:11px;color:var(--blue);font-weight:700;cursor:pointer;font-family:inherit;}
-.notif-list{max-height:320px;overflow-y:auto;}
-.notif-item{padding:12px 16px;border-bottom:1px solid rgba(0,180,210,0.07);cursor:pointer;transition:.15s;display:flex;gap:10px;align-items:flex-start;}
-.notif-item:hover{background:#f5f9ff;}
-.notif-item.nao-lida{background:#f0f7ff;}
-.notif-item.nao-lida:hover{background:#e4f0ff;}
-.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:4px;}
-.notif-dot.lida{background:transparent;}
-.notif-msg{font-size:12px;color:var(--bluedark);line-height:1.5;font-weight:500;}
-.notif-time{font-size:10px;color:var(--bluedark);opacity:.4;margin-top:3px;}
-.notif-empty{padding:24px 16px;text-align:center;font-size:13px;color:var(--bluedark);opacity:.4;}
-
-
+/* -- NOTIF INDICATOR -- */
 #ham-btn{position:relative;}
-#ham-dot{position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:#e74c3c;display:none;border:2px solid #fff;}
+#ham-dot{position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#e74c3c;display:none;border:2px solid #fff;z-index:2;}
 #ham-dot.show{display:block;}
-.mob-lnk-notif{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e74c3c;margin-left:6px;vertical-align:middle;}
-#notif-panel{display:none;position:fixed;top:56px;left:0;right:0;background:#fff;z-index:9997;box-shadow:0 8px 24px rgba(0,20,80,.12);max-height:60vh;overflow-y:auto;}
-#notif-panel.open{display:block;}
-.notif-panel-header{padding:12px 16px 8px;font-size:11px;font-weight:800;color:var(--bluedark);opacity:.4;text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,180,210,0.1);}
-.notif-panel-header button{background:none;border:none;font-size:11px;color:var(--blue);font-weight:700;cursor:pointer;font-family:inherit;}
-.notif-panel-item{padding:12px 16px;border-bottom:1px solid rgba(0,180,210,0.07);display:flex;gap:10px;align-items:flex-start;cursor:pointer;}
-.notif-panel-item.nao-lida{background:#f0f7ff;}
-.notif-panel-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:4px;}
-.notif-panel-dot.lida{background:transparent;}
-.notif-panel-msg{font-size:13px;color:var(--bluedark);line-height:1.5;font-weight:500;}
-.notif-panel-time{font-size:10px;color:var(--bluedark);opacity:.4;margin-top:2px;}
-.notif-panel-empty{padding:20px 16px;text-align:center;font-size:13px;color:var(--bluedark);opacity:.4;}
+.mob-lnk-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e74c3c;margin-left:6px;vertical-align:middle;flex-shrink:0;}
 
 .btn-confirmar{background:linear-gradient(135deg,var(--green),#009060);color:#fff;border:none;padding:12px 22px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 3px 14px rgba(0,168,120,0.3);transition:.2s;white-space:nowrap;}
 .btn-confirmar:hover{transform:translateY(-1px);box-shadow:0 5px 20px rgba(0,168,120,0.4);}
@@ -253,10 +222,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
     <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="Splitpool" class="nav-logo">
     <div class="nav-right">
       <span class="nav-user" id="nav-user"></span>
-      <button class="notif-btn" id="notif-btn" onclick="toggleNotif()">
-        🔔
-        <span class="notif-badge" id="notif-badge"></span>
-      </button>
       <a href="explorar.html" class="nav-btn">Explorar</a>
       <button class="nav-btn" onclick="sair()">Sair</button>
     </div>
@@ -389,28 +354,12 @@ async function confirmarAcesso(){
   if(!assinaturaParaConfirmar) return;
   const btn=document.querySelector('.conf-btn-sim');
   btn.disabled=true;btn.textContent='Confirmando...';
-  const {data:assin,error}=await sb.from('assinaturas')
+  const {error}=await sb.from('assinaturas')
     .update({status:'ativo',confirmado_em:new Date().toISOString()})
-    .eq('id',assinaturaParaConfirmar).eq('membro_id',userId)
-    .select('piscina_id,servico')
-    .single();
+    .eq('id',assinaturaParaConfirmar).eq('membro_id',userId);
   fecharConf();
   btn.disabled=false;btn.textContent='Sim, estou com acesso ✓';
   if(error){showToast('Erro ao confirmar. Tente novamente.'); return;}
-  // Notificar dono que membro confirmou
-  if(assin&&assin.piscina_id){
-    const {data:pisc}=await sb.from('piscinas').select('dono_id').eq('id',assin.piscina_id).single();
-    if(pisc&&pisc.dono_id){
-      const {data:perfil}=await sb.from('profiles').select('nome').eq('id',userId).single();
-      const nomeMembro=perfil?.nome||'Um membro';
-      await sb.from('notificacoes').insert({
-        user_id:pisc.dono_id,
-        tipo:'acesso_confirmado',
-        mensagem:nomeMembro+' confirmou o acesso ao '+assin.servico+'. Repasse liberado!',
-        link:'dashboard-owner.html'
-      });
-    }
-  }
   showToast('Acesso confirmado! Repasse liberado ao dono.','success');
   setTimeout(()=>carregarPlanos(),1200);
 }
@@ -608,16 +557,10 @@ init();
 <div id="mob-name"></div>
 <button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span><div id="ham-dot"></div></button>
 <div id="mob-menu">
-  <button class="mob-lnk" id="mob-notif-btn" onclick="toggleNotifPanel()">🔔 Notificações<span id="mob-notif-dot" class="mob-lnk-notif" style="display:none;"></span></button>
   <a class="mob-lnk" href="explorar.html">Explorar</a>
+  <a class="mob-lnk" id="mob-link-meusplanos" href="meus-planos.html">Meus planos<span id="mob-dot-meusplanos" class="mob-lnk-dot" style="display:none;"></span></a>
+  <a class="mob-lnk" href="dashboard-owner.html">Dashboard</a>
   <button class="mob-lnk" onclick="sair();toggleMenu()">Sair</button>
-</div>
-<div id="notif-panel">
-  <div class="notif-panel-header">
-    <span>Notificações</span>
-    <button onclick="marcarTodasLidas()">Marcar todas como lidas</button>
-  </div>
-  <div id="notif-panel-list"><div class="notif-panel-empty">Nenhuma notificação</div></div>
 </div>
 <script>
 /* ── MOB NAV JS ── */
@@ -643,64 +586,26 @@ document.addEventListener('click',function(e){
 </script>
 
 <script>
-var notifPanelAberto=false;
-function toggleNotifPanel(){
-  var p=document.getElementById('notif-panel');
-  notifPanelAberto=!notifPanelAberto;
-  p.classList.toggle('open',notifPanelAberto);
-  if(notifPanelAberto) renderNotifPanel();
-}
+/* -- NOTIF POLLING 2s -- */
 async function carregarNotificacoes(){
   if(!userId) return;
   var {data:notifs}=await sb.from('notificacoes')
-    .select('*').eq('user_id',userId)
-    .order('created_at',{ascending:false}).limit(20);
-  if(!notifs) return;
-  var naoLidas=notifs.filter(function(n){return !n.lida;}).length;
+    .select('id,lida,tipo,link')
+    .eq('user_id',userId)
+    .eq('lida',false)
+    .limit(20);
+  var tem=notifs&&notifs.length>0;
   var dot=document.getElementById('ham-dot');
-  if(dot) dot.classList.toggle('show',naoLidas>0);
-  var mdot=document.getElementById('mob-notif-dot');
-  if(mdot) mdot.style.display=naoLidas>0?'inline-block':'none';
-  window._notifs=notifs;
+  if(dot) dot.classList.toggle('show',tem);
+  // Ponto em Meus Planos quando há acesso_enviado pendente
+  var dmp=document.getElementById('mob-dot-meusplanos');
+  if(dmp){
+    var temMp=notifs&&notifs.some(function(n){return n.tipo==='acesso_enviado';});
+    dmp.style.display=temMp?'inline-block':'none';
+  }
 }
-function renderNotifPanel(){
-  var notifs=window._notifs||[];
-  var list=document.getElementById('notif-panel-list');
-  if(!list) return;
-  if(!notifs.length){list.innerHTML='<div class="notif-panel-empty">Nenhuma notificação</div>';return;}
-  var icones={acesso_enviado:'🔔',membro_entrou:'👤'};
-  list.innerHTML=notifs.map(function(n){
-    var ico=icones[n.tipo]||'🔔';
-    var tempo=formatarTempo(n.created_at);
-    var cls='notif-panel-item'+(n.lida?'':' nao-lida');
-    var dest=n.link?'onclick="irParaNotif('+n.id+',\''+n.link+'\')"':'onclick="marcarLida('+n.id+')"';
-    return '<div class="'+cls+'" '+dest+'>'
-      +'<div class="notif-panel-dot'+(n.lida?' lida':'')+'"></div>'
-      +'<div><div class="notif-panel-msg">'+ico+' '+n.mensagem+'</div>'
-      +'<div class="notif-panel-time">'+tempo+'</div></div>'
-      +'</div>';
-  }).join('');
-}
-async function marcarLida(id){
-  await sb.from('notificacoes').update({lida:true}).eq('id',id);
-  await carregarNotificacoes(); renderNotifPanel();
-}
-async function irParaNotif(id,link){
-  await sb.from('notificacoes').update({lida:true}).eq('id',id);
-  window.location.href=link;
-}
-async function marcarTodasLidas(){
-  await sb.from('notificacoes').update({lida:true}).eq('user_id',userId).eq('lida',false);
-  await carregarNotificacoes(); renderNotifPanel();
-}
-function formatarTempo(iso){
-  var diff=Math.floor((Date.now()-new Date(iso).getTime())/1000);
-  if(diff<60) return 'Agora';
-  if(diff<3600) return Math.floor(diff/60)+'min atrás';
-  if(diff<86400) return Math.floor(diff/3600)+'h atrás';
-  return Math.floor(diff/86400)+'d atrás';
-}
-setInterval(function(){if(userId) carregarNotificacoes();},30000);
+setInterval(function(){if(userId) carregarNotificacoes();},2000);
 </script>
+
 </body>
 </html>
