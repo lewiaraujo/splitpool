@@ -387,7 +387,7 @@ footer{padding:2.5rem 5%;border-top:1px solid rgba(255,255,255,.4);background:rg
 </div>
 
 <script>
-// Verificar se usuário já está logado — redirecionar para explorar
+// Verificar sessão — adaptar botões do nav
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var raw=localStorage.getItem('sb-eawfweuamtwlsilrkgoo-auth-token');
@@ -396,7 +396,18 @@ document.addEventListener('DOMContentLoaded', function(){
       if(v&&v.user&&v.user.id&&v.expires_at){
         var agora=Math.floor(Date.now()/1000);
         if(v.expires_at>agora){
-          window.location.replace('explorar.html');
+          // Usuário logado — trocar botão CTA
+          var btns=document.querySelectorAll('.nav-cta');
+          btns.forEach(function(btn){
+            btn.textContent='Explorar piscinas →';
+            btn.onclick=function(){window.location.href='explorar.html';};
+          });
+          // Trocar botões de modal por link direto
+          var modalBtns=document.querySelectorAll('.pbtn');
+          modalBtns.forEach(function(btn){
+            btn.textContent='Ir para Explorar →';
+            btn.onclick=function(){window.location.href='explorar.html';};
+          });
         }
       }
     }
