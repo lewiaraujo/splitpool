@@ -22,9 +22,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .nav-logo{height:52px;object-fit:contain;flex-shrink:0;}
 .nav-right{display:flex;align-items:center;gap:12px;}
 .nav-user{font-size:13px;color:var(--bluedark);font-weight:600;opacity:.7;}
-.nav-btn{background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;}
-.nav-btn.outline{background:transparent;color:var(--bluedark);border:1.5px solid rgba(18,85,204,0.3);}
-.nav-btn.outline:hover{background:rgba(18,85,204,0.06);}
+.nav-btn{font-size:13px;font-weight:700;color:var(--blue);background:transparent;border:1.5px solid rgba(18,85,204,0.25);border-radius:8px;padding:7px 14px;cursor:pointer;font-family:inherit;transition:.2s;text-decoration:none;}
+.nav-btn:hover{background:rgba(18,85,204,0.06);}
+.nav-btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+.nav-btn.primary:hover{background:var(--bluedark);}
 main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 .page-header{margin-bottom:2rem;}
 .page-header h1{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;color:var(--bluedark);letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.5);}
@@ -145,15 +146,6 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 @media(max-width:700px){main{padding:80px 4% 40px;}.step-btn .step-label{display:none;}.card-input-row{grid-template-columns:1fr;}}
 
 
-  .nav-in{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 0;gap:6px;}
-  .nav-logo{height:32px;}
-  .nav-right{flex-wrap:wrap;gap:6px;width:100%;justify-content:flex-end;}
-  .nav-user{font-size:11px;opacity:.6;}
-  .nav-btn{font-size:11px;padding:5px 10px;border-radius:7px;}
-}
-
-
-  .nav-dropdown{display:none!important;}
 }
 
 /* ── HAMBURGER MOBILE ── */
@@ -192,8 +184,8 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
     <a href="index.html"><img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="SplitPool" class="nav-logo"></a>
     <div class="nav-right">
       <span class="nav-user" id="nav-user"></span>
-      <button class="nav-btn outline" onclick="window.location.href='explorar.html'">← Explorar</button>
-      <button class="nav-btn outline" onclick="logout()">Sair</button>
+      <button class="nav-btn" onclick="window.location.href='explorar.html'">← Explorar</button>
+      <button class="nav-btn" onclick="logout()">Sair</button>
     </div>
   </div>
 
