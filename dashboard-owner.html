@@ -115,6 +115,39 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .member-email{font-size:11px;color:var(--bluedark);opacity:.45;margin-top:2px;}
 .no-members{text-align:center;padding:24px 0;color:var(--bluedark);opacity:.35;font-size:13px;}
 
+/* ── MOBILE: tabela vira cards ── */
+@media(max-width:680px){
+  .members-table thead{display:none;}
+  .members-table,
+  .members-table tbody,
+  .members-table tr,
+  .members-table td{display:block;width:100%;}
+  .members-table tr{
+    background:rgba(255,255,255,0.7);
+    border:1px solid rgba(0,180,210,0.15);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .members-table td{
+    padding:4px 0;
+    border-top:none;
+    font-size:13px;
+  }
+  .members-table td[data-label]::before{
+    content:attr(data-label);
+    display:block;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--bluedark);
+    opacity:.35;
+    margin-bottom:2px;
+  }
+  .no-members{display:block;}
+}
+
 /* ── VAULT ── */
 .vault-form{background:#f5f9ff;border:1.5px dashed rgba(18,85,204,0.2);border-radius:12px;padding:18px;}
 .vault-notice{display:flex;gap:8px;font-size:12px;color:var(--bluedark);opacity:.6;line-height:1.6;margin-bottom:14px;font-weight:500;}
@@ -415,13 +448,28 @@ function vagasBar(ocp,tot){
 }
 
 /* ── MARCAR ACESSO ENVIADO ── */
-async function marcarAcessoEnviado(assinaturaId){
+async function marcarAcessoEnviado(assinaturaId,btn){
+  if(btn){btn.disabled=true;btn.textContent='Enviando...';}
   var {error}=await sb.from('assinaturas')
     .update({acesso_enviado_em:new Date().toISOString()})
     .eq('id',assinaturaId);
-  if(error){showToast('Erro: '+error.message,'error');return;}
-  showToast('Acesso marcado como enviado! Oriente o membro a verificar o email.','success');
-  setTimeout(function(){carregarDashboard();},900);
+  if(error){
+    showToast('Erro: '+error.message,'error');
+    if(btn){btn.disabled=false;btn.textContent='✓ Marcar acesso enviado';}
+    return;
+  }
+  // Substituir botão imediatamente sem recarregar
+  if(btn){
+    var parent=btn.parentElement;
+    // Remover caixa de instrução que vem antes do botão
+    var prev=btn.previousElementSibling;
+    if(prev&&prev.style&&prev.style.background==='#f0f9ff') prev.remove();
+    var span=document.createElement('span');
+    span.style.cssText='font-size:11px;color:var(--green);font-weight:700;';
+    span.textContent='✓ Acesso enviado';
+    btn.replaceWith(span);
+  }
+  showToast('Acesso marcado como enviado! O membro foi notificado para confirmar.','success');
 }
 
 /* ── TOGGLE EDITAR VAULT ── */
@@ -507,19 +555,19 @@ function renderPool(pool,assins,vault){
         acessoBtn='<div style="background:#f0f9ff;border:1px solid rgba(0,180,210,0.2);border-radius:8px;padding:8px 10px;margin-top:6px;font-size:11px;color:var(--bluedark);line-height:1.5;">'
           +'<strong>📋 O que fazer:</strong> '+instrucaoTxt
           +'</div>'
-          +'<button class="btn-sm primary" style="padding:5px 10px;font-size:11px;margin-top:6px;" onclick="marcarAcessoEnviado('+a.id+')">✓ Marcar acesso enviado</button>';
+          +'<button class="btn-sm primary" id="btn-acesso-'+a.id+'" style="padding:5px 10px;font-size:11px;margin-top:6px;" onclick="marcarAcessoEnviado('+a.id+',this)">✓ Marcar acesso enviado</button>';
       } else if(a.acesso_enviado_em){
         acessoBtn='<span style="font-size:11px;color:var(--green);font-weight:700;">✓ Acesso enviado</span>';
       }
       membrosHTML+='<tr>'
-        +'<td><div class="member-nome">'+(a.profiles&&a.profiles.nome?a.profiles.nome:'—')+'</div>'
+        +'<td data-label="Membro"><div class="member-nome">'+(a.profiles&&a.profiles.nome?a.profiles.nome:'—')+'</div>'
         +'<div class="member-email">'+(a.profiles&&a.profiles.email?a.profiles.email:'')+'</div></td>'
-        +'<td><div style="font-size:12px;font-weight:700;color:var(--blue);">'+emailServico+'</div>'
+        +'<td data-label="Email no serviço"><div style="font-size:12px;font-weight:700;color:var(--blue);">'+emailServico+'</div>'
         +'<div style="font-size:10px;color:var(--bluedark);opacity:.4;">email no serviço</div>'
         +acessoBtn+'</td>'
-        +'<td>'+(a.plano_nome||pool.servico)+'</td>'
-        +'<td>'+fmt(a.valor)+'/mês</td>'
-        +'<td>'+getMemberBadge(a.status)+'</td>'
+        +'<td data-label="Plano">'+(a.plano_nome||pool.servico)+'</td>'
+        +'<td data-label="Valor">'+fmt(a.valor)+'/mês</td>'
+        +'<td data-label="Status">'+getMemberBadge(a.status)+'</td>'
         +'</tr>';
     });
   }
