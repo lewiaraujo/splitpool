@@ -92,6 +92,27 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .plano-meta-row strong{opacity:1;color:var(--bluedark);}
 
 /* BOTÃO CONFIRMAR */
+
+/* -- NOTIFICACOES -- */
+.notif-btn{position:relative;background:none;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:.2s;}
+.notif-btn:hover{background:rgba(18,85,204,0.08);}
+.notif-badge{position:absolute;top:2px;right:2px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px;}
+.notif-badge.show{display:flex;}
+.notif-dropdown{position:fixed;top:56px;right:16px;width:320px;max-width:calc(100vw - 32px);background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,20,80,.18);z-index:500;display:none;overflow:hidden;}
+.notif-dropdown.open{display:block;}
+.notif-header{padding:14px 16px 10px;font-size:12px;font-weight:800;color:var(--bluedark);opacity:.5;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(0,180,210,0.1);display:flex;justify-content:space-between;align-items:center;}
+.notif-header button{background:none;border:none;font-size:11px;color:var(--blue);font-weight:700;cursor:pointer;font-family:inherit;}
+.notif-list{max-height:320px;overflow-y:auto;}
+.notif-item{padding:12px 16px;border-bottom:1px solid rgba(0,180,210,0.07);cursor:pointer;transition:.15s;display:flex;gap:10px;align-items:flex-start;}
+.notif-item:hover{background:#f5f9ff;}
+.notif-item.nao-lida{background:#f0f7ff;}
+.notif-item.nao-lida:hover{background:#e4f0ff;}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:4px;}
+.notif-dot.lida{background:transparent;}
+.notif-msg{font-size:12px;color:var(--bluedark);line-height:1.5;font-weight:500;}
+.notif-time{font-size:10px;color:var(--bluedark);opacity:.4;margin-top:3px;}
+.notif-empty{padding:24px 16px;text-align:center;font-size:13px;color:var(--bluedark);opacity:.4;}
+
 .btn-confirmar{background:linear-gradient(135deg,var(--green),#009060);color:#fff;border:none;padding:12px 22px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 3px 14px rgba(0,168,120,0.3);transition:.2s;white-space:nowrap;}
 .btn-confirmar:hover{transform:translateY(-1px);box-shadow:0 5px 20px rgba(0,168,120,0.4);}
 .btn-confirmar:disabled{background:#93C5FD;box-shadow:none;cursor:not-allowed;transform:none;}
@@ -121,7 +142,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .cred-copy{background:transparent;border:none;cursor:pointer;color:#00875A;font-size:11px;font-weight:700;padding:4px 8px;border-radius:5px;transition:.2s;}
 .cred-copy:hover{background:rgba(0,168,120,0.1);}
 .cred-aguardando{background:#fff8e0;border:1px solid rgba(180,120,0,0.2);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:12px;color:#8a5c00;font-weight:500;line-height:1.5;display:flex;gap:8px;align-items:center;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bluedark);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;transition:transform .3s ease;white-space:normal;max-width:calc(100vw - 32px);text-align:center;line-height:1.5;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bluedark);color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;transition:transform .3s ease;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .toast.success{background:var(--green);}
 
@@ -215,6 +236,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
     <img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="Splitpool" class="nav-logo">
     <div class="nav-right">
       <span class="nav-user" id="nav-user"></span>
+      <button class="notif-btn" id="notif-btn" onclick="toggleNotif()">
+        🔔
+        <span class="notif-badge" id="notif-badge"></span>
+      </button>
       <a href="explorar.html" class="nav-btn">Explorar</a>
       <button class="nav-btn" onclick="sair()">Sair</button>
     </div>
@@ -347,12 +372,28 @@ async function confirmarAcesso(){
   if(!assinaturaParaConfirmar) return;
   const btn=document.querySelector('.conf-btn-sim');
   btn.disabled=true;btn.textContent='Confirmando...';
-  const {error}=await sb.from('assinaturas')
+  const {data:assin,error}=await sb.from('assinaturas')
     .update({status:'ativo',confirmado_em:new Date().toISOString()})
-    .eq('id',assinaturaParaConfirmar).eq('membro_id',userId);
+    .eq('id',assinaturaParaConfirmar).eq('membro_id',userId)
+    .select('piscina_id,servico')
+    .single();
   fecharConf();
   btn.disabled=false;btn.textContent='Sim, estou com acesso ✓';
   if(error){showToast('Erro ao confirmar. Tente novamente.'); return;}
+  // Notificar dono que membro confirmou
+  if(assin&&assin.piscina_id){
+    const {data:pisc}=await sb.from('piscinas').select('dono_id').eq('id',assin.piscina_id).single();
+    if(pisc&&pisc.dono_id){
+      const {data:perfil}=await sb.from('profiles').select('nome').eq('id',userId).single();
+      const nomeMembro=perfil?.nome||'Um membro';
+      await sb.from('notificacoes').insert({
+        user_id:pisc.dono_id,
+        tipo:'acesso_confirmado',
+        mensagem:nomeMembro+' confirmou o acesso ao '+assin.servico+'. Repasse liberado!',
+        link:'dashboard-owner.html'
+      });
+    }
+  }
   showToast('Acesso confirmado! Repasse liberado ao dono.','success');
   setTimeout(()=>carregarPlanos(),1200);
 }
@@ -380,10 +421,11 @@ function renderPlano(a){
 
   if(a.status==='aguardando_acesso'){
     if(!a.acesso_enviado_em){
-      // Dono ainda não enviou — sem botão de confirmação
+      // Dono ainda não enviou
       acessoHTML=`<div style="background:#fff8e0;border:1px solid rgba(180,120,0,0.2);border-radius:10px;padding:14px 16px;margin-top:12px;">
         <div style="font-size:13px;font-weight:700;color:#8a5c00;margin-bottom:4px;">⏳ Aguardando o dono adicionar seu acesso</div>
         <div style="font-size:12px;color:#8a5c00;opacity:.8;line-height:1.6;">O dono vai adicionar o email <strong>${a.email_servico||'seu email'}</strong> no ${a.servico}. Você receberá um convite em breve.</div>
+        <div style="margin-top:10px;font-size:11px;color:#8a5c00;opacity:.7;">Já recebeu o acesso? <button onclick="abrirConf(${a.id})" style="background:none;border:none;color:var(--blue);font-weight:700;cursor:pointer;font-size:11px;font-family:inherit;">Confirmar agora →</button></div>
       </div>`;
     } else {
       // Dono enviou — mostrar aviso urgente para confirmar
@@ -534,6 +576,7 @@ async function init(){
   var mn=document.getElementById('mob-name');if(mn)mn.textContent=email.split('@')[0];
   document.title='Splitpool — Meus Planos';
   carregarPlanos();
+  carregarNotificacoes();
 }
 
 document.getElementById('conf-overlay').addEventListener('click',function(e){
@@ -573,5 +616,82 @@ document.addEventListener('click',function(e){
     b.classList.remove('open');m.classList.remove('open');
   }});
 </script>
+
+<!-- DROPDOWN NOTIFICACOES -->
+<div id="notif-dropdown" class="notif-dropdown">
+  <div class="notif-header">
+    <span>Notificações</span>
+    <button onclick="marcarTodasLidas()">Marcar todas como lidas</button>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div class="notif-empty">Nenhuma notificação</div>
+  </div>
+</div>
+<script>
+var notifAberto=false;
+function toggleNotif(){
+  var dd=document.getElementById('notif-dropdown');
+  notifAberto=!notifAberto;
+  dd.classList.toggle('open',notifAberto);
+  if(notifAberto) carregarNotificacoes();
+}
+document.addEventListener('click',function(e){
+  var dd=document.getElementById('notif-dropdown');
+  var btn=document.getElementById('notif-btn');
+  if(notifAberto&&dd&&btn&&!dd.contains(e.target)&&!btn.contains(e.target)){
+    notifAberto=false;dd.classList.remove('open');
+  }
+});
+async function carregarNotificacoes(){
+  var {data:notifs}=await sb.from('notificacoes')
+    .select('*')
+    .eq('user_id',userId)
+    .order('created_at',{ascending:false})
+    .limit(20);
+  if(!notifs) return;
+  var naoLidas=notifs.filter(function(n){return !n.lida;}).length;
+  var badge=document.getElementById('notif-badge');
+  if(badge){
+    if(naoLidas>0){badge.textContent=naoLidas>9?'9+':naoLidas;badge.classList.add('show');}
+    else{badge.classList.remove('show');}
+  }
+  var list=document.getElementById('notif-list');
+  if(!list) return;
+  if(!notifs.length){list.innerHTML='<div class="notif-empty">Nenhuma notificação</div>';return;}
+  var icones={acesso_enviado:'🔔',membro_entrou:'👤'};
+  list.innerHTML=notifs.map(function(n){
+    var ico=icones[n.tipo]||'🔔';
+    var tempo=formatarTempo(n.created_at);
+    var cls='notif-item'+(n.lida?'':' nao-lida');
+    var dest=n.link?'onclick="irParaNotif('+n.id+',\''+n.link+'\')"':'onclick="marcarLida('+n.id+')"';
+    return '<div class="'+cls+'" '+dest+'>'
+      +'<div class="notif-dot'+(n.lida?' lida':'')+'"></div>'
+      +'<div><div class="notif-msg">'+ico+' '+n.mensagem+'</div>'
+      +'<div class="notif-time">'+tempo+'</div></div>'
+      +'</div>';
+  }).join('');
+}
+async function marcarLida(id){
+  await sb.from('notificacoes').update({lida:true}).eq('id',id);
+  carregarNotificacoes();
+}
+async function irParaNotif(id,link){
+  await sb.from('notificacoes').update({lida:true}).eq('id',id);
+  window.location.href=link;
+}
+async function marcarTodasLidas(){
+  await sb.from('notificacoes').update({lida:true}).eq('user_id',userId).eq('lida',false);
+  carregarNotificacoes();
+}
+function formatarTempo(iso){
+  var diff=Math.floor((Date.now()-new Date(iso).getTime())/1000);
+  if(diff<60) return 'Agora';
+  if(diff<3600) return Math.floor(diff/60)+'min atrás';
+  if(diff<86400) return Math.floor(diff/3600)+'h atrás';
+  return Math.floor(diff/86400)+'d atrás';
+}
+setInterval(function(){if(userId) carregarNotificacoes();},30000);
+</script>
+
 </body>
 </html>
