@@ -159,7 +159,6 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
   nav{position:fixed;top:0;left:0;right:0;z-index:300;}
   .nav-in{height:56px;}
   .nav-right{display:none!important;}
-  body{padding-top:56px;}
 }
 @media(min-width:681px){
   #ham-btn,#mob-menu{display:none!important;}
@@ -222,9 +221,6 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
   </div>
 
 </nav>
-  <div class="mob-divider"></div>
-  <a class="mob-item" href="explorar.html">← Explorar</a>
-  <button class="mob-item" onclick="logout();toggleMenu()">Sair</button>
 </div>
 <main>
   <div class="page-header">
@@ -939,8 +935,6 @@ async function logout(){await sb.auth.signOut();window.location.href='index.html
 <!-- MOBILE NAV -->
 <button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
 <div id="mob-menu">
-  <div class="mob-user-name" id="mob-uname"></div>
-  <div class="mob-sep"></div>
   <a class="mob-lnk" href="explorar.html">← Explorar</a>
   <button class="mob-lnk" onclick="logout();toggleMenu()">Sair</button>
 </div>

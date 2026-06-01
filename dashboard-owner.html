@@ -174,7 +174,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
   nav{position:fixed;top:0;left:0;right:0;z-index:300;}
   .nav-in{height:56px;}
   .nav-right{display:none!important;}
-  body{padding-top:56px;}
 }
 @media(min-width:681px){
   #ham-btn,#mob-menu{display:none!important;}
@@ -240,11 +239,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
   </div>
 
 </nav>
-  <div class="mob-divider"></div>
-  <a class="mob-item" href="explorar.html">Explorar</a>
-  <a class="mob-item" href="meus-planos.html">Meus planos</a>
-  <button class="mob-item" onclick="sair();toggleMenu()">Sair</button>
-  <a class="mob-item primary" href="criar-piscina.html">+ Nova piscina</a>
 </div>
 
 <div class="page">
@@ -709,8 +703,6 @@ init();
 <!-- MOBILE NAV -->
 <button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
 <div id="mob-menu">
-  <div class="mob-user-name" id="mob-uname"></div>
-  <div class="mob-sep"></div>
   <a class="mob-lnk" href="explorar.html">Explorar</a>
   <a class="mob-lnk" href="meus-planos.html">Meus planos</a>
   <button class="mob-lnk" onclick="sair();toggleMenu()">Sair</button>
