@@ -15,29 +15,27 @@
     'acesso_enviado':'meus-planos.html'
   };
 
-  // Buscar usuário logado via Supabase REST
-  async function getUser(){
+  // Buscar usuário e token logado via localStorage
+  function getSession(){
     try{
-      // Tenta pegar do localStorage do Supabase
-      for(var k in localStorage){
-        if(k.indexOf('supabase.auth.token')!==-1||k.indexOf('sb-')!==-1){
-          try{
-            var v=JSON.parse(localStorage[k]);
-            var u=v&&(v.user||(v.currentSession&&v.currentSession.user));
-            if(u&&u.id) return u.id;
-          }catch(e){}
-        }
+      var raw=localStorage.getItem('sb-eawfweuamtwlsilrkgoo-auth-token');
+      if(raw){
+        var v=JSON.parse(raw);
+        if(v&&v.user&&v.user.id&&v.access_token)
+          return {uid:v.user.id, token:v.access_token};
       }
     }catch(e){}
     return null;
   }
 
   async function poll(){
-    var uid=await getUser();
-    if(!uid) return;
+    var sess=getSession();
+    if(!sess) return;
+    var uid=sess.uid;
+    var token=sess.token;
 
     var res=await fetch(SBU+'/rest/v1/notificacoes?select=id,tipo,lida&user_id=eq.'+uid+'&lida=eq.false&limit=20',{
-      headers:{'apikey':SBK,'Authorization':'Bearer '+SBK}
+      headers:{'apikey':SBK,'Authorization':'Bearer '+token}
     });
     if(!res.ok) return;
     var notifs=await res.json();
@@ -107,7 +105,7 @@
           method:'PATCH',
           headers:{
             'apikey':SBK,
-            'Authorization':'Bearer '+SBK,
+            'Authorization':'Bearer '+token,
             'Content-Type':'application/json',
             'Prefer':'return=minimal'
           },
