@@ -134,13 +134,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 }
 
 /* ── MOBILE NAV FINAL ── */
-@media(max-width:768px){
+@media(max-width:680px){
   nav{position:fixed;top:0;left:0;right:0;z-index:300;}
   .nav-in{height:56px;}
   .nav-right{display:none!important;}
   .nav-user{display:none!important;}
 }
-@media(min-width:769px){
+@media(min-width:681px){
   #ham-btn,#mob-menu{display:none!important;}
 }
 #ham-btn{
@@ -180,7 +180,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .mob-lnk{display:block;padding:13px 12px;border-radius:10px;font-size:15px;font-weight:600;color:#0A3080;text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;}
 .mob-lnk:active{background:rgba(18,85,204,0.08);}
 .mob-lnk.cta{background:linear-gradient(135deg,#1255CC,#0A3080);color:#fff;text-align:center;margin-top:8px;border-radius:10px;}
-@media(max-width:768px){
+@media(max-width:680px){
   #ham-btn{display:flex;}
 }
 
@@ -197,10 +197,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
   opacity:.65;
   white-space:nowrap;
 }
-@media(max-width:768px){
+@media(max-width:680px){
   #mob-name{display:flex;}
 }
-@media(min-width:769px){
+@media(min-width:681px){
   #mob-name{display:none!important;}
 }
 </style>
@@ -348,12 +348,28 @@ async function confirmarAcesso(){
   if(!assinaturaParaConfirmar) return;
   const btn=document.querySelector('.conf-btn-sim');
   btn.disabled=true;btn.textContent='Confirmando...';
-  const {error}=await sb.from('assinaturas')
+  const {data:assin,error}=await sb.from('assinaturas')
     .update({status:'ativo',confirmado_em:new Date().toISOString()})
-    .eq('id',assinaturaParaConfirmar).eq('membro_id',userId);
+    .eq('id',assinaturaParaConfirmar).eq('membro_id',userId)
+    .select('piscina_id,servico')
+    .single();
   fecharConf();
   btn.disabled=false;btn.textContent='Sim, estou com acesso ✓';
   if(error){showToast('Erro ao confirmar. Tente novamente.'); return;}
+  // Notificar dono que membro confirmou
+  if(assin&&assin.piscina_id){
+    const {data:pisc}=await sb.from('piscinas').select('dono_id').eq('id',assin.piscina_id).single();
+    if(pisc&&pisc.dono_id){
+      const {data:perfil}=await sb.from('profiles').select('nome').eq('id',userId).single();
+      const nomeMembro=perfil?.nome||'Um membro';
+      await sb.from('notificacoes').insert({
+        user_id:pisc.dono_id,
+        tipo:'acesso_confirmado',
+        mensagem:nomeMembro+' confirmou o acesso ao '+assin.servico+'. Repasse liberado!',
+        link:'dashboard-owner.html'
+      });
+    }
+  }
   showToast('Acesso confirmado! Repasse liberado ao dono.','success');
   setTimeout(()=>carregarPlanos(),1200);
 }
@@ -535,6 +551,7 @@ async function init(){
   var mn=document.getElementById('mob-name');if(mn)mn.textContent=email.split('@')[0];
   document.title='Splitpool — Meus Planos';
   carregarPlanos();
+  carregarNotificacoes();
 }
 
 document.getElementById('conf-overlay').addEventListener('click',function(e){
@@ -550,6 +567,7 @@ init();
 <button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span><div id="ham-dot"></div></button>
 <div id="mob-menu">
   <a class="mob-lnk" href="explorar.html">Explorar</a>
+  <a class="mob-lnk" href="dashboard-owner.html">Dashboard<span id="mob-dot-dashboard" class="mob-lnk-dot" style="display:none;"></span></a>
   <button class="mob-lnk" onclick="sair();toggleMenu()">Sair</button>
 </div>
 <script>

@@ -574,6 +574,15 @@ async function confirmarPagamento(){
     })
     // Incrementar vagas_ocupadas de forma atômica no banco
     await sb.rpc('incrementar_vagas', {piscina_id_param: piscinaData.id})
+    // Notificar dono que um membro entrou
+    const {data:perfilMembro}=await sb.from('profiles').select('nome').eq('id',sess.session.user.id).single()
+    const nomeMembroNot=perfilMembro?.nome||emailServico||'Um membro'
+    await sb.from('notificacoes').insert({
+      user_id:piscinaData.dono_id,
+      tipo:'membro_entrou',
+      mensagem:nomeMembroNot+' entrou na sua piscina de '+piscinaData.servico+'.',
+      link:'dashboard-owner.html'
+    })
   }
 
   mostrarSucesso()
@@ -607,7 +616,5 @@ function mostrarSucesso(){
 
 load();
 </script>
-
-<script src="notif.js"></script>
 </body>
 </html>

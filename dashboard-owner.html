@@ -111,7 +111,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .members-table{width:100%;border-collapse:collapse;font-size:13px;}
 .members-table th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--bluedark);opacity:.35;padding:0 10px 8px 0;}
 .members-table td{padding:10px 10px 10px 0;border-top:1px solid rgba(0,180,210,0.1);vertical-align:middle;}
-@media(max-width:680px){
+@media(max-width:768px){
   .members-table thead{display:none;}
   .members-table,.members-table tbody,.members-table tr,.members-table td{display:block;width:100%;box-sizing:border-box;}
   .members-table tr{background:rgba(255,255,255,0.7);border:1px solid rgba(0,180,210,0.15);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
@@ -125,11 +125,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 /* ── VAULT ── */
 .vault-form{background:#f5f9ff;border:1.5px dashed rgba(18,85,204,0.2);border-radius:12px;padding:18px;}
 .vault-notice{display:flex;gap:8px;font-size:12px;color:var(--bluedark);opacity:.6;line-height:1.6;margin-bottom:14px;font-weight:500;}
-.vault-saved{background:#e6fff8;border:1px solid rgba(0,168,120,0.25);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.vault-saved{background:#e6fff8;border:1px solid rgba(0,168,120,0.25);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:center;margin-bottom:14px;}
 .vault-saved-txt{font-size:13px;color:#00522a;font-weight:600;}
 .vault-saved-sub{font-size:11px;color:#00875A;opacity:.7;margin-top:2px;font-weight:500;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-@media(max-width:680px){
+@media(max-width:768px){
   .form-row{grid-template-columns:1fr;}
   .vault-saved{flex-direction:column;align-items:flex-start;}
   .vault-saved .btn-sm{width:100%;justify-content:center;}
@@ -182,13 +182,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 }
 
 /* ── MOBILE NAV FINAL ── */
-@media(max-width:768px){
+@media(max-width:680px){
   nav{position:fixed;top:0;left:0;right:0;z-index:300;}
   .nav-in{height:56px;}
   .nav-right{display:none!important;}
   .nav-user{display:none!important;}
 }
-@media(min-width:769px){
+@media(min-width:681px){
   #ham-btn,#mob-menu{display:none!important;}
 }
 #ham-btn{
@@ -228,7 +228,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .mob-lnk{display:block;padding:13px 12px;border-radius:10px;font-size:15px;font-weight:600;color:#0A3080;text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;}
 .mob-lnk:active{background:rgba(18,85,204,0.08);}
 .mob-lnk.cta{background:linear-gradient(135deg,#1255CC,#0A3080);color:#fff;text-align:center;margin-top:8px;border-radius:10px;}
-@media(max-width:768px){
+@media(max-width:680px){
   #ham-btn{display:flex;}
 }
 
@@ -245,10 +245,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
   opacity:.65;
   white-space:nowrap;
 }
-@media(max-width:768px){
+@media(max-width:680px){
   #mob-name{display:flex;}
 }
-@media(min-width:769px){
+@media(min-width:681px){
   #mob-name{display:none!important;}
 }
 </style>
@@ -752,6 +752,7 @@ async function init(){
   var m=document.getElementById('nav-user-mobile');if(m)m.textContent=nome;
 
   carregarDashboard();
+  carregarNotificacoes();
 }
 
 init();
@@ -763,7 +764,7 @@ init();
 <button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span><div id="ham-dot"></div></button>
 <div id="mob-menu">
   <a class="mob-lnk" href="explorar.html">Explorar</a>
-  <a class="mob-lnk" href="meus-planos.html">Meus planos</a>
+  <a class="mob-lnk" href="meus-planos.html">Meus planos<span id="mob-dot-meusplanos" class="mob-lnk-dot" style="display:none;"></span></a>
   <button class="mob-lnk" onclick="sair();toggleMenu()">Sair</button>
   <a class="mob-lnk cta" href="criar-piscina.html">+ Nova piscina</a>
 </div>
