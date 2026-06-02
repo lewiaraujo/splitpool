@@ -1315,10 +1315,13 @@ function renderExtratoLucro(){
       var pisc=piscMap[r.piscina_id]||{};
       var sp=extrairLucroSP(r.observacao);
       var lucro=getLucroSPFromRepasse(r.valor,sp);
-      html+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(0,180,210,0.07);">'
-        +'<div><div style="font-weight:600;color:var(--bluedark);">💰 '+(pisc.servico||'—')+'</div>'
-        +'<div style="font-size:10px;color:var(--bluedark);opacity:.4;">SP reteve: '+fmt(sp)+'</div></div>'
-        +'<span style="font-weight:700;color:var(--green);">'+fmt(lucro)+'</span></div>';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(0,180,210,0.08);">'
+        +'<div>'
+        +'<div style="font-size:12px;font-weight:700;color:var(--bluedark);">💰 '+(pisc.servico||'—')+'</div>'
+        +'<div style="font-size:11px;color:var(--bluedark);opacity:.5;margin-top:2px;">SP reteve: '+fmt(sp)+'</div>'
+        +'</div>'
+        +'<div style="font-size:14px;font-weight:800;color:#00875A;font-family:Nunito,sans-serif;">'+fmt(lucro)+'</div>'
+        +'</div>';
     });
     html+='<div class="repasse-total"><span>Lucro '+formatarMes(mes)+'</span><span class="repasse-val green">'+fmt(totalLucro)+'</span></div>';
     html+='</div>';
