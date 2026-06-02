@@ -152,6 +152,25 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .btn-sm.reativar{background:#e6fff8;color:#00875A;border:1.5px solid rgba(0,168,120,0.2);}
 .btn-sm.reativar:hover{background:#d0ffef;}
 
+
+/* ── EXTRATO / REPASSES ── */
+.extrato-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.extrato-tab{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid rgba(18,85,204,0.2);background:rgba(255,255,255,0.7);color:var(--bluedark);transition:.15s;}
+.extrato-tab.act{background:var(--blue);color:#fff;border-color:var(--blue);}
+.repasse-card{background:rgba(255,255,255,0.92);border:1px solid rgba(0,180,210,0.18);border-radius:12px;padding:14px 16px;margin-bottom:8px;}
+.repasse-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.repasse-mes{font-size:13px;font-weight:700;color:var(--bluedark);}
+.repasse-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;}
+.repasse-status.pendente{background:#fff8e0;color:#8a5c00;}
+.repasse-status.aprovado{background:#e6fff8;color:#00522a;}
+.repasse-status.pago{background:#e6fff8;color:#00875A;}
+.repasse-row{display:flex;justify-content:space-between;font-size:12px;color:var(--bluedark);margin-bottom:3px;}
+.repasse-val{font-weight:700;}
+.repasse-val.green{color:var(--green);}
+.repasse-val.blue{color:var(--blue);}
+.repasse-total{display:flex;justify-content:space-between;font-size:14px;font-weight:800;color:var(--bluedark);border-top:1px solid rgba(0,180,210,0.15);padding-top:8px;margin-top:6px;}
+.extrato-empty{text-align:center;padding:32px 16px;color:var(--bluedark);opacity:.4;font-size:14px;}
+
 /* ── EMPTY STATE ── */
 #empty-state{display:none;flex-direction:column;align-items:center;gap:20px;padding:48px 20px;}
 
@@ -306,6 +325,24 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
     <div>
       <div class="section-lbl">🏊 Minhas Piscinas</div>
       <div id="pools-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
+
+    <!-- EXTRATO -->
+    <div class="card" id="extrato-section" style="margin-top:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div>
+          <div style="font-family:Nunito,sans-serif;font-size:17px;font-weight:900;color:var(--bluedark);">📋 Extrato de Repasses</div>
+          <div style="font-size:12px;color:var(--bluedark);opacity:.5;margin-top:2px;">Histórico de repasses gerados mensalmente</div>
+        </div>
+        <button class="btn-sm primary" onclick="gerarRepasses()" id="btn-gerar-repasse" style="font-size:12px;">⚡ Gerar repasses do mês</button>
+      </div>
+      <div class="extrato-tabs">
+        <div class="extrato-tab act" onclick="filtrarExtrato('todos',this)">Todos</div>
+        <div class="extrato-tab" onclick="filtrarExtrato('pendente',this)">Pendentes</div>
+        <div class="extrato-tab" onclick="filtrarExtrato('aprovado',this)">Aprovados</div>
+        <div class="extrato-tab" onclick="filtrarExtrato('pago',this)">Pagos</div>
+      </div>
+      <div id="extrato-list"><div class="extrato-empty">Nenhum repasse registrado ainda.</div></div>
     </div>
 
   </div>
@@ -833,6 +870,7 @@ async function init(){
 
   carregarDashboard();
   carregarNotificacoes();
+  carregarExtrato();
 }
 
 init();
@@ -892,5 +930,192 @@ window.addEventListener('resize', function(){
 </script>
 
 <script src="notif.js"></script>
+
+<script>
+/* ── REPASSES E EXTRATO ── */
+
+var extratoFiltro = 'todos';
+var todosRepasses = [];
+
+// Calcular repasse tipo 1 (custo) — o que a SP repassa para o dono pagar o plano
+// Valor = repasse do dono × membros ativos da piscina
+function calcRepasseCusto(pool, assins) {
+  var ativos = assins.filter(function(a){ return a.status === 'ativo'; });
+  if(!ativos.length) return 0;
+  var repPorVaga = getRepasse(pool.servico, pool.servico);
+  // Para família, repasse = precoVaga - lucroSP
+  // Usamos o preco_por_vaga do banco como base
+  return ativos.length * Number(pool.preco_por_vaga || 0);
+}
+
+// Calcular repasse tipo 2 (margem) — lucro líquido do dono
+function calcRepasseMargem(pool, assins) {
+  var ativos = assins.filter(function(a){ return a.status === 'ativo'; });
+  if(!ativos.length) return 0;
+  var total = 0;
+  ativos.forEach(function(a) {
+    var rep = getRepasse(pool.servico, a.plano_nome);
+    total += rep;
+  });
+  return total;
+}
+
+function getMesAtual() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+async function gerarRepasses() {
+  var btn = document.getElementById('btn-gerar-repasse');
+  if(btn){ btn.disabled=true; btn.textContent='Gerando...'; }
+
+  var {data:piscinas} = await sb.from('piscinas').select('*').eq('dono_id', userId).eq('status','aberta');
+  if(!piscinas || !piscinas.length){
+    showToast('Nenhuma piscina ativa para gerar repasses.','error');
+    if(btn){ btn.disabled=false; btn.textContent='⚡ Gerar repasses do mês'; }
+    return;
+  }
+
+  var mesRef = getMesAtual();
+  var inseridos = 0;
+
+  for(var i=0; i<piscinas.length; i++){
+    var pool = piscinas[i];
+    var {data:assins} = await sb.from('assinaturas')
+      .select('*').eq('piscina_id', pool.id).eq('status','ativo');
+    if(!assins || !assins.length) continue;
+
+    // Verificar se já gerou repasse esse mês para essa piscina
+    var {data:jaExiste} = await sb.from('repasses')
+      .select('id').eq('dono_id', userId).eq('piscina_id', pool.id).eq('mes_referencia', mesRef);
+    if(jaExiste && jaExiste.length) continue;
+
+    // Tipo 1: custo (valor total que os membros pagam ao dono)
+    var valCusto = assins.reduce(function(s,a){ return s + Number(a.valor||0); }, 0);
+    // Tipo 2: margem (lucro líquido do dono)
+    var valMargem = calcRepasseMargem(pool, assins);
+
+    // Calcular data de vencimento - 5 dias antes
+    var venc = pool.cartao_vencimento;
+    var dataRepasse1 = null;
+    if(venc){
+      var hoje = new Date();
+      var diaVenc = parseInt(venc);
+      var dtVenc = new Date(hoje.getFullYear(), hoje.getMonth(), diaVenc);
+      if(dtVenc <= hoje) dtVenc.setMonth(dtVenc.getMonth()+1);
+      dtVenc.setDate(dtVenc.getDate()-5);
+      dataRepasse1 = dtVenc.toISOString().split('T')[0];
+    }
+
+    if(valCusto > 0){
+      await sb.from('repasses').insert({
+        dono_id: userId,
+        piscina_id: pool.id,
+        tipo: 'custo',
+        valor: valCusto,
+        mes_referencia: mesRef,
+        status: 'pendente',
+        observacao: 'Repasse de custo — ' + pool.servico + ' · ' + assins.length + ' membro(s) · Vence ' + (dataRepasse1||'—')
+      });
+      inseridos++;
+    }
+    if(valMargem > 0){
+      await sb.from('repasses').insert({
+        dono_id: userId,
+        piscina_id: pool.id,
+        tipo: 'margem',
+        valor: valMargem,
+        mes_referencia: mesRef,
+        status: 'pendente',
+        observacao: 'Margem de lucro — ' + pool.servico + ' · ' + assins.length + ' membro(s) confirmado(s)'
+      });
+      inseridos++;
+    }
+  }
+
+  if(btn){ btn.disabled=false; btn.textContent='⚡ Gerar repasses do mês'; }
+  if(inseridos > 0){
+    showToast('✅ ' + inseridos + ' repasse(s) gerado(s) com sucesso!','success');
+    carregarExtrato();
+  } else {
+    showToast('Repasses deste mês já foram gerados ou não há membros ativos.','error');
+  }
+}
+
+async function carregarExtrato() {
+  var {data:repasses} = await sb.from('repasses')
+    .select('*')
+    .eq('dono_id', userId)
+    .order('mes_referencia', {ascending: false})
+    .order('created_at', {ascending: false})
+    .limit(50);
+
+  todosRepasses = repasses || [];
+  renderExtrato();
+}
+
+function filtrarExtrato(filtro, el) {
+  extratoFiltro = filtro;
+  document.querySelectorAll('.extrato-tab').forEach(function(t){ t.classList.remove('act'); });
+  if(el) el.classList.add('act');
+  renderExtrato();
+}
+
+function renderExtrato() {
+  var lista = extratoFiltro === 'todos'
+    ? todosRepasses
+    : todosRepasses.filter(function(r){ return r.status === extratoFiltro; });
+
+  if(!lista.length){
+    document.getElementById('extrato-list').innerHTML = '<div class="extrato-empty">Nenhum repasse encontrado.</div>';
+    return;
+  }
+
+  // Agrupar por mês
+  var porMes = {};
+  lista.forEach(function(r){
+    if(!porMes[r.mes_referencia]) porMes[r.mes_referencia] = [];
+    porMes[r.mes_referencia].push(r);
+  });
+
+  var html = '';
+  Object.keys(porMes).sort().reverse().forEach(function(mes){
+    var items = porMes[mes];
+    var totalMes = items.reduce(function(s,r){ return s + Number(r.valor||0); }, 0);
+    var statusGeral = items.every(function(r){ return r.status==='pago'; }) ? 'pago'
+      : items.some(function(r){ return r.status==='aprovado'; }) ? 'aprovado' : 'pendente';
+    var statusLabel = {pendente:'Pendente',aprovado:'Aprovado',pago:'Pago'}[statusGeral];
+    var mesLabel = formatarMes(mes);
+
+    html += '<div class="repasse-card">';
+    html += '<div class="repasse-header">';
+    html += '<div class="repasse-mes">' + mesLabel + '</div>';
+    html += '<span class="repasse-status ' + statusGeral + '">' + statusLabel + '</span>';
+    html += '</div>';
+
+    items.forEach(function(r){
+      var tipoLabel = r.tipo === 'custo' ? '💳 Repasse de custo' : '💰 Margem de lucro';
+      var tipoColor = r.tipo === 'custo' ? 'blue' : 'green';
+      html += '<div class="repasse-row">';
+      html += '<span>' + tipoLabel + (r.observacao ? ' <span style="opacity:.5;font-size:11px;">· ' + r.observacao.split('·')[1] + '</span>' : '') + '</span>';
+      html += '<span class="repasse-val ' + tipoColor + '">' + fmt(r.valor) + '</span>';
+      html += '</div>';
+    });
+
+    html += '<div class="repasse-total"><span>Total ' + mesLabel + '</span><span class="repasse-val green">' + fmt(totalMes) + '</span></div>';
+    html += '</div>';
+  });
+
+  document.getElementById('extrato-list').innerHTML = html;
+}
+
+function formatarMes(mesRef) {
+  var meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var partes = mesRef.split('-');
+  return meses[parseInt(partes[1])-1] + '/' + partes[0];
+}
+
+</script>
+
 </body>
 </html>
