@@ -431,9 +431,7 @@ async function marcarAcessoEnviado(assinaturaId,btn){
   if(btn){btn.disabled=true;btn.textContent='Enviando...';}
   var {data:assin,error}=await sb.from('assinaturas')
     .update({acesso_enviado_em:new Date().toISOString()})
-    .eq('id',assinaturaId)
-    .select('membro_id,servico')
-    .single();
+    .eq('id',assinaturaId).select('membro_id,servico').single();
   if(error){
     showToast('Erro: '+error.message,'error');
     if(btn){btn.disabled=false;btn.textContent='✓ Marcar acesso enviado';}
@@ -441,8 +439,7 @@ async function marcarAcessoEnviado(assinaturaId,btn){
   }
   if(assin&&assin.membro_id){
     await sb.from('notificacoes').insert({
-      user_id:assin.membro_id,
-      tipo:'acesso_enviado',
+      user_id:assin.membro_id,tipo:'acesso_enviado',
       mensagem:'Seu acesso ao '+assin.servico+' foi enviado! Confirme em Meus Planos.',
       link:'meus-planos.html'
     });
@@ -662,6 +659,28 @@ function renderPool(pool,assins,vault){
     +'</div>';
 }
 
+
+/* ── TABELA DE REPASSES (margem do dono) ── */
+var REPASSE_MAP={
+  // Wellhub
+  'starter':8,'basic':8,'basic+':9,'silver':14,'silver+':18,'gold':29,'gold+':35,'platinum':35,'diamond':35,'diamond+':35,
+  // TotalPass
+  'tp go':8,'tp1':10,'tp1+':13,'tp2':17,'tp3':23,'tp4':30,'tp5':33,'tp5+':37,'tp6':40,'tp7':46,
+  // Familia
+  'microsoft 365':15,'duolingo super':12,'canva teams':10,'notion team':15,'alura':25
+};
+function getRepasse(servico,planoNome){
+  var key=(planoNome||servico||'').toLowerCase().trim();
+  if(REPASSE_MAP[key]) return REPASSE_MAP[key];
+  // Tenta match parcial
+  for(var k in REPASSE_MAP){if(key.indexOf(k)!==-1||k.indexOf(key)!==-1) return REPASSE_MAP[k];}
+  return 0;
+}
+function isWellness(servico){
+  var s=(servico||'').toLowerCase();
+  return s.indexOf('wellhub')!==-1||s.indexOf('totalpass')!==-1;
+}
+
 /* ── CARREGAR DASHBOARD ── */
 async function carregarDashboard(){
   var {data:piscinas,error:ep}=await sb.from('piscinas')
@@ -712,14 +731,63 @@ async function carregarDashboard(){
 
   // Resumo
   var totalReceita=0,totalAReceber=0,piscinasAtivas=0,vagasOcup=0,vagasTotal=0;
+  var provisionadoTotal=0,provisionadoDetalhes=[];
   piscinas.forEach(function(p){
     var pa=assinsByPool[p.id]||[];
-    totalReceita+=pa.filter(function(a){return a.status==='ativo';}).reduce(function(s,a){return s+Number(a.valor||0);},0);
+    pa.filter(function(a){return a.status==='ativo';}).forEach(function(a){
+      totalReceita+=Number(a.valor||0);
+      // Provisionado: só wellness com acesso confirmado
+      if(isWellness(p.servico)){
+        var rep=getRepasse(p.servico,a.plano_nome);
+        if(rep>0){
+          provisionadoTotal+=rep;
+          provisionadoDetalhes.push({servico:p.servico,plano:a.plano_nome||p.servico,rep:rep,membro:a.profiles?a.profiles.nome||a.profiles.email:'Membro'});
+        }
+      }
+    });
     totalAReceber+=pa.filter(function(a){return a.status==='aguardando_acesso';}).reduce(function(s,a){return s+Number(a.valor||0);},0);
     if(p.status==='aberta') piscinasAtivas++;
     vagasOcup+=Number(p.vagas_ocupadas||0);
     vagasTotal+=Number(p.vagas_total||0);
   });
+
+  // Card provisionado (só mostra se tiver valor)
+  var provCard='';
+  if(provisionadoTotal>0){
+    var detHTML=provisionadoDetalhes.map(function(d){
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(0,180,210,0.08);font-size:12px;">'
+        +'<div><div style="font-weight:700;color:var(--bluedark);">'+d.servico+(d.plano&&d.plano!==d.servico?' · '+d.plano:'')+'</div>'
+        +'<div style="font-size:11px;color:var(--bluedark);opacity:.45;">'+d.membro+'</div></div>'
+        +'<div style="font-weight:800;color:#00875A;font-family:Nunito,sans-serif;">R$'+d.rep.toFixed(2).replace('.',',')+'</div>'
+        +'</div>';
+    }).join('');
+    provCard='<div id="provisionado-card" style="background:rgba(255,255,255,0.92);border:1.5px solid rgba(0,168,120,0.25);border-radius:16px;padding:18px 20px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,168,120,0.08);">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+      +'<div>'
+      +'<div style="font-size:12px;font-weight:800;color:#00522a;text-transform:uppercase;letter-spacing:.06em;">💰 Provisionado para saque</div>'
+      +'<div style="font-size:11px;color:#00875A;opacity:.7;margin-top:2px;">Sua margem dos planos wellness confirmados</div>'
+      +'</div>'
+      +'<div style="text-align:right;">'
+      +'<div style="font-family:Nunito,sans-serif;font-size:26px;font-weight:900;color:#00875A;">'+fmt(provisionadoTotal)+'</div>'
+      +'<div style="font-size:10px;color:#00875A;opacity:.6;font-weight:600;">DISPONÍVEL</div>'
+      +'</div>'
+      +'</div>'
+      +'<div style="border-top:1px solid rgba(0,168,120,0.15);padding-top:10px;">'
+      +detHTML
+      +'</div>'
+      +'</div>';
+  }
+
+  // Injetar card provisionado antes da lista de piscinas
+  var provEl=document.getElementById('provisionado-card-wrap');
+  if(!provEl){
+    var wrap=document.createElement('div');
+    wrap.id='provisionado-card-wrap';
+    var poolsList=document.getElementById('pools-list');
+    if(poolsList&&poolsList.parentNode) poolsList.parentNode.insertBefore(wrap,poolsList);
+  }
+  var w=document.getElementById('provisionado-card-wrap');
+  if(w) w.innerHTML=provCard;
 
   document.getElementById('resumo-bar').innerHTML=
     '<div class="resumo-item"><div class="resumo-val green">'+fmt(totalReceita)+'</div><div class="resumo-lbl">Receita do mês</div></div>'
