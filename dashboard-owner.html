@@ -1330,24 +1330,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
     </div>
 
     <!-- EXTRATO -->
-    <div class="card" id="extrato-section" style="margin-top:8px;">
-      <div class="card-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-        <div>
-          <div style="font-family:Nunito,sans-serif;font-size:17px;font-weight:900;color:var(--bluedark);">📋 Extrato de Repasses</div>
-          <div style="font-size:12px;color:var(--bluedark);opacity:.5;margin-top:2px;">Histórico de repasses gerados mensalmente</div>
-        </div>
-        <button class="btn-sm primary btn-gerar-todos" onclick="gerarRepasses()" id="btn-gerar-repasse" style="font-size:12px;">⚡ Gerar todos os repasses</button>
-      </div>
-      <div class="extrato-tabs">
-        <div class="extrato-tab act" onclick="filtrarExtrato('todos',this)">Todos</div>
-        <div class="extrato-tab" onclick="filtrarExtrato('pendente',this)">Pendentes</div>
-        <div class="extrato-tab" onclick="filtrarExtrato('aprovado',this)">Aprovados</div>
-        <div class="extrato-tab" onclick="filtrarExtrato('pago',this)">Pagos</div>
-      </div>
-      <div id="extrato-list"><div class="extrato-empty">Nenhum repasse registrado ainda.</div></div>
-    </div>
-
-  </div>
+    
 
 </div>
 </div>
@@ -2034,72 +2017,6 @@ async function gerarRepasses() {
   }
 }
 
-async function carregarExtrato() {
-  var {data:repasses} = await sb.from('repasses')
-    .select('*')
-    .eq('dono_id', userId)
-    .order('mes_referencia', {ascending: false})
-    .order('created_at', {ascending: false})
-    .limit(50);
-
-  todosRepasses = repasses || [];
-  renderExtrato();
-}
-
-function filtrarExtrato(filtro, el) {
-  extratoFiltro = filtro;
-  document.querySelectorAll('.extrato-tab').forEach(function(t){ t.classList.remove('act'); });
-  if(el) el.classList.add('act');
-  renderExtrato();
-}
-
-function renderExtrato() {
-  var lista = extratoFiltro === 'todos'
-    ? todosRepasses
-    : todosRepasses.filter(function(r){ return r.status === extratoFiltro; });
-
-  if(!lista.length){
-    document.getElementById('extrato-list').innerHTML = '<div class="extrato-empty">Nenhum repasse encontrado.</div>';
-    return;
-  }
-
-  // Agrupar por mês
-  var porMes = {};
-  lista.forEach(function(r){
-    if(!porMes[r.mes_referencia]) porMes[r.mes_referencia] = [];
-    porMes[r.mes_referencia].push(r);
-  });
-
-  var html = '';
-  Object.keys(porMes).sort().reverse().forEach(function(mes){
-    var items = porMes[mes];
-    var totalMes = items.reduce(function(s,r){ return s + Number(r.valor||0); }, 0);
-    var statusGeral = items.every(function(r){ return r.status==='pago'; }) ? 'pago'
-      : items.some(function(r){ return r.status==='aprovado'; }) ? 'aprovado' : 'pendente';
-    var statusLabel = {pendente:'Pendente',aprovado:'Aprovado',pago:'Pago'}[statusGeral];
-    var mesLabel = formatarMes(mes);
-
-    html += '<div class="repasse-card">';
-    html += '<div class="repasse-header">';
-    html += '<div class="repasse-mes">' + mesLabel + '</div>';
-    html += '<span class="repasse-status ' + statusGeral + '">' + statusLabel + '</span>';
-    html += '</div>';
-
-    items.forEach(function(r){
-      var tipoLabel = r.tipo === 'custo' ? '💳 Repasse de custo' : '💰 Margem de lucro';
-      var tipoColor = r.tipo === 'custo' ? 'blue' : 'green';
-      html += '<div class="repasse-row">';
-      html += '<span>' + tipoLabel + (r.observacao ? ' <span style="opacity:.5;font-size:11px;">· ' + r.observacao.split('·')[1] + '</span>' : '') + '</span>';
-      html += '<span class="repasse-val ' + tipoColor + '">' + fmt(r.valor) + '</span>';
-      html += '</div>';
-    });
-
-    html += '<div class="repasse-total"><span>Total ' + mesLabel + '</span><span class="repasse-val green">' + fmt(totalMes) + '</span></div>';
-    html += '</div>';
-  });
-
-  document.getElementById('extrato-list').innerHTML = html;
-}
 
 function formatarMes(mesRef) {
   var meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
