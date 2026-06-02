@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splitpool — Acesso Restrito</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--blue:#1255CC;--bluedark:#0A3080;--teal:#00C8D7;}
+body{font-family:'Inter',sans-serif;min-height:100vh;background:#0A3080;display:flex;align-items:center;justify-content:center;padding:20px;}
+.box{background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+.logo{font-family:'Nunito',sans-serif;font-size:24px;font-weight:900;color:var(--blue);text-align:center;margin-bottom:6px;}
+.logo span{color:var(--teal);}
+.badge{display:inline-block;background:#0A3080;color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:8px;letter-spacing:.08em;margin:0 auto 24px;display:block;width:fit-content;margin-left:auto;margin-right:auto;}
+.title{font-size:18px;font-weight:800;color:var(--bluedark);text-align:center;margin-bottom:4px;}
+.sub{font-size:13px;color:var(--bluedark);opacity:.45;text-align:center;margin-bottom:28px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--bluedark);opacity:.6;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+.field input{width:100%;padding:12px 14px;border:1.5px solid rgba(18,85,204,0.2);border-radius:10px;font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;transition:.2s;}
+.field input:focus{border-color:var(--blue);}
+.btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;transition:.2s;}
+.btn:hover{opacity:.9;}
+.btn:disabled{opacity:.6;cursor:not-allowed;}
+.error{background:#fff0f0;border:1px solid rgba(200,0,0,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:#c0392b;margin-bottom:14px;display:none;}
+.error.show{display:block;}
+.lock{text-align:center;font-size:40px;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="lock">🔐</div>
+  <div class="logo">Spli<span>T</span>Pool</div>
+  <div class="badge">ACESSO RESTRITO</div>
+  <div class="title">Painel Administrativo</div>
+  <div class="sub">Acesso exclusivo para administradores</div>
+
+  <div class="error" id="error-msg">Email ou senha incorretos.</div>
+
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="email" placeholder="admin@splitpool.com" autocomplete="email">
+  </div>
+  <div class="field">
+    <label>Senha</label>
+    <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
+  </div>
+  <button class="btn" id="btn-login" onclick="entrar()">Acessar painel →</button>
+</div>
+
+<script>
+const SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
+const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
+const ADMIN_ID='d30eb11b-baf1-4abe-b122-f5c9e181d1eb';
+const sb=supabase.createClient(SBU,SBK);
+
+// Se já está logado e é admin, redireciona direto
+(async function(){
+  var {data:sess}=await sb.auth.getSession();
+  if(sess.session&&sess.session.user.id===ADMIN_ID){
+    window.location.replace('dashboard-admin.html');
+  }
+})();
+
+document.getElementById('senha').addEventListener('keydown',function(e){
+  if(e.key==='Enter') entrar();
+});
+
+async function entrar(){
+  var email=document.getElementById('email').value.trim();
+  var senha=document.getElementById('senha').value;
+  var btn=document.getElementById('btn-login');
+  var err=document.getElementById('error-msg');
+  err.classList.remove('show');
+
+  if(!email||!senha){err.textContent='Preencha email e senha.';err.classList.add('show');return;}
+
+  btn.disabled=true;btn.textContent='Verificando...';
+
+  var {data,error}=await sb.auth.signInWithPassword({email,password:senha});
+  if(error||!data.user){
+    err.textContent='Email ou senha incorretos.';
+    err.classList.add('show');
+    btn.disabled=false;btn.textContent='Acessar painel →';
+    return;
+  }
+
+  if(data.user.id!==ADMIN_ID){
+    await sb.auth.signOut();
+    err.textContent='Acesso negado. Você não tem permissão de administrador.';
+    err.classList.add('show');
+    btn.disabled=false;btn.textContent='Acessar painel →';
+    return;
+  }
+
+  window.location.replace('dashboard-admin.html');
+}
+</script>
+</body>
+</html>

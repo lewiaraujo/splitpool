@@ -171,6 +171,31 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .repasse-total{display:flex;justify-content:space-between;font-size:14px;font-weight:800;color:var(--bluedark);border-top:1px solid rgba(0,180,210,0.15);padding-top:8px;margin-top:6px;}
 .extrato-empty{text-align:center;padding:32px 16px;color:var(--bluedark);opacity:.4;font-size:14px;}
 
+
+/* ── MINI-EXTRATO NO CARD ── */
+.pool-mini-extrato{margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,180,210,0.1);}
+.pool-mini-extrato-titulo{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--bluedark);opacity:.4;margin-bottom:8px;}
+.pool-repasse-item{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:8px;background:rgba(0,180,210,0.04);margin-bottom:5px;}
+.pool-repasse-tipo{font-size:12px;color:var(--bluedark);font-weight:500;}
+.pool-repasse-val{font-size:13px;font-weight:800;}
+.pool-repasse-val.green{color:var(--green);}
+.pool-repasse-val.blue{color:var(--blue);}
+.pool-repasse-status{font-size:10px;padding:2px 8px;border-radius:5px;font-weight:700;margin-left:8px;}
+.pool-repasse-status.pendente{background:#fff8e0;color:#8a5c00;}
+.pool-repasse-status.aprovado{background:#e0f0ff;color:#0A3080;}
+.pool-repasse-status.pago{background:#e6fff8;color:#00522a;}
+
+/* ── EXTRATO MOBILE ── */
+@media(max-width:680px){
+  .extrato-tabs{gap:6px;}
+  .extrato-tab{padding:6px 12px;font-size:12px;}
+  #extrato-section .card-header-row{flex-direction:column;align-items:flex-start;gap:8px;}
+  .btn-gerar-todos{width:100%;justify-content:center;}
+  .repasse-card{padding:12px 14px;}
+  .repasse-mes{font-size:12px;}
+  .repasse-total{font-size:13px;}
+}
+
 /* ── EMPTY STATE ── */
 #empty-state{display:none;flex-direction:column;align-items:center;gap:20px;padding:48px 20px;}
 
@@ -329,12 +354,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 
     <!-- EXTRATO -->
     <div class="card" id="extrato-section" style="margin-top:8px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="card-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
         <div>
           <div style="font-family:Nunito,sans-serif;font-size:17px;font-weight:900;color:var(--bluedark);">📋 Extrato de Repasses</div>
           <div style="font-size:12px;color:var(--bluedark);opacity:.5;margin-top:2px;">Histórico de repasses gerados mensalmente</div>
         </div>
-        <button class="btn-sm primary" onclick="gerarRepasses()" id="btn-gerar-repasse" style="font-size:12px;">⚡ Gerar todos os repasses</button>
+        <button class="btn-sm primary btn-gerar-todos" onclick="gerarRepasses()" id="btn-gerar-repasse" style="font-size:12px;">⚡ Gerar todos os repasses</button>
       </div>
       <div class="extrato-tabs">
         <div class="extrato-tab act" onclick="filtrarExtrato('todos',this)">Todos</div>
@@ -687,9 +712,10 @@ function renderPool(pool,assins,vault){
     +'</div></div>'
 
     // Actions
+    +'<div id="mini-extrato-'+pool.id+'" class="pool-mini-extrato" style="display:none;"></div>'
     +'<div class="pool-actions">'
     +toggleBtn
-    +'<button class="btn-sm ghost" onclick="gerarRepassePiscina('+pool.id+',event)" title="Gerar repasse deste mês para esta piscina">⚡ Gerar repasse</button>'
+    +'<button class="btn-sm ghost" id="btn-rep-'+pool.id+'" onclick="gerarRepassePiscina('+pool.id+',event)" title="Gerar repasse deste mês para esta piscina">⚡ Gerar repasse</button>'
     +'<a href="criar-piscina.html" class="btn-sm ghost">+ Nova piscina</a>'
     +'</div>'
 
@@ -850,6 +876,7 @@ async function carregarDashboard(){
 
   document.getElementById('loading-state').style.display='none';
   document.getElementById('dash-content').style.display='flex';
+  carregarTodosMiniExtratos(piscinas);
 }
 
 /* ── INIT ── */
@@ -1104,6 +1131,31 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .repasse-total{display:flex;justify-content:space-between;font-size:14px;font-weight:800;color:var(--bluedark);border-top:1px solid rgba(0,180,210,0.15);padding-top:8px;margin-top:6px;}
 .extrato-empty{text-align:center;padding:32px 16px;color:var(--bluedark);opacity:.4;font-size:14px;}
 
+
+/* ── MINI-EXTRATO NO CARD ── */
+.pool-mini-extrato{margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,180,210,0.1);}
+.pool-mini-extrato-titulo{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--bluedark);opacity:.4;margin-bottom:8px;}
+.pool-repasse-item{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:8px;background:rgba(0,180,210,0.04);margin-bottom:5px;}
+.pool-repasse-tipo{font-size:12px;color:var(--bluedark);font-weight:500;}
+.pool-repasse-val{font-size:13px;font-weight:800;}
+.pool-repasse-val.green{color:var(--green);}
+.pool-repasse-val.blue{color:var(--blue);}
+.pool-repasse-status{font-size:10px;padding:2px 8px;border-radius:5px;font-weight:700;margin-left:8px;}
+.pool-repasse-status.pendente{background:#fff8e0;color:#8a5c00;}
+.pool-repasse-status.aprovado{background:#e0f0ff;color:#0A3080;}
+.pool-repasse-status.pago{background:#e6fff8;color:#00522a;}
+
+/* ── EXTRATO MOBILE ── */
+@media(max-width:680px){
+  .extrato-tabs{gap:6px;}
+  .extrato-tab{padding:6px 12px;font-size:12px;}
+  #extrato-section .card-header-row{flex-direction:column;align-items:flex-start;gap:8px;}
+  .btn-gerar-todos{width:100%;justify-content:center;}
+  .repasse-card{padding:12px 14px;}
+  .repasse-mes{font-size:12px;}
+  .repasse-total{font-size:13px;}
+}
+
 /* ── EMPTY STATE ── */
 #empty-state{display:none;flex-direction:column;align-items:center;gap:20px;padding:48px 20px;}
 
@@ -1262,12 +1314,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 
     <!-- EXTRATO -->
     <div class="card" id="extrato-section" style="margin-top:8px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="card-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
         <div>
           <div style="font-family:Nunito,sans-serif;font-size:17px;font-weight:900;color:var(--bluedark);">📋 Extrato de Repasses</div>
           <div style="font-size:12px;color:var(--bluedark);opacity:.5;margin-top:2px;">Histórico de repasses gerados mensalmente</div>
         </div>
-        <button class="btn-sm primary" onclick="gerarRepasses()" id="btn-gerar-repasse" style="font-size:12px;">⚡ Gerar todos os repasses</button>
+        <button class="btn-sm primary btn-gerar-todos" onclick="gerarRepasses()" id="btn-gerar-repasse" style="font-size:12px;">⚡ Gerar todos os repasses</button>
       </div>
       <div class="extrato-tabs">
         <div class="extrato-tab act" onclick="filtrarExtrato('todos',this)">Todos</div>
@@ -1620,9 +1672,10 @@ function renderPool(pool,assins,vault){
     +'</div></div>'
 
     // Actions
+    +'<div id="mini-extrato-'+pool.id+'" class="pool-mini-extrato" style="display:none;"></div>'
     +'<div class="pool-actions">'
     +toggleBtn
-    +'<button class="btn-sm ghost" onclick="gerarRepassePiscina('+pool.id+',event)" title="Gerar repasse deste mês para esta piscina">⚡ Gerar repasse</button>'
+    +'<button class="btn-sm ghost" id="btn-rep-'+pool.id+'" onclick="gerarRepassePiscina('+pool.id+',event)" title="Gerar repasse deste mês para esta piscina">⚡ Gerar repasse</button>'
     +'<a href="criar-piscina.html" class="btn-sm ghost">+ Nova piscina</a>'
     +'</div>'
 
@@ -2135,6 +2188,7 @@ async function gerarRepassePiscina(piscinaId, e){
     if(error){showToast('Erro: '+error.message,'error');if(btn){btn.disabled=false;btn.textContent='⚡ Gerar repasse';}return;}
     showToast('✅ Repasse de '+pool.servico+' gerado para '+formatarMes(mesRef)+'!','success');
     carregarExtrato();
+    carregarMiniExtrato(piscinaId);
   }
   if(btn){btn.disabled=false;btn.textContent='⚡ Gerar repasse';}
 }
@@ -2167,6 +2221,48 @@ async function gerarRepasses(){
   if(btn){btn.disabled=false;btn.textContent='⚡ Gerar todos os repasses';}
   if(inseridos>0){showToast('✅ '+inseridos+' repasse(s) gerado(s)!','success');carregarExtrato();}
   else showToast('Repasses deste mês já foram gerados ou não há membros ativos.','error');
+}
+
+async function carregarMiniExtrato(piscinaId){
+  var {data:reps}=await sb.from('repasses')
+    .select('*')
+    .eq('piscina_id',piscinaId)
+    .eq('dono_id',userId)
+    .order('mes_referencia',{ascending:false})
+    .limit(6);
+  var el=document.getElementById('mini-extrato-'+piscinaId);
+  if(!el) return;
+  if(!reps||!reps.length){el.style.display='none';return;}
+  el.style.display='block';
+  var html='<div class="pool-mini-extrato-titulo">Repasses gerados</div>';
+  // Agrupar por mês
+  var porMes={};
+  reps.forEach(function(r){if(!porMes[r.mes_referencia])porMes[r.mes_referencia]=[];porMes[r.mes_referencia].push(r);});
+  Object.keys(porMes).sort().reverse().forEach(function(mes){
+    var items=porMes[mes];
+    var total=items.reduce(function(s,r){return s+Number(r.valor||0);},0);
+    var statusGeral=items.every(function(r){return r.status==='pago';})?'pago':items.some(function(r){return r.status==='aprovado';})?'aprovado':'pendente';
+    html+='<div class="pool-repasse-item">';
+    html+='<div><div style="font-size:12px;font-weight:700;color:var(--bluedark);">'+formatarMes(mes)+'</div>';
+    html+='<div style="display:flex;gap:4px;margin-top:3px;">';
+    items.forEach(function(r){
+      var label=r.tipo==='custo'?'💳 Custo':'💰 Margem';
+      html+='<span style="font-size:10px;background:rgba(0,180,210,0.08);padding:2px 6px;border-radius:4px;color:var(--bluedark);">'+label+' '+fmt(r.valor)+'</span>';
+    });
+    html+='</div></div>';
+    html+='<div style="text-align:right;">';
+    html+='<div class="pool-repasse-val '+(statusGeral==='pago'?'green':'blue')+'">'+fmt(total)+'</div>';
+    html+='<span class="pool-repasse-status '+statusGeral+'">'+statusGeral+'</span>';
+    html+='</div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+async function carregarTodosMiniExtratos(piscinas){
+  for(var i=0;i<piscinas.length;i++){
+    carregarMiniExtrato(piscinas[i].id);
+  }
 }
 
 async function carregarExtrato(){
