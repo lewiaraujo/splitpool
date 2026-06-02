@@ -1291,9 +1291,12 @@ function renderExtratoLucro(){
   // Reutiliza renderExtrato mas só com tipo lucro
   // Extrair lucro SP da observação para calcular lucro real do dono
   function extrairLucroSP(obs){
-    var m=(obs||'').match(/SP reteve R\$([0-9.,]+)/);
-    if(m) return parseFloat(m[1].replace(',','.'));
-    return 0;
+    var s=obs||'';
+    var idx=s.indexOf('SP reteve R$');
+    if(idx===-1) return 0;
+    var parte=s.substring(idx+12); // depois de "SP reteve R$"
+    var num=parte.split(/[^0-9,]/)[0].replace(',','.');
+    return parseFloat(num)||0;
   }
   var porMes={};
   lista.forEach(function(r){if(!porMes[r.mes_referencia])porMes[r.mes_referencia]=[];porMes[r.mes_referencia].push(r);});
