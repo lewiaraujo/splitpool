@@ -662,12 +662,12 @@ function renderPool(pool,assins,vault){
 
 /* ── TABELA DE REPASSES (margem do dono) ── */
 var REPASSE_MAP={
-  // Wellhub
-  'starter':8,'basic':8,'basic+':9,'silver':14,'silver+':18,'gold':29,'gold+':35,'platinum':35,'diamond':35,'diamond+':35,
-  // TotalPass
-  'tp go':8,'tp1':10,'tp1+':13,'tp2':17,'tp3':23,'tp4':30,'tp5':33,'tp5+':37,'tp6':40,'tp7':46,
-  // Familia
-  'microsoft 365':15,'duolingo super':12,'canva teams':10,'notion team':15,'alura':25
+  // Wellhub — lucro dono Fase 1 (80% do spread)
+  'starter':9.60,'basic':9.60,'basic+':10.40,'silver':16.00,'silver+':20.80,'gold':33.60,'gold+':40.00,'platinum':40.00,'diamond':40.00,'diamond+':40.00,
+  // TotalPass — lucro dono Fase 1 (80% do spread)
+  'tp go':9.60,'tp1':12.00,'tp1+':16.00,'tp2':20.00,'tp3':28.00,'tp4':36.00,'tp5':40.00,'tp5+':44.00,'tp6':48.00,'tp7':56.00,
+  // Familia — lucro dono Fase 1 (repasse - custo/vaga)
+  'microsoft 365':7.87,'duolingo super':3.50,'canva teams':2.13,'notion team':17.50,'alura':25.00
 };
 function getRepasse(servico,planoNome){
   var key=(planoNome||servico||'').toLowerCase().trim();
