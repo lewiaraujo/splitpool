@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Splitpool — Acesso Restrito</title>
+<title>Splitpool — Acesso Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@700;800;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{--blue:#1255CC;--bluedark:#0A3080;--teal:#00C8D7;}
-body{font-family:'Inter',sans-serif;min-height:100vh;background:#0A3080;display:flex;align-items:center;justify-content:center;padding:20px;}
-.box{background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+body{font-family:'Inter',sans-serif;min-height:100vh;background:linear-gradient(135deg,#0A3080 0%,#1255CC 60%,#00C8D7 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
+.box{background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,0.3);}
 .logo{font-family:'Nunito',sans-serif;font-size:24px;font-weight:900;color:var(--blue);text-align:center;margin-bottom:6px;}
 .logo span{color:var(--teal);}
-.badge{display:inline-block;background:#0A3080;color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:8px;letter-spacing:.08em;margin:0 auto 24px;display:block;width:fit-content;margin-left:auto;margin-right:auto;}
+.badge{display:block;background:#0A3080;color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:8px;letter-spacing:.08em;width:fit-content;margin:0 auto 28px;}
 .title{font-size:18px;font-weight:800;color:var(--bluedark);text-align:center;margin-bottom:4px;}
 .sub{font-size:13px;color:var(--bluedark);opacity:.45;text-align:center;margin-bottom:28px;}
 .field{margin-bottom:16px;}
@@ -32,19 +32,19 @@ body{font-family:'Inter',sans-serif;min-height:100vh;background:#0A3080;display:
 <div class="box">
   <div class="lock">🔐</div>
   <div class="logo">Spli<span>T</span>Pool</div>
-  <div class="badge">ACESSO RESTRITO</div>
-  <div class="title">Painel Administrativo</div>
-  <div class="sub">Acesso exclusivo para administradores</div>
+  <div class="badge">ADMINISTRADOR</div>
+  <div class="title">Acesso Restrito</div>
+  <div class="sub">Painel exclusivo para administradores Splitpool</div>
 
-  <div class="error" id="error-msg">Email ou senha incorretos.</div>
+  <div class="error" id="error-msg"></div>
 
   <div class="field">
     <label>Email</label>
-    <input type="email" id="email" placeholder="admin@splitpool.com" autocomplete="email">
+    <input type="email" id="email" placeholder="admin@splitpool.com" autocomplete="off">
   </div>
   <div class="field">
     <label>Senha</label>
-    <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
+    <input type="password" id="senha" placeholder="••••••••" autocomplete="off">
   </div>
   <button class="btn" id="btn-login" onclick="entrar()">Acessar painel →</button>
 </div>
@@ -52,48 +52,58 @@ body{font-family:'Inter',sans-serif;min-height:100vh;background:#0A3080;display:
 <script>
 const SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
 const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
-const ADMIN_ID='d30eb11b-baf1-4abe-b122-f5c9e181d1eb';
 const sb=supabase.createClient(SBU,SBK);
 
-// Se já está logado e é admin, redireciona direto
-(async function(){
-  var {data:sess}=await sb.auth.getSession();
-  if(sess.session&&sess.session.user.id===ADMIN_ID){
-    window.location.replace('dashboard-admin.html');
-  }
+// Verificar sessão admin no localStorage
+(function(){
+  try{
+    var sess=JSON.parse(localStorage.getItem('sp_admin_sess')||'null');
+    if(sess&&sess.email&&sess.exp>Date.now()){
+      window.location.replace('dashboard-admin.html');
+    }
+  }catch(e){}
 })();
 
 document.getElementById('senha').addEventListener('keydown',function(e){
   if(e.key==='Enter') entrar();
 });
 
+// Hash SHA-256 simples via SubtleCrypto
+async function sha256(msg){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 async function entrar(){
-  var email=document.getElementById('email').value.trim();
+  var email=document.getElementById('email').value.trim().toLowerCase();
   var senha=document.getElementById('senha').value;
   var btn=document.getElementById('btn-login');
   var err=document.getElementById('error-msg');
   err.classList.remove('show');
 
-  if(!email||!senha){err.textContent='Preencha email e senha.';err.classList.add('show');return;}
+  if(!email||!senha){
+    err.textContent='Preencha email e senha.';
+    err.classList.add('show');
+    return;
+  }
 
   btn.disabled=true;btn.textContent='Verificando...';
 
-  var {data,error}=await sb.auth.signInWithPassword({email,password:senha});
-  if(error||!data.user){
+  var hash=await sha256(senha);
+
+  // Buscar admin na tabela admins usando service key via função RPC
+  var {data,error}=await sb.rpc('verificar_admin',{p_email:email,p_hash:hash});
+
+  if(error||!data||!data.autorizado){
     err.textContent='Email ou senha incorretos.';
     err.classList.add('show');
     btn.disabled=false;btn.textContent='Acessar painel →';
     return;
   }
 
-  if(data.user.id!==ADMIN_ID){
-    await sb.auth.signOut();
-    err.textContent='Acesso negado. Você não tem permissão de administrador.';
-    err.classList.add('show');
-    btn.disabled=false;btn.textContent='Acessar painel →';
-    return;
-  }
-
+  // Salvar sessão admin no localStorage (expira em 8h)
+  var sess={email:email,nome:data.nome,exp:Date.now()+8*60*60*1000};
+  localStorage.setItem('sp_admin_sess',JSON.stringify(sess));
   window.location.replace('dashboard-admin.html');
 }
 </script>

@@ -724,6 +724,23 @@ function renderPool(pool,assins,vault){
 }
 
 
+
+/* ── LUCRO SPLITPOOL MAP (Fase 1) ── */
+var LUCRO_SP_MAP={
+  // Wellhub — 20% do spread
+  'starter':2.40,'basic':2.40,'basic+':2.60,'silver':4.00,'silver+':5.20,'gold':8.40,'gold+':10.00,'platinum':10.00,'diamond':10.00,'diamond+':10.00,
+  // TotalPass — 20% do spread
+  'tp go':2.40,'tp1':3.00,'tp1+':4.00,'tp2':5.00,'tp3':7.00,'tp4':9.00,'tp5':10.00,'tp5+':11.00,'tp6':12.00,'tp7':14.00,
+  // Familia — margem SP sobre preço
+  'microsoft 365':7.65,'duolingo super':5.57,'canva teams':3.98,'notion team':7.50,'alura':14.90
+};
+function getLucroSP(servico,planoNome){
+  var key=(planoNome||servico||'').toLowerCase().trim();
+  if(LUCRO_SP_MAP[key]) return LUCRO_SP_MAP[key];
+  for(var k in LUCRO_SP_MAP){if(key.indexOf(k)!==-1||k.indexOf(key)!==-1) return LUCRO_SP_MAP[k];}
+  return 0;
+}
+
 /* ── TABELA DE REPASSES (margem do dono) ── */
 var REPASSE_MAP={
   // Wellhub — lucro dono Fase 1 (80% do spread)
@@ -1684,6 +1701,23 @@ function renderPool(pool,assins,vault){
 }
 
 
+
+/* ── LUCRO SPLITPOOL MAP (Fase 1) ── */
+var LUCRO_SP_MAP={
+  // Wellhub — 20% do spread
+  'starter':2.40,'basic':2.40,'basic+':2.60,'silver':4.00,'silver+':5.20,'gold':8.40,'gold+':10.00,'platinum':10.00,'diamond':10.00,'diamond+':10.00,
+  // TotalPass — 20% do spread
+  'tp go':2.40,'tp1':3.00,'tp1+':4.00,'tp2':5.00,'tp3':7.00,'tp4':9.00,'tp5':10.00,'tp5+':11.00,'tp6':12.00,'tp7':14.00,
+  // Familia — margem SP sobre preço
+  'microsoft 365':7.65,'duolingo super':5.57,'canva teams':3.98,'notion team':7.50,'alura':14.90
+};
+function getLucroSP(servico,planoNome){
+  var key=(planoNome||servico||'').toLowerCase().trim();
+  if(LUCRO_SP_MAP[key]) return LUCRO_SP_MAP[key];
+  for(var k in LUCRO_SP_MAP){if(key.indexOf(k)!==-1||k.indexOf(key)!==-1) return LUCRO_SP_MAP[k];}
+  return 0;
+}
+
 /* ── TABELA DE REPASSES (margem do dono) ── */
 var REPASSE_MAP={
   // Wellhub — lucro dono Fase 1 (80% do spread)
@@ -1977,46 +2011,17 @@ async function gerarRepasses() {
       .select('id').eq('dono_id', userId).eq('piscina_id', pool.id).eq('mes_referencia', mesRef);
     if(jaExiste && jaExiste.length) continue;
 
-    // Tipo 1: custo (valor total que os membros pagam ao dono)
-    var valCusto = assins.reduce(function(s,a){ return s + Number(a.valor||0); }, 0);
-    // Tipo 2: margem (lucro líquido do dono)
-    var valMargem = calcRepasseMargem(pool, assins);
-
-    // Calcular data de vencimento - 5 dias antes
-    var venc = pool.cartao_vencimento;
-    var dataRepasse1 = null;
-    if(venc){
-      var hoje = new Date();
-      var diaVenc = parseInt(venc);
-      var dtVenc = new Date(hoje.getFullYear(), hoje.getMonth(), diaVenc);
-      if(dtVenc <= hoje) dtVenc.setMonth(dtVenc.getMonth()+1);
-      dtVenc.setDate(dtVenc.getDate()-5);
-      dataRepasse1 = dtVenc.toISOString().split('T')[0];
-    }
-
-    if(valCusto > 0){
-      await sb.from('repasses').insert({
-        dono_id: userId,
-        piscina_id: pool.id,
-        tipo: 'custo',
-        valor: valCusto,
-        mes_referencia: mesRef,
-        status: 'pendente',
-        observacao: 'Repasse de custo — ' + pool.servico + ' · ' + assins.length + ' membro(s) · Vence ' + (dataRepasse1||'—')
-      });
-      inseridos++;
-    }
-    if(valMargem > 0){
-      await sb.from('repasses').insert({
-        dono_id: userId,
-        piscina_id: pool.id,
-        tipo: 'margem',
-        valor: valMargem,
-        mes_referencia: mesRef,
-        status: 'pendente',
-        observacao: 'Margem de lucro — ' + pool.servico + ' · ' + assins.length + ' membro(s) confirmado(s)'
-      });
-      inseridos++;
+    var valRepasse=calcRepasseReal(pool,assins);
+    var valLucroSP=calcLucroSPPiscina(pool,assins);
+    var inserts2=[];
+    if(valRepasse>0) inserts2.push({
+      dono_id:userId,piscina_id:pool.id,tipo:'repasse',valor:valRepasse,
+      mes_referencia:mesRef,status:'pendente',
+      observacao:pool.servico+' · '+assins.length+' membro(s) · SP reteve '+fmt(valLucroSP)
+    });
+    if(inserts2.length){
+      await sb.from('repasses').insert(inserts2);
+      inseridos+=inserts2.length;
     }
   }
 
@@ -2121,16 +2126,26 @@ function formatarMes(mesRef){
   return meses[parseInt(p[1])-1]+'/'+p[0];
 }
 
-function calcMargemPiscina(pool, assins){
+function calcRepasseReal(pool, assins){
+  // Repasse ao dono = valor_pago_membro - lucro_SP
   var ativos=assins.filter(function(a){return a.status==='ativo';});
   var total=0;
-  ativos.forEach(function(a){total+=getRepasse(pool.servico,a.plano_nome);});
+  ativos.forEach(function(a){
+    var lucroSP=getLucroSP(pool.servico,a.plano_nome);
+    total+=Number(a.valor||0)-lucroSP;
+  });
+  return Math.max(0,total);
+}
+function calcLucroSPPiscina(pool, assins){
+  // Lucro da Splitpool = soma dos lucros SP por membro ativo
+  var ativos=assins.filter(function(a){return a.status==='ativo';});
+  var total=0;
+  ativos.forEach(function(a){total+=getLucroSP(pool.servico,a.plano_nome);});
   return total;
 }
-function calcCustoPiscina(assins){
-  return assins.filter(function(a){return a.status==='ativo';})
-    .reduce(function(s,a){return s+Number(a.valor||0);},0);
-}
+// Mantidos por compatibilidade
+function calcMargemPiscina(pool,assins){return calcRepasseReal(pool,assins);}
+function calcCustoPiscina(assins){return 0;}
 
 // Gerar repasse para UMA piscina específica
 async function gerarRepassePiscina(piscinaId, e){
@@ -2158,8 +2173,8 @@ async function gerarRepassePiscina(piscinaId, e){
     return;
   }
 
-  var valCusto=calcCustoPiscina(assins);
-  var valMargem=calcMargemPiscina(pool,assins);
+  var valRepasse=calcRepasseReal(pool,assins);
+  var valLucroSP=calcLucroSPPiscina(pool,assins);
   var venc=pool.cartao_vencimento;
   var obsData='';
   if(venc){
@@ -2172,15 +2187,10 @@ async function gerarRepassePiscina(piscinaId, e){
   }
 
   var inserts=[];
-  if(valCusto>0) inserts.push({
-    dono_id:userId,piscina_id:piscinaId,tipo:'custo',valor:valCusto,
+  if(valRepasse>0) inserts.push({
+    dono_id:userId,piscina_id:piscinaId,tipo:'repasse',valor:valRepasse,
     mes_referencia:mesRef,status:'pendente',
-    observacao:pool.servico+' · '+assins.length+' membro(s)'+obsData
-  });
-  if(valMargem>0) inserts.push({
-    dono_id:userId,piscina_id:piscinaId,tipo:'margem',valor:valMargem,
-    mes_referencia:mesRef,status:'pendente',
-    observacao:pool.servico+' · '+assins.length+' membro(s) confirmado(s)'
+    observacao:pool.servico+' · '+assins.length+' membro(s) · SP reteve '+fmt(valLucroSP)+obsData
   });
 
   if(inserts.length){
@@ -2211,11 +2221,10 @@ async function gerarRepasses(){
     if(jaExiste&&jaExiste.length) continue;
     var {data:assins}=await sb.from('assinaturas').select('*').eq('piscina_id',pool.id).eq('status','ativo');
     if(!assins||!assins.length) continue;
-    var valCusto=calcCustoPiscina(assins);
-    var valMargem=calcMargemPiscina(pool,assins);
+    var valRepasse=calcRepasseReal(pool,assins);
+    var valLucroSP=calcLucroSPPiscina(pool,assins);
     var inserts=[];
-    if(valCusto>0) inserts.push({dono_id:userId,piscina_id:pool.id,tipo:'custo',valor:valCusto,mes_referencia:mesRef,status:'pendente',observacao:pool.servico+' · '+assins.length+' membro(s)'});
-    if(valMargem>0) inserts.push({dono_id:userId,piscina_id:pool.id,tipo:'margem',valor:valMargem,mes_referencia:mesRef,status:'pendente',observacao:pool.servico+' · '+assins.length+' membro(s)'});
+    if(valRepasse>0) inserts.push({dono_id:userId,piscina_id:pool.id,tipo:'repasse',valor:valRepasse,mes_referencia:mesRef,status:'pendente',observacao:pool.servico+' · '+assins.length+' membro(s) · SP reteve '+fmt(valLucroSP)});
     if(inserts.length){await sb.from('repasses').insert(inserts);inseridos+=inserts.length;}
   }
   if(btn){btn.disabled=false;btn.textContent='⚡ Gerar todos os repasses';}

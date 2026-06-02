@@ -68,7 +68,7 @@ tbody td{padding:12px 16px;font-size:13px;color:var(--bluedark);}
 
 <nav>
   <div class="nav-in">
-    <div class="nav-logo">Spli<span style="color:var(--teal);">T</span>Pool <span class="nav-badge">ADMIN</span></div>
+    <div class="nav-logo">Spli<span style="color:var(--teal);">T</span>Pool <span class="nav-badge">ADMIN</span></div><span id="nav-admin-nome" style="font-size:13px;color:var(--bluedark);opacity:.6;font-weight:600;"></span>
     <div class="nav-right">
       <a href="dashboard-owner.html" class="nav-btn">Dashboard dono</a>
       <a href="explorar.html" class="nav-btn">Explorar</a>
@@ -107,7 +107,8 @@ tbody td{padding:12px 16px;font-size:13px;color:var(--bluedark);}
           <th>Serviço</th>
           <th>Mês</th>
           <th>Tipo</th>
-          <th>Valor</th>
+          <th>Repasse</th>
+          <th>Obs.</th>
           <th>Status</th>
           <th>Ações</th>
         </tr>
@@ -124,11 +125,11 @@ tbody td{padding:12px 16px;font-size:13px;color:var(--bluedark);}
 <script>
 const SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
 const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
-const ADMIN_ID='d30eb11b-baf1-4abe-b122-f5c9e181d1eb';
 const sb=supabase.createClient(SBU,SBK);
 
 var todosRepasses=[];
 var filtroAtual='todos';
+var adminSess=null;
 var mesesLabel={'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
 
 function fmt(v){return'R$'+Number(v).toFixed(2).replace('.',',');}
@@ -142,11 +143,17 @@ function showToast(msg,tipo){
 }
 
 async function init(){
-  var {data:sess}=await sb.auth.getSession();
-  if(!sess.session){window.location.href='cadastro.html';return;}
-  if(sess.session.user.id!==ADMIN_ID){
-    alert('Acesso restrito ao administrador.');
-    window.location.href='explorar.html';
+  try{
+    var sess=JSON.parse(localStorage.getItem('sp_admin_sess')||'null');
+    if(!sess||!sess.email||sess.exp<=Date.now()){
+      window.location.replace('admin-login.html');
+      return;
+    }
+    adminSess=sess;
+    var navNome=document.getElementById('nav-admin-nome');
+    if(navNome) navNome.textContent=sess.nome||sess.email;
+  }catch(e){
+    window.location.replace('admin-login.html');
     return;
   }
   await carregarDados();
@@ -234,8 +241,9 @@ function renderTabela(){
       '<td data-label="Dono">'+nome+'</td>'+
       '<td data-label="Serviço">'+servico+'</td>'+
       '<td data-label="Mês">'+formatMes(r.mes_referencia)+'</td>'+
-      '<td data-label="Tipo"><span class="tipo-pill '+r.tipo+'">'+r.tipo+'</span></td>'+
-      '<td data-label="Valor" style="font-weight:700;color:var(--green);">'+fmt(r.valor)+'</td>'+
+      '<td data-label="Tipo"><span class="tipo-pill repasse">repasse</span></td>'+
+      '<td data-label="Repasse" style="font-weight:700;color:var(--green);">'+fmt(r.valor)+'</td>'+
+      '<td data-label="Obs." style="font-size:11px;color:#666;max-width:180px;">'+((r.observacao||'').substring(0,60))+'</td>'+
       '<td data-label="Status"><span class="status-pill '+r.status+'">'+r.status+'</span></td>'+
       '<td data-label="Ação">'+acoes+'</td>'+
       '</tr>';
@@ -286,7 +294,7 @@ function getMesAtual(){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 }
 
-function sair(){sb.auth.signOut().then(function(){window.location.href='index.html';});}
+function sair(){localStorage.removeItem('sp_admin_sess');window.location.replace('admin-login.html');}
 
 init();
 </script>
