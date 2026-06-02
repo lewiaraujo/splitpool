@@ -8,59 +8,110 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;--green:#00A878;--text:#0C2461;--red:#e74c3c;}
-body{font-family:'Inter',sans-serif;color:var(--text);background:#f0f6ff;min-height:100vh;}
-nav{background:#fff;border-bottom:1px solid rgba(18,85,204,0.15);padding:0 5%;position:sticky;top:0;z-index:100;}
-.nav-in{max-width:1100px;margin:0 auto;height:60px;display:flex;align-items:center;justify-content:space-between;}
-.nav-logo{font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;color:var(--blue);}
-.nav-badge{background:#e74c3c;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;margin-left:8px;}
-.nav-right{display:flex;gap:10px;align-items:center;}
-.nav-btn{font-size:13px;font-weight:600;color:var(--blue);background:transparent;border:1px solid rgba(18,85,204,0.2);border-radius:7px;padding:6px 14px;cursor:pointer;font-family:inherit;text-decoration:none;}
-.wrap{max-width:1100px;margin:0 auto;padding:32px 5% 60px;}
-.page-title{font-family:'Nunito',sans-serif;font-size:24px;font-weight:900;color:var(--bluedark);margin-bottom:4px;}
-.page-sub{font-size:13px;color:var(--bluedark);opacity:.5;margin-bottom:24px;}
-.resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:28px;}
-.rcard{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid rgba(0,180,210,0.15);}
-.rcard-val{font-family:'Nunito',sans-serif;font-size:26px;font-weight:900;color:var(--bluedark);}
+:root{--blue:#1255CC;--bluedark:#0A3080;--teal:#00C8D7;--green:#00A878;--red:#e74c3c;--bg:#f0f4ff;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--bluedark);min-height:100vh;}
+
+/* NAV */
+nav{background:#0A3080;padding:0 5%;position:sticky;top:0;z-index:200;}
+.nav-in{max-width:1200px;margin:0 auto;height:58px;display:flex;align-items:center;gap:0;}
+.nav-logo{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-right:32px;white-space:nowrap;}
+.nav-logo span{color:var(--teal);}
+.nav-badge{background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px;margin-left:6px;letter-spacing:.05em;}
+.nav-links{display:flex;gap:2px;flex:1;}
+.nav-link{padding:8px 14px;border-radius:7px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.65);cursor:pointer;transition:.15s;white-space:nowrap;background:none;border:none;font-family:inherit;}
+.nav-link:hover{background:rgba(255,255,255,0.1);color:#fff;}
+.nav-link.act{background:rgba(255,255,255,0.15);color:#fff;}
+.nav-right{display:flex;align-items:center;gap:12px;margin-left:auto;}
+.nav-admin{font-size:12px;color:rgba(255,255,255,0.5);font-weight:600;}
+.nav-sair{background:rgba(255,255,255,0.1);color:#fff;border:none;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.nav-sair:hover{background:rgba(255,255,255,0.2);}
+@media(max-width:768px){
+  .nav-links{display:none;}
+  .mob-menu-btn{display:flex;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;margin-left:auto;}
+}
+@media(min-width:769px){.mob-menu-btn{display:none;}}
+
+/* LAYOUT */
+.wrap{max-width:1200px;margin:0 auto;padding:28px 5% 60px;}
+.section{display:none;}
+.section.act{display:block;}
+
+/* CARDS RESUMO */
+.resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:28px;}
+.rcard{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid rgba(18,85,204,0.1);box-shadow:0 2px 8px rgba(0,20,80,0.05);}
+.rcard-val{font-family:'Nunito',sans-serif;font-size:24px;font-weight:900;}
 .rcard-val.green{color:var(--green);}
 .rcard-val.blue{color:var(--blue);}
 .rcard-val.red{color:var(--red);}
-.rcard-lbl{font-size:11px;color:var(--bluedark);opacity:.45;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
-.section-title{font-size:13px;font-weight:700;color:var(--bluedark);opacity:.5;text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;}
-.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
-.filter-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(18,85,204,0.2);background:#fff;color:var(--bluedark);transition:.15s;}
-.filter-btn.act{background:var(--blue);color:#fff;border-color:var(--blue);}
-.table-wrap{background:#fff;border-radius:14px;border:1px solid rgba(0,180,210,0.15);overflow:hidden;}
+.rcard-val.teal{color:#009eb0;}
+.rcard-lbl{font-size:11px;color:var(--bluedark);opacity:.4;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+
+/* SECTION HEADER */
+.sec-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.sec-title{font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;color:var(--bluedark);}
+.sec-sub{font-size:13px;color:var(--bluedark);opacity:.45;margin-top:2px;}
+
+/* FILTROS */
+.filters{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap;}
+.fbtn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(18,85,204,0.18);background:#fff;color:var(--bluedark);transition:.15s;font-family:inherit;}
+.fbtn.act{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+/* TABELA */
+.tbl-wrap{background:#fff;border-radius:14px;border:1px solid rgba(18,85,204,0.1);overflow:hidden;box-shadow:0 2px 8px rgba(0,20,80,0.05);}
 table{width:100%;border-collapse:collapse;}
-thead th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--bluedark);opacity:.4;padding:12px 16px;text-align:left;border-bottom:1px solid rgba(0,180,210,0.1);}
-tbody tr{border-bottom:1px solid rgba(0,180,210,0.07);transition:.15s;}
-tbody tr:hover{background:#f5f9ff;}
-tbody td{padding:12px 16px;font-size:13px;color:var(--bluedark);}
-.status-pill{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;}
-.status-pill.pendente{background:#fff8e0;color:#8a5c00;}
-.status-pill.aprovado{background:#e0f0ff;color:#0A3080;}
-.status-pill.pago{background:#e6fff8;color:#00522a;}
-.tipo-pill{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;}
-.tipo-pill.custo{background:#e6f0ff;color:#1255CC;}
-.tipo-pill.margem{background:#e6fff8;color:#00875A;}
-.btn-aprovar{background:var(--blue);color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+thead th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--bluedark);opacity:.35;padding:12px 16px;text-align:left;border-bottom:1px solid rgba(18,85,204,0.08);}
+tbody tr{border-bottom:1px solid rgba(18,85,204,0.05);transition:.1s;}
+tbody tr:hover{background:#f5f8ff;}
+tbody tr:last-child{border-bottom:none;}
+tbody td{padding:12px 16px;font-size:13px;}
+.pill{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;}
+.pill.pendente{background:#fff8e0;color:#8a5c00;}
+.pill.aprovado{background:#e0f0ff;color:#0A3080;}
+.pill.pago{background:#e6fff8;color:#00522a;}
+.pill.aberta{background:#e6fff8;color:#00522a;}
+.pill.pausada{background:#fff0f0;color:#a32d2d;}
+.pill.pendente-aprov{background:#fff8e0;color:#8a5c00;}
+.pill.repasse{background:#e6f0ff;color:#1255CC;}
+.pill.ativo{background:#e6fff8;color:#00522a;}
+.pill.membro{background:#f0f0ff;color:#4040aa;}
+
+/* BOTÕES AÇÃO */
+.btn-act{border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.btn-aprovar{background:var(--blue);color:#fff;}
 .btn-aprovar:hover{background:var(--bluedark);}
-.btn-pago{background:var(--green);color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-pago{background:var(--green);color:#fff;}
 .btn-pago:hover{opacity:.85;}
-.btn-export{background:var(--green);color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bluedark);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;transition:transform .3s ease;white-space:normal;max-width:calc(100vw - 32px);text-align:center;}
+.btn-abrir{background:#f0f4ff;color:var(--blue);border:1px solid rgba(18,85,204,0.2);}
+.btn-pausar{background:#fff0f0;color:var(--red);border:1px solid rgba(231,76,60,0.2);}
+.btn-reativar{background:#e6fff8;color:var(--green);border:1px solid rgba(0,168,120,0.2);}
+
+/* EXPORT */
+.btn-export{background:var(--green);color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+/* GRAFICO SIMPLES */
+.chart-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.chart-bar-lbl{font-size:12px;color:var(--bluedark);width:120px;flex-shrink:0;}
+.chart-bar-track{flex:1;background:rgba(18,85,204,0.08);border-radius:4px;height:16px;}
+.chart-bar-fill{height:16px;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--teal));transition:.5s;}
+.chart-bar-val{font-size:12px;font-weight:700;color:var(--blue);width:70px;text-align:right;flex-shrink:0;}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px;color:var(--bluedark);opacity:.35;font-size:14px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bluedark);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;transition:transform .3s;white-space:normal;max-width:calc(100vw - 32px);text-align:center;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .toast.success{background:#00875A;}
 .toast.error{background:#c0392b;}
-.empty{text-align:center;padding:40px;color:var(--bluedark);opacity:.4;font-size:14px;}
-.spinner{width:32px;height:32px;border:3px solid rgba(18,85,204,0.15);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto;}
-@keyframes spin{to{transform:rotate(360deg);}}
+
+/* MOBILE */
 @media(max-width:680px){
   thead{display:none;}
   table,tbody,tr,td{display:block;width:100%;}
-  tr{padding:12px 16px;border-bottom:1px solid rgba(0,180,210,0.1);}
-  td{padding:3px 0;border:none;font-size:13px;}
-  td[data-label]::before{content:attr(data-label);display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-right:8px;}
+  tr{padding:12px 16px;border-bottom:1px solid rgba(18,85,204,0.08);}
+  td{padding:3px 0;border:none;}
+  td[data-label]::before{content:attr(data-label);font-size:10px;font-weight:700;text-transform:uppercase;color:var(--bluedark);opacity:.35;margin-right:6px;}
+  .resumo{grid-template-columns:repeat(2,1fr);}
 }
 </style>
 </head>
@@ -68,56 +119,103 @@ tbody td{padding:12px 16px;font-size:13px;color:var(--bluedark);}
 
 <nav>
   <div class="nav-in">
-    <div class="nav-logo">Spli<span style="color:var(--teal);">T</span>Pool <span class="nav-badge">ADMIN</span></div><span id="nav-admin-nome" style="font-size:13px;color:var(--bluedark);opacity:.6;font-weight:600;"></span>
-    <div class="nav-right">
-      <a href="dashboard-owner.html" class="nav-btn">Dashboard dono</a>
-      <a href="explorar.html" class="nav-btn">Explorar</a>
-      <button class="nav-btn" onclick="sair()">Sair</button>
+    <div class="nav-logo">Spli<span>T</span>Pool<span class="nav-badge">ADMIN</span></div>
+    <div class="nav-links">
+      <button class="nav-link act" onclick="irPara('repasses',this)">💸 Repasses</button>
+      <button class="nav-link" onclick="irPara('piscinas',this)">🏊 Piscinas</button>
+      <button class="nav-link" onclick="irPara('usuarios',this)">👥 Usuários</button>
+      <button class="nav-link" onclick="irPara('financeiro',this)">📊 Financeiro</button>
     </div>
+    <div class="nav-right">
+      <span class="nav-admin" id="nav-admin-nome"></span>
+      <button class="nav-sair" onclick="sair()">Sair</button>
+    </div>
+    <button class="mob-menu-btn" onclick="toggleMobNav()">☰</button>
   </div>
 </nav>
 
+<!-- MOB NAV -->
+<div id="mob-nav" style="display:none;background:#0A3080;padding:8px 5%;border-top:1px solid rgba(255,255,255,0.1);">
+  <button class="nav-link act" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('repasses',this);toggleMobNav()">💸 Repasses</button>
+  <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('piscinas',this);toggleMobNav()">🏊 Piscinas</button>
+  <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('usuarios',this);toggleMobNav()">👥 Usuários</button>
+  <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('financeiro',this);toggleMobNav()">📊 Financeiro</button>
+</div>
+
 <div class="wrap">
-  <div class="page-title">Painel Administrativo</div>
-  <div class="page-sub">Visão financeira completa · Repasses e saques</div>
 
-  <div class="resumo" id="resumo-admin">
-    <div class="spinner"></div>
+  <!-- ── REPASSES ── -->
+  <div class="section act" id="sec-repasses">
+    <div class="resumo" id="resumo-repasses"></div>
+    <div class="sec-header">
+      <div><div class="sec-title">💸 Repasses</div><div class="sec-sub">Aprovar e registrar pagamentos aos donos</div></div>
+      <button class="btn-export" onclick="exportarCSV()">⬇ Exportar CSV</button>
+    </div>
+    <div class="filters">
+      <div class="fbtn act" onclick="filtrar('repasses','todos',this)">Todos</div>
+      <div class="fbtn" onclick="filtrar('repasses','pendente',this)">Pendentes</div>
+      <div class="fbtn" onclick="filtrar('repasses','aprovado',this)">Aprovados</div>
+      <div class="fbtn" onclick="filtrar('repasses','pago',this)">Pagos</div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Dono</th><th>Serviço</th><th>Mês</th><th>Repasse</th><th>Lucro SP</th><th>Observação</th><th>Status</th><th>Ação</th></tr></thead>
+        <tbody id="tbody-repasses"><tr><td colspan="8"><div class="empty">Carregando...</div></td></tr></tbody>
+      </table>
+    </div>
   </div>
 
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
-    <div class="section-title" style="margin:0;">Repasses</div>
-    <button class="btn-export" onclick="exportarCSV()">⬇ Exportar CSV</button>
+  <!-- ── PISCINAS ── -->
+  <div class="section" id="sec-piscinas">
+    <div class="resumo" id="resumo-piscinas"></div>
+    <div class="sec-header">
+      <div><div class="sec-title">🏊 Piscinas</div><div class="sec-sub">Gerenciar todas as piscinas da plataforma</div></div>
+    </div>
+    <div class="filters">
+      <div class="fbtn act" onclick="filtrar('piscinas','todas',this)">Todas</div>
+      <div class="fbtn" onclick="filtrar('piscinas','aberta',this)">Abertas</div>
+      <div class="fbtn" onclick="filtrar('piscinas','pendente',this)">Pendentes</div>
+      <div class="fbtn" onclick="filtrar('piscinas','pausada',this)">Pausadas</div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Dono</th><th>Serviço</th><th>Vagas</th><th>Preço/vaga</th><th>Receita/mês</th><th>Status</th><th>Ação</th></tr></thead>
+        <tbody id="tbody-piscinas"><tr><td colspan="7"><div class="empty">Carregando...</div></td></tr></tbody>
+      </table>
+    </div>
   </div>
 
-  <div class="filters" id="filtros">
-    <div class="filter-btn act" onclick="filtrar('todos',this)">Todos</div>
-    <div class="filter-btn" onclick="filtrar('pendente',this)">Pendentes</div>
-    <div class="filter-btn" onclick="filtrar('aprovado',this)">Aprovados</div>
-    <div class="filter-btn" onclick="filtrar('pago',this)">Pagos</div>
-    <div class="filter-btn" onclick="filtrar('custo',this)">Tipo: Custo</div>
-    <div class="filter-btn" onclick="filtrar('margem',this)">Tipo: Margem</div>
+  <!-- ── USUÁRIOS ── -->
+  <div class="section" id="sec-usuarios">
+    <div class="resumo" id="resumo-usuarios"></div>
+    <div class="sec-header">
+      <div><div class="sec-title">👥 Usuários</div><div class="sec-sub">Donos e membros da plataforma</div></div>
+    </div>
+    <div class="filters">
+      <div class="fbtn act" onclick="filtrar('usuarios','todos',this)">Todos</div>
+      <div class="fbtn" onclick="filtrar('usuarios','dono',this)">Donos</div>
+      <div class="fbtn" onclick="filtrar('usuarios','membro',this)">Membros</div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Nome</th><th>Email</th><th>Piscinas criadas</th><th>Assinaturas</th><th>Tipo</th><th>Cadastro</th></tr></thead>
+        <tbody id="tbody-usuarios"><tr><td colspan="6"><div class="empty">Carregando...</div></td></tr></tbody>
+      </table>
+    </div>
   </div>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Dono</th>
-          <th>Serviço</th>
-          <th>Mês</th>
-          <th>Tipo</th>
-          <th>Repasse</th>
-          <th>Obs.</th>
-          <th>Status</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="tabela-body">
-        <tr><td colspan="7"><div class="spinner"></div></td></tr>
-      </tbody>
-    </table>
+  <!-- ── FINANCEIRO ── -->
+  <div class="section" id="sec-financeiro">
+    <div class="resumo" id="resumo-financeiro"></div>
+    <div class="sec-header">
+      <div><div class="sec-title">📊 Financeiro</div><div class="sec-sub">MRR, lucro Splitpool e métricas gerais</div></div>
+    </div>
+    <div style="background:#fff;border-radius:14px;padding:20px 24px;border:1px solid rgba(18,85,204,0.1);box-shadow:0 2px 8px rgba(0,20,80,0.05);">
+      <div style="font-size:14px;font-weight:700;color:var(--bluedark);margin-bottom:16px;">Lucro Splitpool por serviço</div>
+      <div id="chart-servicos"></div>
+    </div>
   </div>
+
 </div>
 
 <div class="toast" id="toast"></div>
@@ -127,171 +225,296 @@ const SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
 const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
 const sb=supabase.createClient(SBU,SBK);
 
-var todosRepasses=[];
-var filtroAtual='todos';
+var dados={repasses:[],piscinas:[],usuarios:[],perfisMap:{},piscMap:{}};
+var filtros={repasses:'todos',piscinas:'todas',usuarios:'todos'};
 var adminSess=null;
-var mesesLabel={'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
+var LUCRO_SP_MAP={
+  'starter':2.40,'basic':2.40,'basic+':2.60,'silver':4.00,'silver+':5.20,'gold':8.40,'gold+':10.00,'platinum':10.00,'diamond':10.00,'diamond+':10.00,
+  'tp go':2.40,'tp1':3.00,'tp1+':4.00,'tp2':5.00,'tp3':7.00,'tp4':9.00,'tp5':10.00,'tp5+':11.00,'tp6':12.00,'tp7':14.00,
+  'microsoft 365':7.65,'duolingo super':5.57,'canva teams':3.98,'notion team':7.50,'alura':14.90
+};
 
-function fmt(v){return'R$'+Number(v).toFixed(2).replace('.',',');}
-function formatMes(m){var p=m.split('-');return(mesesLabel[p[1]]||p[1])+'/'+p[0];}
+function getLucroSP(servico,plano){
+  var k=((plano||servico)||'').toLowerCase().trim();
+  if(LUCRO_SP_MAP[k]) return LUCRO_SP_MAP[k];
+  for(var x in LUCRO_SP_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1) return LUCRO_SP_MAP[x];}
+  return 0;
+}
+
+function fmt(v){return 'R$'+Number(v||0).toFixed(2).replace('.',',');}
+function fmtData(iso){if(!iso) return '—';return new Date(iso).toLocaleDateString('pt-BR');}
+var ML={'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
+function fmtMes(m){var p=m.split('-');return(ML[p[1]]||p[1])+'/'+p[0];}
 
 function showToast(msg,tipo){
   var t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='toast show '+(tipo||'');
+  t.textContent=msg;t.className='toast show '+(tipo||'');
   setTimeout(function(){t.className='toast';},3500);
 }
 
+function toggleMobNav(){
+  var m=document.getElementById('mob-nav');
+  m.style.display=m.style.display==='none'?'block':'none';
+}
+
+function irPara(sec,el){
+  document.querySelectorAll('.section').forEach(function(s){s.classList.remove('act');});
+  document.getElementById('sec-'+sec).classList.add('act');
+  document.querySelectorAll('.nav-link').forEach(function(l){l.classList.remove('act');});
+  if(el) el.classList.add('act');
+  // Carregar dados da seção se ainda não carregou
+  if(sec==='piscinas'&&!dados.piscinas.length) carregarPiscinas();
+  if(sec==='usuarios'&&!dados.usuarios.length) carregarUsuarios();
+  if(sec==='financeiro') renderFinanceiro();
+}
+
+function filtrar(sec,val,el){
+  filtros[sec]=val;
+  document.querySelectorAll('#sec-'+sec+' .fbtn').forEach(function(b){b.classList.remove('act');});
+  if(el) el.classList.add('act');
+  if(sec==='repasses') renderRepasses();
+  if(sec==='piscinas') renderPiscinas();
+  if(sec==='usuarios') renderUsuarios();
+}
+
+// ── INIT ──
 async function init(){
   try{
     var sess=JSON.parse(localStorage.getItem('sp_admin_sess')||'null');
-    if(!sess||!sess.email||sess.exp<=Date.now()){
-      window.location.replace('admin-login.html');
-      return;
-    }
+    if(!sess||!sess.email||sess.exp<=Date.now()){window.location.replace('admin-login.html');return;}
     adminSess=sess;
-    var navNome=document.getElementById('nav-admin-nome');
-    if(navNome) navNome.textContent=sess.nome||sess.email;
-  }catch(e){
-    window.location.replace('admin-login.html');
-    return;
-  }
-  await carregarDados();
+    var n=document.getElementById('nav-admin-nome');
+    if(n) n.textContent=sess.nome||sess.email;
+  }catch(e){window.location.replace('admin-login.html');return;}
+  await carregarRepasses();
 }
 
-async function carregarDados(){
-  // Buscar todos os repasses
-  var {data:repasses}=await sb.from('repasses')
-    .select('*')
-    .order('mes_referencia',{ascending:false})
-    .order('created_at',{ascending:false});
-  todosRepasses=repasses||[];
-
-  // Buscar perfis dos donos
-  var donoIds=[...new Set(todosRepasses.map(function(r){return r.dono_id;}))];
-  var perfisMap={};
+// ── REPASSES ──
+async function carregarRepasses(){
+  var {data:r}=await sb.from('repasses').select('*').order('mes_referencia',{ascending:false}).order('created_at',{ascending:false});
+  dados.repasses=r||[];
+  var donoIds=[...new Set(dados.repasses.map(function(x){return x.dono_id;}))];
   if(donoIds.length){
-    var {data:perfis}=await sb.from('profiles').select('id,nome,email').in('id',donoIds);
-    (perfis||[]).forEach(function(p){perfisMap[p.id]=p;});
+    var {data:p}=await sb.from('profiles').select('id,nome,email').in('id',donoIds);
+    (p||[]).forEach(function(x){dados.perfisMap[x.id]=x;});
   }
-
-  // Buscar piscinas
-  var piscIds=[...new Set(todosRepasses.map(function(r){return r.piscina_id;}))];
-  var piscMap={};
-  if(piscIds.length){
-    var {data:piscs}=await sb.from('piscinas').select('id,servico').in('id',piscIds);
-    (piscs||[]).forEach(function(p){piscMap[p.id]=p;});
+  var pIds=[...new Set(dados.repasses.map(function(x){return x.piscina_id;}))];
+  if(pIds.length){
+    var {data:ps}=await sb.from('piscinas').select('id,servico').in('id',pIds);
+    (ps||[]).forEach(function(x){dados.piscMap[x.id]=x;});
   }
-
-  // Enriquecer repasses
-  todosRepasses=todosRepasses.map(function(r){
-    r._perfil=perfisMap[r.dono_id]||{nome:'—',email:'—'};
-    r._piscina=piscMap[r.piscina_id]||{servico:'—'};
-    return r;
-  });
-
-  renderResumo();
-  renderTabela();
+  renderResumoRepasses();
+  renderRepasses();
 }
 
-function renderResumo(){
-  var total=todosRepasses.reduce(function(s,r){return s+Number(r.valor||0);},0);
-  var pendente=todosRepasses.filter(function(r){return r.status==='pendente';}).reduce(function(s,r){return s+Number(r.valor||0);},0);
-  var aprovado=todosRepasses.filter(function(r){return r.status==='aprovado';}).reduce(function(s,r){return s+Number(r.valor||0);},0);
-  var pago=todosRepasses.filter(function(r){return r.status==='pago';}).reduce(function(s,r){return s+Number(r.valor||0);},0);
-  var nDonos=new Set(todosRepasses.map(function(r){return r.dono_id;})).size;
-
-  document.getElementById('resumo-admin').innerHTML=
+function renderResumoRepasses(){
+  var r=dados.repasses;
+  var total=r.reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var pend=r.filter(function(x){return x.status==='pendente';}).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var aprov=r.filter(function(x){return x.status==='aprovado';}).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var pago=r.filter(function(x){return x.status==='pago';}).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var nDonos=new Set(r.map(function(x){return x.dono_id;})).size;
+  document.getElementById('resumo-repasses').innerHTML=
     '<div class="rcard"><div class="rcard-val blue">'+fmt(total)+'</div><div class="rcard-lbl">Total gerado</div></div>'+
-    '<div class="rcard"><div class="rcard-val red">'+fmt(pendente)+'</div><div class="rcard-lbl">A pagar</div></div>'+
-    '<div class="rcard"><div class="rcard-val blue">'+fmt(aprovado)+'</div><div class="rcard-lbl">Aprovados</div></div>'+
+    '<div class="rcard"><div class="rcard-val red">'+fmt(pend)+'</div><div class="rcard-lbl">A pagar</div></div>'+
+    '<div class="rcard"><div class="rcard-val teal">'+fmt(aprov)+'</div><div class="rcard-lbl">Aprovados</div></div>'+
     '<div class="rcard"><div class="rcard-val green">'+fmt(pago)+'</div><div class="rcard-lbl">Pagos</div></div>'+
-    '<div class="rcard"><div class="rcard-val">'+nDonos+'</div><div class="rcard-lbl">Donos ativos</div></div>'+
-    '<div class="rcard"><div class="rcard-val">'+todosRepasses.length+'</div><div class="rcard-lbl">Repasses totais</div></div>';
+    '<div class="rcard"><div class="rcard-val">'+nDonos+'</div><div class="rcard-lbl">Donos</div></div>'+
+    '<div class="rcard"><div class="rcard-val">'+r.length+'</div><div class="rcard-lbl">Repasses</div></div>';
 }
 
-function filtrar(f,el){
-  filtroAtual=f;
-  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('act');});
-  if(el) el.classList.add('act');
-  renderTabela();
-}
-
-function renderTabela(){
-  var lista=todosRepasses.filter(function(r){
-    if(filtroAtual==='todos') return true;
-    if(filtroAtual==='custo'||filtroAtual==='margem') return r.tipo===filtroAtual;
-    return r.status===filtroAtual;
-  });
-
-  if(!lista.length){
-    document.getElementById('tabela-body').innerHTML='<tr><td colspan="7"><div class="empty">Nenhum repasse encontrado.</div></td></tr>';
-    return;
-  }
-
+function renderRepasses(){
+  var f=filtros.repasses;
+  var lista=f==='todos'?dados.repasses:dados.repasses.filter(function(r){return r.status===f;});
+  if(!lista.length){document.getElementById('tbody-repasses').innerHTML='<tr><td colspan="8"><div class="empty">Nenhum repasse encontrado.</div></td></tr>';return;}
   var html=lista.map(function(r){
-    var nome=r._perfil.nome||r._perfil.email||'—';
-    var servico=r._piscina.servico||'—';
+    var nome=(dados.perfisMap[r.dono_id]||{}).nome||'—';
+    var serv=(dados.piscMap[r.piscina_id]||{}).servico||'—';
+    var lucroSP=getLucroSP(serv,'');
     var acoes='';
-    if(r.status==='pendente') acoes='<button class="btn-aprovar" onclick="aprovar(\''+r.id+'\')">Aprovar</button>';
-    if(r.status==='aprovado') acoes='<button class="btn-pago" onclick="marcarPago(\''+r.id+'\')">Marcar pago</button>';
-    if(r.status==='pago') acoes='<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Pago</span>';
-
+    if(r.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="aprovar(\''+r.id+'\')">Aprovar</button>';
+    else if(r.status==='aprovado') acoes='<button class="btn-act btn-pago" onclick="marcarPago(\''+r.id+'\')">Pago</button>';
+    else acoes='<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Pago '+fmtData(r.pago_em)+'</span>';
     return '<tr>'+
       '<td data-label="Dono">'+nome+'</td>'+
-      '<td data-label="Serviço">'+servico+'</td>'+
-      '<td data-label="Mês">'+formatMes(r.mes_referencia)+'</td>'+
-      '<td data-label="Tipo"><span class="tipo-pill repasse">repasse</span></td>'+
+      '<td data-label="Serviço">'+serv+'</td>'+
+      '<td data-label="Mês">'+fmtMes(r.mes_referencia)+'</td>'+
       '<td data-label="Repasse" style="font-weight:700;color:var(--green);">'+fmt(r.valor)+'</td>'+
-      '<td data-label="Obs." style="font-size:11px;color:#666;max-width:180px;">'+((r.observacao||'').substring(0,60))+'</td>'+
-      '<td data-label="Status"><span class="status-pill '+r.status+'">'+r.status+'</span></td>'+
+      '<td data-label="Lucro SP" style="font-weight:600;color:var(--blue);">'+fmt(lucroSP)+'</td>'+
+      '<td data-label="Obs" style="font-size:11px;opacity:.6;max-width:160px;">'+((r.observacao||'').substring(0,55))+'</td>'+
+      '<td data-label="Status"><span class="pill '+r.status+'">'+r.status+'</span></td>'+
       '<td data-label="Ação">'+acoes+'</td>'+
       '</tr>';
   }).join('');
-
-  document.getElementById('tabela-body').innerHTML=html;
+  document.getElementById('tbody-repasses').innerHTML=html;
 }
 
 async function aprovar(id){
-  var {error}=await sb.from('repasses').update({status:'aprovado'}).eq('id',id);
-  if(error){showToast('Erro: '+error.message,'error');return;}
+  await sb.from('repasses').update({status:'aprovado'}).eq('id',id);
   showToast('Repasse aprovado!','success');
-  await carregarDados();
+  await carregarRepasses();
 }
-
 async function marcarPago(id){
-  var {error}=await sb.from('repasses').update({status:'pago',pago_em:new Date().toISOString()}).eq('id',id);
-  if(error){showToast('Erro: '+error.message,'error');return;}
+  await sb.from('repasses').update({status:'pago',pago_em:new Date().toISOString()}).eq('id',id);
   showToast('Repasse marcado como pago!','success');
-  await carregarDados();
+  await carregarRepasses();
 }
 
 function exportarCSV(){
-  var lista=todosRepasses;
-  var cabecalho='Dono,Email,Serviço,Mês,Tipo,Valor,Status,Pago em\n';
-  var linhas=lista.map(function(r){
-    return [
-      r._perfil.nome||'—',
-      r._perfil.email||'—',
-      r._piscina.servico||'—',
-      formatMes(r.mes_referencia),
-      r.tipo,
-      Number(r.valor).toFixed(2),
-      r.status,
-      r.pago_em?new Date(r.pago_em).toLocaleDateString('pt-BR'):'—'
-    ].join(',');
+  var h='Dono,Serviço,Mês,Repasse,Status,Pago em,Obs\n';
+  var l=dados.repasses.map(function(r){
+    return [(dados.perfisMap[r.dono_id]||{}).nome||'—',(dados.piscMap[r.piscina_id]||{}).servico||'—',fmtMes(r.mes_referencia),Number(r.valor).toFixed(2),r.status,r.pago_em?fmtData(r.pago_em):'—',(r.observacao||'').replace(/,/g,';')].join(',');
   }).join('\n');
-  var blob=new Blob([cabecalho+linhas],{type:'text/csv;charset=utf-8;'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='splitpool_repasses_'+getMesAtual()+'.csv';
-  a.click();URL.revokeObjectURL(url);
+  var b=new Blob([h+l],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download='splitpool_repasses.csv';a.click();
   showToast('CSV exportado!','success');
 }
 
-function getMesAtual(){
-  var d=new Date();
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+// ── PISCINAS ──
+async function carregarPiscinas(){
+  var {data:p}=await sb.from('piscinas').select('*,profiles(nome,email)').order('created_at',{ascending:false});
+  dados.piscinas=p||[];
+  renderResumoPiscinas();
+  renderPiscinas();
+}
+
+function renderResumoPiscinas(){
+  var p=dados.piscinas;
+  var abertas=p.filter(function(x){return x.status==='aberta';}).length;
+  var pend=p.filter(function(x){return x.status==='pendente';}).length;
+  var pausadas=p.filter(function(x){return x.status==='pausada';}).length;
+  var vagas=p.reduce(function(s,x){return s+Number(x.vagas_ocupadas||0);},0);
+  document.getElementById('resumo-piscinas').innerHTML=
+    '<div class="rcard"><div class="rcard-val blue">'+p.length+'</div><div class="rcard-lbl">Total</div></div>'+
+    '<div class="rcard"><div class="rcard-val green">'+abertas+'</div><div class="rcard-lbl">Abertas</div></div>'+
+    '<div class="rcard"><div class="rcard-val red">'+pend+'</div><div class="rcard-lbl">Pendentes</div></div>'+
+    '<div class="rcard"><div class="rcard-val">'+pausadas+'</div><div class="rcard-lbl">Pausadas</div></div>'+
+    '<div class="rcard"><div class="rcard-val teal">'+vagas+'</div><div class="rcard-lbl">Vagas ocupadas</div></div>';
+}
+
+function renderPiscinas(){
+  var f=filtros.piscinas;
+  var lista=f==='todas'?dados.piscinas:dados.piscinas.filter(function(p){return p.status===f;});
+  if(!lista.length){document.getElementById('tbody-piscinas').innerHTML='<tr><td colspan="7"><div class="empty">Nenhuma piscina encontrada.</div></td></tr>';return;}
+  var html=lista.map(function(p){
+    var dono=(p.profiles&&p.profiles.nome)||'—';
+    var receita=p.vagas_ocupadas*Number(p.preco_por_vaga||0);
+    var acoes='';
+    if(p.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="aprovarPiscina('+p.id+')">Aprovar</button>';
+    else if(p.status==='aberta') acoes='<button class="btn-act btn-pausar" onclick="alterarStatus('+p.id+',\'pausada\')">Pausar</button>';
+    else if(p.status==='pausada') acoes='<button class="btn-act btn-reativar" onclick="alterarStatus('+p.id+',\'aberta\')">Reativar</button>';
+    return '<tr>'+
+      '<td data-label="Dono">'+dono+'</td>'+
+      '<td data-label="Serviço" style="font-weight:600;">'+p.servico+'</td>'+
+      '<td data-label="Vagas">'+p.vagas_ocupadas+'/'+p.vagas_total+'</td>'+
+      '<td data-label="Preço/vaga">'+fmt(p.preco_por_vaga)+'</td>'+
+      '<td data-label="Receita/mês" style="font-weight:700;color:var(--green);">'+fmt(receita)+'</td>'+
+      '<td data-label="Status"><span class="pill '+(p.status==='pendente'?'pendente-aprov':p.status)+'">'+p.status+'</span></td>'+
+      '<td data-label="Ação">'+acoes+'</td>'+
+      '</tr>';
+  }).join('');
+  document.getElementById('tbody-piscinas').innerHTML=html;
+}
+
+async function aprovarPiscina(id){
+  await sb.from('piscinas').update({status:'aberta'}).eq('id',id);
+  showToast('Piscina aprovada e aberta!','success');
+  await carregarPiscinas();
+}
+async function alterarStatus(id,status){
+  await sb.from('piscinas').update({status:status}).eq('id',id);
+  showToast('Status atualizado!','success');
+  await carregarPiscinas();
+}
+
+// ── USUÁRIOS ──
+async function carregarUsuarios(){
+  var {data:profs}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
+  var {data:piscs}=await sb.from('piscinas').select('dono_id');
+  var {data:assins}=await sb.from('assinaturas').select('membro_id');
+  var donos=new Set((piscs||[]).map(function(p){return p.dono_id;}));
+  var membros=new Set((assins||[]).map(function(a){return a.membro_id;}));
+  var contPisc={},contAssins={};
+  (piscs||[]).forEach(function(p){contPisc[p.dono_id]=(contPisc[p.dono_id]||0)+1;});
+  (assins||[]).forEach(function(a){contAssins[a.membro_id]=(contAssins[a.membro_id]||0)+1;});
+  dados.usuarios=(profs||[]).map(function(u){
+    u._isDono=donos.has(u.id);
+    u._isMembro=membros.has(u.id);
+    u._nPisc=contPisc[u.id]||0;
+    u._nAssins=contAssins[u.id]||0;
+    return u;
+  });
+  renderResumoUsuarios();
+  renderUsuarios();
+}
+
+function renderResumoUsuarios(){
+  var u=dados.usuarios;
+  var donos=u.filter(function(x){return x._isDono;}).length;
+  var membros=u.filter(function(x){return x._isMembro;}).length;
+  document.getElementById('resumo-usuarios').innerHTML=
+    '<div class="rcard"><div class="rcard-val blue">'+u.length+'</div><div class="rcard-lbl">Total usuários</div></div>'+
+    '<div class="rcard"><div class="rcard-val green">'+donos+'</div><div class="rcard-lbl">Donos</div></div>'+
+    '<div class="rcard"><div class="rcard-val teal">'+membros+'</div><div class="rcard-lbl">Membros</div></div>';
+}
+
+function renderUsuarios(){
+  var f=filtros.usuarios;
+  var lista=dados.usuarios.filter(function(u){
+    if(f==='dono') return u._isDono;
+    if(f==='membro') return u._isMembro&&!u._isDono;
+    return true;
+  });
+  if(!lista.length){document.getElementById('tbody-usuarios').innerHTML='<tr><td colspan="6"><div class="empty">Nenhum usuário encontrado.</div></td></tr>';return;}
+  var html=lista.map(function(u){
+    var tipo=u._isDono&&u._isMembro?'dono+membro':u._isDono?'dono':'membro';
+    return '<tr>'+
+      '<td data-label="Nome" style="font-weight:600;">'+u.nome+'</td>'+
+      '<td data-label="Email" style="font-size:12px;opacity:.7;">'+u.email+'</td>'+
+      '<td data-label="Piscinas">'+u._nPisc+'</td>'+
+      '<td data-label="Assinaturas">'+u._nAssins+'</td>'+
+      '<td data-label="Tipo"><span class="pill '+(u._isDono?'aberta':'membro')+'">'+tipo+'</span></td>'+
+      '<td data-label="Cadastro" style="font-size:12px;opacity:.6;">'+fmtData(u.created_at)+'</td>'+
+      '</tr>';
+  }).join('');
+  document.getElementById('tbody-usuarios').innerHTML=html;
+}
+
+// ── FINANCEIRO ──
+function renderFinanceiro(){
+  var r=dados.repasses;
+  var totalRepassado=r.filter(function(x){return x.status==='pago';}).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  var totalPend=r.filter(function(x){return x.status==='pendente';}).reduce(function(s,x){return s+Number(x.valor||0);},0);
+  // Estimar lucro SP
+  var lucroSP=0;
+  dados.piscinas.forEach(function(p){
+    lucroSP+=getLucroSP(p.servico,'')*Number(p.vagas_ocupadas||0);
+  });
+  var mrr=dados.piscinas.filter(function(p){return p.status==='aberta';}).reduce(function(s,p){return s+Number(p.preco_por_vaga||0)*Number(p.vagas_ocupadas||0);},0);
+  document.getElementById('resumo-financeiro').innerHTML=
+    '<div class="rcard"><div class="rcard-val green">'+fmt(mrr)+'</div><div class="rcard-lbl">MRR</div></div>'+
+    '<div class="rcard"><div class="rcard-val blue">'+fmt(lucroSP)+'</div><div class="rcard-lbl">Lucro SP/mês</div></div>'+
+    '<div class="rcard"><div class="rcard-val">'+fmt(totalRepassado)+'</div><div class="rcard-lbl">Total pago donos</div></div>'+
+    '<div class="rcard"><div class="rcard-val red">'+fmt(totalPend)+'</div><div class="rcard-lbl">A pagar donos</div></div>';
+
+  // Gráfico por serviço
+  var porServ={};
+  dados.piscinas.forEach(function(p){
+    var s=p.servico||'Outro';
+    if(!porServ[s]) porServ[s]=0;
+    porServ[s]+=getLucroSP(p.servico,'')*Number(p.vagas_ocupadas||0);
+  });
+  var maxV=Math.max.apply(null,Object.values(porServ))||1;
+  var html=Object.keys(porServ).sort(function(a,b){return porServ[b]-porServ[a];}).map(function(s){
+    var pct=Math.round(porServ[s]/maxV*100);
+    return '<div class="chart-bar-row">'+
+      '<div class="chart-bar-lbl">'+s+'</div>'+
+      '<div class="chart-bar-track"><div class="chart-bar-fill" style="width:'+pct+'%"></div></div>'+
+      '<div class="chart-bar-val">'+fmt(porServ[s])+'</div>'+
+      '</div>';
+  }).join('');
+  document.getElementById('chart-servicos').innerHTML=html||'<div class="empty">Sem dados ainda.</div>';
 }
 
 function sair(){localStorage.removeItem('sp_admin_sess');window.location.replace('admin-login.html');}
