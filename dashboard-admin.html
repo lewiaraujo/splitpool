@@ -379,8 +379,8 @@ function renderRepasses(){
       preps.forEach(function(r){
         var lucroSP=getLucroSP(pisc.servico||'','');
         var acoes='';
-        if(r.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="aprovar(''+r.id+'')">Aprovar</button>';
-        else if(r.status==='aprovado') acoes='<button class="btn-act btn-pago" onclick="marcarPago(''+r.id+'')">Pago</button>';
+        if(r.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="aprovar(\''+r.id+'\')">Aprovar</button>';
+        else if(r.status==='aprovado') acoes='<button class="btn-act btn-pago" onclick="marcarPago(\''+r.id+'\')">Pago</button>';
         else acoes='<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Pago '+fmtData(r.pago_em)+'</span>';
         html+='<div class="rep-item">';
         html+='<div class="rep-info"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">';
