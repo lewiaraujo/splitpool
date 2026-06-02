@@ -175,13 +175,13 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
   .total-badge{display:none;}
 }
 /* ── MOBILE NAV FINAL ── */
-@media(max-width:768px){
+@media(max-width:680px){
   nav{position:fixed;top:0;left:0;right:0;z-index:300;}
   .nav-in{height:56px;}
   .nav-right{display:none!important;}
   .nav-user{display:none!important;}
 }
-@media(min-width:769px){
+@media(min-width:681px){
   #ham-btn,#mob-menu{display:none!important;}
 }
 #ham-btn{
@@ -221,7 +221,7 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 .mob-lnk{display:block;padding:13px 12px;border-radius:10px;font-size:15px;font-weight:600;color:#0A3080;text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;}
 .mob-lnk:active{background:rgba(18,85,204,0.08);}
 .mob-lnk.cta{background:linear-gradient(135deg,#1255CC,#0A3080);color:#fff;text-align:center;margin-top:8px;border-radius:10px;}
-@media(max-width:768px){
+@media(max-width:680px){
   #ham-btn{display:flex;}
 }
 
@@ -238,10 +238,10 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
   opacity:.65;
   white-space:nowrap;
 }
-@media(max-width:768px){
+@media(max-width:680px){
   #mob-name{display:flex;}
 }
-@media(min-width:769px){
+@media(min-width:681px){
   #mob-name{display:none!important;}
 }
 </style>
@@ -258,8 +258,8 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
     <a href="index.html"><img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="SplitPool" class="nav-logo"></a>
     <div class="nav-right">
       <span class="nav-user" id="nav-user"></span>
-      <button class="nav-btn" id="nav-btn-meusplanos" style="position:relative;" onclick="window.location.href='meus-planos.html'">Meus planos</button>
-      <button class="nav-btn" id="nav-btn-dashboard" style="position:relative;" onclick="window.location.href='dashboard-owner.html'">Dashboard</button>
+      <button class="nav-btn" onclick="window.location.href='meus-planos.html'">Meus planos</button>
+      <button class="nav-btn" onclick="window.location.href='dashboard-owner.html'">Dashboard</button>
       <button class="nav-btn" onclick="logout()">Sair</button>
       <button class="nav-btn primary" onclick="window.location.href='criar-piscina.html'">+ Criar piscina</button>
     </div>
@@ -569,7 +569,7 @@ const CAT_MODAL = {
   'Microsoft 365 Family':{mensal:51.00,anual:49.92,sp:25.50},
   'Microsoft 365':{mensal:51.00,anual:49.92,sp:25.50},
   'Duolingo Super Família':{mensal:69.90,anual:37.49,sp:19.90},
-    'Duolingo':{mensal:69.90,anual:37.49,sp:9.90},
+    'Duolingo':{mensal:69.90,anual:37.49,sp:19.90},
   'Canva Teams':{mensal:24.17,anual:24.17,sp:15.90},
   'Canva':{mensal:24.17,anual:24.17,sp:15.90},
   'Notion Team':{mensal:50.00,anual:null,sp:25.00},
@@ -788,10 +788,10 @@ document.getElementById('modal-detalhe').addEventListener('click', e => {
 <!-- MOBILE NAV -->
 
 <div id="mob-name"></div>
-<button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span><div id="ham-dot"></div></button>
+<button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
 <div id="mob-menu">
-  <a class="mob-lnk" href="meus-planos.html">Meus planos<span id="mob-dot-meusplanos" class="mob-lnk-dot" style="display:none;"></span></a>
-  <a class="mob-lnk" href="dashboard-owner.html">Dashboard<span id="mob-dot-dashboard" class="mob-lnk-dot" style="display:none;"></span></a>
+  <a class="mob-lnk" href="meus-planos.html">Meus planos</a>
+  <a class="mob-lnk" href="dashboard-owner.html">Dashboard</a>
   <button class="mob-lnk" onclick="logout();toggleMenu()">Sair</button>
   <a class="mob-lnk cta" href="criar-piscina.html">+ Criar piscina</a>
 </div>
@@ -817,7 +817,5 @@ document.addEventListener('click',function(e){
     b.classList.remove('open');m.classList.remove('open');
   }});
 </script>
-
-<script src="notif.js"></script>
 </body>
 </html>
