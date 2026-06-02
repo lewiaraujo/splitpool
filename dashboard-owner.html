@@ -939,7 +939,7 @@ async function carregarDashboard(){
         +'</div>';
     }).join('');
     card1HTML='<div class="fin-card">'
-      +'<div class="fin-card-header" onclick="toggleFinCard('fin-body-1',this)">'
+      +'<div class="fin-card-header" onclick="toggleFinCard(\'fin-body-1\',this)">'
       +'<div><div class="fin-card-title blue">💳 Repasse para pagamento dos planos</div>'
       +'<div class="fin-card-sub">Valor repassado para cobrir o custo dos seus planos</div></div>'
       +'<div class="fin-card-right">'
@@ -972,7 +972,7 @@ async function carregarDashboard(){
         +'</div>';
     }
     card2HTML='<div class="fin-card">'
-      +'<div class="fin-card-header" onclick="toggleFinCard('fin-body-2',this)">'
+      +'<div class="fin-card-header" onclick="toggleFinCard(\'fin-body-2\',this)">'
       +'<div><div class="fin-card-title green">💰 Seu lucro como dono</div>'
       +'<div class="fin-card-sub">Margem dos membros ativos e confirmados</div></div>'
       +'<div class="fin-card-right">'
@@ -1833,7 +1833,7 @@ function trocarAbaExtrato(aba,el){
   if(el) el.classList.add('act');
   var target=document.getElementById('extrato-aba-'+aba);
   if(target) target.classList.add('act');
-  if(aba==='lucro') renderExtratológico();
+  if(aba==='lucro') renderExtratoLucro();
 }
 
 function renderExtratoLucro(){
