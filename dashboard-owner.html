@@ -262,13 +262,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 }
 
 /* ── MOBILE NAV FINAL ── */
-@media(max-width:680px){
+@media(max-width:768px){
   nav{position:fixed;top:0;left:0;right:0;z-index:300;}
   .nav-in{height:56px;}
   .nav-right{display:none!important;}
   .nav-user{display:none!important;}
 }
-@media(min-width:681px){
+@media(min-width:769px){
   #ham-btn,#mob-menu{display:none!important;}
 }
 #ham-btn{
@@ -308,7 +308,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .mob-lnk{display:block;padding:13px 12px;border-radius:10px;font-size:15px;font-weight:600;color:#0A3080;text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;}
 .mob-lnk:active{background:rgba(18,85,204,0.08);}
 .mob-lnk.cta{background:linear-gradient(135deg,#1255CC,#0A3080);color:#fff;text-align:center;margin-top:8px;border-radius:10px;}
-@media(max-width:680px){
+@media(max-width:768px){
   #ham-btn{display:flex;}
 }
 
@@ -325,10 +325,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
   opacity:.65;
   white-space:nowrap;
 }
-@media(max-width:680px){
+@media(max-width:768px){
   #mob-name{display:flex;}
 }
-@media(min-width:681px){
+@media(min-width:769px){
   #mob-name{display:none!important;}
 }
 </style>
@@ -1350,13 +1350,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 }
 
 /* ── MOBILE NAV FINAL ── */
-@media(max-width:680px){
+@media(max-width:768px){
   nav{position:fixed;top:0;left:0;right:0;z-index:300;}
   .nav-in{height:56px;}
   .nav-right{display:none!important;}
   .nav-user{display:none!important;}
 }
-@media(min-width:681px){
+@media(min-width:769px){
   #ham-btn,#mob-menu{display:none!important;}
 }
 #ham-btn{
@@ -1396,7 +1396,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .mob-lnk{display:block;padding:13px 12px;border-radius:10px;font-size:15px;font-weight:600;color:#0A3080;text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;}
 .mob-lnk:active{background:rgba(18,85,204,0.08);}
 .mob-lnk.cta{background:linear-gradient(135deg,#1255CC,#0A3080);color:#fff;text-align:center;margin-top:8px;border-radius:10px;}
-@media(max-width:680px){
+@media(max-width:768px){
   #ham-btn{display:flex;}
 }
 
@@ -1413,10 +1413,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
   opacity:.65;
   white-space:nowrap;
 }
-@media(max-width:680px){
+@media(max-width:768px){
   #mob-name{display:flex;}
 }
-@media(min-width:681px){
+@media(min-width:769px){
   #mob-name{display:none!important;}
 }
 </style>
@@ -1839,26 +1839,50 @@ function trocarAbaExtrato(aba,el){
 function renderExtratoLucro(){
   var el=document.getElementById('extrato-lucro-list');
   if(!el) return;
-  var lista=todosRepasses.filter(function(r){return r.tipo==='lucro'||r.tipo==='margem';});
+  // Todos os repasses são do tipo 'repasse' — o lucro é calculado subtraindo o que SP reteve
+  // que está na observação "SP reteve R$X,XX"
+  var lista=todosRepasses.filter(function(r){return r.tipo==='repasse';});
   if(!lista.length){el.innerHTML='<div class="extrato-empty">Nenhum lucro registrado ainda.</div>';return;}
   // Reutiliza renderExtrato mas só com tipo lucro
+  // Extrair lucro SP da observação para calcular lucro real do dono
+  function extrairLucroSP(obs){
+    var m=(obs||'').match(/SP reteve R\$([0-9.,]+)/);
+    if(m) return parseFloat(m[1].replace(',','.'));
+    return 0;
+  }
   var porMes={};
   lista.forEach(function(r){if(!porMes[r.mes_referencia])porMes[r.mes_referencia]=[];porMes[r.mes_referencia].push(r);});
   var html='';
   Object.keys(porMes).sort().reverse().forEach(function(mes){
     var items=porMes[mes];
-    var total=items.reduce(function(s,r){return s+Number(r.valor||0);},0);
+    var totalLucro=items.reduce(function(s,r){
+      var sp=extrairLucroSP(r.observacao);
+      return s+getLucroSPFromRepasse(r.valor,sp);
+    },0);
     html+='<div class="repasse-card">';
     html+='<div class="repasse-header"><div class="repasse-mes">'+formatarMes(mes)+'</div>';
     html+='<span class="repasse-status '+(items[0].status||'pendente')+'">'+items[0].status+'</span></div>';
     items.forEach(function(r){
       var pisc=piscMap[r.piscina_id]||{};
-      html+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;"><span>💰 '+(pisc.servico||'—')+'</span><span style="font-weight:700;color:var(--green);">'+fmt(r.valor)+'</span></div>';
+      var sp=extrairLucroSP(r.observacao);
+      var lucro=getLucroSPFromRepasse(r.valor,sp);
+      html+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(0,180,210,0.07);">'
+        +'<div><div style="font-weight:600;color:var(--bluedark);">💰 '+(pisc.servico||'—')+'</div>'
+        +'<div style="font-size:10px;color:var(--bluedark);opacity:.4;">SP reteve: '+fmt(sp)+'</div></div>'
+        +'<span style="font-weight:700;color:var(--green);">'+fmt(lucro)+'</span></div>';
     });
-    html+='<div class="repasse-total"><span>Total '+formatarMes(mes)+'</span><span class="repasse-val green">'+fmt(total)+'</span></div>';
+    html+='<div class="repasse-total"><span>Lucro '+formatarMes(mes)+'</span><span class="repasse-val green">'+fmt(totalLucro)+'</span></div>';
     html+='</div>';
   });
   el.innerHTML=html;
+}
+
+function getLucroSPFromRepasse(valorRepasse, lucroSP){
+  // O repasse já descontou o lucroSP (valor = membro_pago - lucroSP)
+  // Então o lucro do dono = valor - custo_plano
+  // Como não temos o custo aqui, usamos o lucroSP da observação diretamente
+  // pois lucroSP = valor_dono_lucro pelo REPASSE_MAP
+  return lucroSP>0 ? lucroSP : 0;
 }
 
 function filtrarExtrato(filtro,el){
