@@ -362,8 +362,8 @@ function renderRepasses(){
     html+='<div class="dono-header">';
     html+='<div><div class="dono-nome">👤 '+nome+'</div><div class="dono-email">'+email+'</div></div>';
     html+='<div class="dono-actions">';
-    if(temPendente) html+='<button class="btn-aprovar-todos" onclick="aprovarTodosDono(''+donoId+'')">✓ Aprovar todos</button>';
-    if(temAprovado) html+='<button class="btn-aprovar-todos" onclick="pagarTodosDono(''+donoId+'')">💸 Todos pagos</button>';
+    if(temPendente) html+='<button class="btn-aprovar-todos" onclick="aprovarTodosDono(\''+donoId+'\')">✓ Aprovar todos</button>';
+    if(temAprovado) html+='<button class="btn-aprovar-todos" onclick="pagarTodosDono(\''+donoId+'\')">💸 Todos pagos</button>';
     html+='</div>';
     html+='<div class="dono-total"><div class="dono-total-val">'+fmt(totalDono)+'</div><div class="dono-total-lbl">Total</div></div>';
     html+='</div>';
