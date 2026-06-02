@@ -104,6 +104,28 @@ tbody td{padding:12px 16px;font-size:13px;}
 .toast.success{background:#00875A;}
 .toast.error{background:#c0392b;}
 
+/* REPASSES AGRUPADOS */
+.dono-group{background:#fff;border-radius:14px;border:1px solid rgba(18,85,204,0.1);box-shadow:0 2px 8px rgba(0,20,80,0.05);margin-bottom:16px;overflow:hidden;}
+.dono-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:linear-gradient(135deg,#0A3080,#1255CC);flex-wrap:wrap;gap:8px;}
+.dono-nome{font-size:14px;font-weight:800;color:#fff;}
+.dono-email{font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px;}
+.dono-total{text-align:right;}
+.dono-total-val{font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;color:#fff;}
+.dono-total-lbl{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;}
+.dono-actions{display:flex;gap:8px;align-items:center;}
+.btn-aprovar-todos{background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.btn-aprovar-todos:hover{background:rgba(255,255,255,0.3);}
+.pisc-group{border-bottom:1px solid rgba(18,85,204,0.07);}
+.pisc-group:last-child{border-bottom:none;}
+.pisc-header{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:rgba(0,180,210,0.04);border-bottom:1px solid rgba(18,85,204,0.06);}
+.pisc-nome{font-size:13px;font-weight:700;color:var(--bluedark);}
+.pisc-mes{font-size:11px;color:var(--bluedark);opacity:.45;margin-top:1px;}
+.rep-item{display:flex;justify-content:space-between;align-items:center;padding:10px 18px 10px 28px;flex-wrap:wrap;gap:8px;}
+.rep-item:hover{background:#f5f8ff;}
+.rep-info{display:flex;flex-direction:column;gap:2px;}
+.rep-obs{font-size:11px;color:var(--bluedark);opacity:.5;}
+.rep-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+
 /* MOBILE */
 @media(max-width:680px){
   thead{display:none;}
@@ -148,7 +170,7 @@ tbody td{padding:12px 16px;font-size:13px;}
   <div class="section act" id="sec-repasses">
     <div class="resumo" id="resumo-repasses"></div>
     <div class="sec-header">
-      <div><div class="sec-title">💸 Repasses</div><div class="sec-sub">Aprovar e registrar pagamentos aos donos</div></div>
+      <div><div class="sec-title">💸 Repasses</div><div class="sec-sub">Aprovação por dono e piscina</div></div>
       <button class="btn-export" onclick="exportarCSV()">⬇ Exportar CSV</button>
     </div>
     <div class="filters">
@@ -157,12 +179,7 @@ tbody td{padding:12px 16px;font-size:13px;}
       <div class="fbtn" onclick="filtrar('repasses','aprovado',this)">Aprovados</div>
       <div class="fbtn" onclick="filtrar('repasses','pago',this)">Pagos</div>
     </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Dono</th><th>Serviço</th><th>Mês</th><th>Repasse</th><th>Lucro SP</th><th>Observação</th><th>Status</th><th>Ação</th></tr></thead>
-        <tbody id="tbody-repasses"><tr><td colspan="8"><div class="empty">Carregando...</div></td></tr></tbody>
-      </table>
-    </div>
+    <div id="repasses-list"><div class="empty">Carregando...</div></div>
   </div>
 
   <!-- ── PISCINAS ── -->
@@ -326,27 +343,58 @@ function renderResumoRepasses(){
 function renderRepasses(){
   var f=filtros.repasses;
   var lista=f==='todos'?dados.repasses:dados.repasses.filter(function(r){return r.status===f;});
-  if(!lista.length){document.getElementById('tbody-repasses').innerHTML='<tr><td colspan="8"><div class="empty">Nenhum repasse encontrado.</div></td></tr>';return;}
-  var html=lista.map(function(r){
-    var nome=(dados.perfisMap[r.dono_id]||{}).nome||'—';
-    var serv=(dados.piscMap[r.piscina_id]||{}).servico||'—';
-    var lucroSP=getLucroSP(serv,'');
-    var acoes='';
-    if(r.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="aprovar(\''+r.id+'\')">Aprovar</button>';
-    else if(r.status==='aprovado') acoes='<button class="btn-act btn-pago" onclick="marcarPago(\''+r.id+'\')">Pago</button>';
-    else acoes='<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Pago '+fmtData(r.pago_em)+'</span>';
-    return '<tr>'+
-      '<td data-label="Dono">'+nome+'</td>'+
-      '<td data-label="Serviço">'+serv+'</td>'+
-      '<td data-label="Mês">'+fmtMes(r.mes_referencia)+'</td>'+
-      '<td data-label="Repasse" style="font-weight:700;color:var(--green);">'+fmt(r.valor)+'</td>'+
-      '<td data-label="Lucro SP" style="font-weight:600;color:var(--blue);">'+fmt(lucroSP)+'</td>'+
-      '<td data-label="Obs" style="font-size:11px;opacity:.6;max-width:160px;">'+((r.observacao||'').substring(0,55))+'</td>'+
-      '<td data-label="Status"><span class="pill '+r.status+'">'+r.status+'</span></td>'+
-      '<td data-label="Ação">'+acoes+'</td>'+
-      '</tr>';
-  }).join('');
-  document.getElementById('tbody-repasses').innerHTML=html;
+  var el=document.getElementById('repasses-list');
+  if(!lista.length){el.innerHTML='<div class="empty">Nenhum repasse encontrado.</div>';return;}
+  var porDono={};
+  lista.forEach(function(r){if(!porDono[r.dono_id])porDono[r.dono_id]=[];porDono[r.dono_id].push(r);});
+  var html='';
+  Object.keys(porDono).forEach(function(donoId){
+    var reps=porDono[donoId];
+    var perfil=dados.perfisMap[donoId]||{};
+    var nome=perfil.nome||perfil.email||'—';
+    var email=perfil.email||'';
+    var totalDono=reps.reduce(function(s,r){return s+Number(r.valor||0);},0);
+    var temPendente=reps.some(function(r){return r.status==='pendente';});
+    var temAprovado=reps.some(function(r){return r.status==='aprovado';});
+    var porPisc={};
+    reps.forEach(function(r){if(!porPisc[r.piscina_id])porPisc[r.piscina_id]=[];porPisc[r.piscina_id].push(r);});
+    html+='<div class="dono-group">';
+    html+='<div class="dono-header">';
+    html+='<div><div class="dono-nome">👤 '+nome+'</div><div class="dono-email">'+email+'</div></div>';
+    html+='<div class="dono-actions">';
+    if(temPendente) html+='<button class="btn-aprovar-todos" onclick="aprovarTodosDono(''+donoId+'')">✓ Aprovar todos</button>';
+    if(temAprovado) html+='<button class="btn-aprovar-todos" onclick="pagarTodosDono(''+donoId+'')">💸 Todos pagos</button>';
+    html+='</div>';
+    html+='<div class="dono-total"><div class="dono-total-val">'+fmt(totalDono)+'</div><div class="dono-total-lbl">Total</div></div>';
+    html+='</div>';
+    Object.keys(porPisc).forEach(function(piscId){
+      var preps=porPisc[piscId];
+      var pisc=dados.piscMap[piscId]||{};
+      var servico=pisc.servico||'Piscina #'+piscId;
+      var totalPisc=preps.reduce(function(s,r){return s+Number(r.valor||0);},0);
+      var mes=preps[0]?fmtMes(preps[0].mes_referencia):'—';
+      html+='<div class="pisc-group">';
+      html+='<div class="pisc-header"><div><div class="pisc-nome">🏊 '+servico+'</div><div class="pisc-mes">'+mes+'</div></div>';
+      html+='<div style="font-size:13px;font-weight:800;color:var(--green);">'+fmt(totalPisc)+'</div></div>';
+      preps.forEach(function(r){
+        var lucroSP=getLucroSP(pisc.servico||'','');
+        var acoes='';
+        if(r.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="aprovar(''+r.id+'')">Aprovar</button>';
+        else if(r.status==='aprovado') acoes='<button class="btn-act btn-pago" onclick="marcarPago(''+r.id+'')">Pago</button>';
+        else acoes='<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Pago '+fmtData(r.pago_em)+'</span>';
+        html+='<div class="rep-item">';
+        html+='<div class="rep-info"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">';
+        html+='<span class="pill '+r.status+'">'+r.status+'</span>';
+        html+='<span style="font-size:13px;font-weight:700;color:var(--green);">'+fmt(r.valor)+'</span>';
+        html+='<span style="font-size:11px;color:var(--blue);font-weight:600;">SP: '+fmt(lucroSP)+'</span>';
+        html+='</div><div class="rep-obs">'+((r.observacao||'').substring(0,70))+'</div></div>';
+        html+='<div class="rep-right">'+acoes+'</div></div>';
+      });
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+  el.innerHTML=html;
 }
 
 async function aprovar(id){
@@ -357,6 +405,16 @@ async function aprovar(id){
 async function marcarPago(id){
   await sb.from('repasses').update({status:'pago',pago_em:new Date().toISOString()}).eq('id',id);
   showToast('Repasse marcado como pago!','success');
+  await carregarRepasses();
+}
+async function aprovarTodosDono(donoId){
+  await sb.from('repasses').update({status:'aprovado'}).eq('dono_id',donoId).eq('status','pendente');
+  showToast('Todos os repasses aprovados!','success');
+  await carregarRepasses();
+}
+async function pagarTodosDono(donoId){
+  await sb.from('repasses').update({status:'pago',pago_em:new Date().toISOString()}).eq('dono_id',donoId).eq('status','aprovado');
+  showToast('Todos marcados como pagos!','success');
   await carregarRepasses();
 }
 
