@@ -196,6 +196,42 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
   .repasse-total{font-size:13px;}
 }
 
+
+/* ── CARDS FINANCEIROS RECOLHÍVEIS ── */
+.fin-card{background:rgba(255,255,255,0.92);border-radius:16px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,20,80,0.07);overflow:hidden;}
+.fin-card-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;user-select:none;border-bottom:1px solid rgba(0,180,210,0.1);}
+.fin-card-header:hover{background:rgba(0,180,210,0.03);}
+.fin-card-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;}
+.fin-card-title.green{color:#00522a;}
+.fin-card-title.blue{color:var(--bluedark);}
+.fin-card-sub{font-size:11px;opacity:.5;margin-top:2px;font-weight:500;}
+.fin-card-right{display:flex;align-items:center;gap:10px;}
+.fin-card-total{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;}
+.fin-card-total.green{color:#00875A;}
+.fin-card-total.blue{color:var(--blue);}
+.fin-card-chevron{font-size:11px;color:var(--bluedark);opacity:.4;transition:transform .2s;}
+.fin-card-body{padding:10px 18px 14px;}
+.fin-card-body.hidden{display:none;}
+.fin-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(0,180,210,0.07);font-size:12px;}
+.fin-row:last-child{border-bottom:none;}
+.fin-row-left{flex:1;}
+.fin-row-name{font-weight:700;color:var(--bluedark);}
+.fin-row-sub{font-size:11px;color:var(--bluedark);opacity:.45;margin-top:2px;}
+.fin-row-val{font-weight:800;font-family:'Nunito',sans-serif;font-size:13px;}
+.fin-row-val.green{color:#00875A;}
+.fin-row-val.blue{color:var(--blue);}
+.fin-status-badges{display:flex;gap:5px;margin-top:3px;flex-wrap:wrap;}
+.fin-badge{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700;}
+.fin-badge.ativo{background:#e6fff8;color:#00522a;}
+.fin-badge.aguardando{background:#fff8e0;color:#8a5c00;}
+/* ── EXTRATO ABAS ── */
+.extrato-wrap{background:rgba(255,255,255,0.92);border-radius:16px;box-shadow:0 2px 12px rgba(0,20,80,0.07);overflow:hidden;}
+.extrato-aba-row{display:flex;border-bottom:2px solid rgba(0,180,210,0.1);}
+.extrato-aba{flex:1;padding:12px 16px;font-size:13px;font-weight:700;color:var(--bluedark);opacity:.45;cursor:pointer;text-align:center;transition:.15s;border:none;background:none;font-family:inherit;}
+.extrato-aba.act{color:var(--blue);opacity:1;border-bottom:2px solid var(--blue);margin-bottom:-2px;}
+.extrato-aba-content{display:none;padding:14px 18px;}
+.extrato-aba-content.act{display:block;}
+
 /* ── EMPTY STATE ── */
 #empty-state{display:none;flex-direction:column;align-items:center;gap:20px;padding:48px 20px;}
 
@@ -353,21 +389,29 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
     </div>
 
     <!-- EXTRATO -->
-    <div class="card" id="extrato-section" style="margin-top:8px;">
-      <div class="card-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-        <div>
-          <div style="font-family:Nunito,sans-serif;font-size:17px;font-weight:900;color:var(--bluedark);">📋 Extrato de Repasses</div>
-          <div style="font-size:12px;color:var(--bluedark);opacity:.5;margin-top:2px;">Histórico de repasses gerados mensalmente</div>
-        </div>
+    <div class="extrato-wrap" id="extrato-section" style="margin-top:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px 0;flex-wrap:wrap;gap:10px;">
+        <div style="font-family:Nunito,sans-serif;font-size:17px;font-weight:900;color:var(--bluedark);">📋 Extrato</div>
         <button class="btn-sm primary btn-gerar-todos" onclick="gerarRepasses()" id="btn-gerar-repasse" style="font-size:12px;">⚡ Gerar todos os repasses</button>
       </div>
-      <div class="extrato-tabs">
-        <div class="extrato-tab act" onclick="filtrarExtrato('todos',this)">Todos</div>
-        <div class="extrato-tab" onclick="filtrarExtrato('pendente',this)">Pendentes</div>
-        <div class="extrato-tab" onclick="filtrarExtrato('aprovado',this)">Aprovados</div>
-        <div class="extrato-tab" onclick="filtrarExtrato('pago',this)">Pagos</div>
+      <div class="extrato-aba-row" style="margin-top:10px;">
+        <button class="extrato-aba act" onclick="trocarAbaExtrato('repasse',this)">💳 Repasses</button>
+        <button class="extrato-aba" onclick="trocarAbaExtrato('lucro',this)">💰 Lucro</button>
       </div>
-      <div id="extrato-list"><div class="extrato-empty">Nenhum repasse registrado ainda.</div></div>
+      <!-- Aba Repasses -->
+      <div class="extrato-aba-content act" id="extrato-aba-repasse">
+        <div class="extrato-tabs" style="margin-bottom:10px;">
+          <div class="extrato-tab act" onclick="filtrarExtrato('todos',this)">Todos</div>
+          <div class="extrato-tab" onclick="filtrarExtrato('pendente',this)">Pendentes</div>
+          <div class="extrato-tab" onclick="filtrarExtrato('aprovado',this)">Aprovados</div>
+          <div class="extrato-tab" onclick="filtrarExtrato('pago',this)">Pagos</div>
+        </div>
+        <div id="extrato-list"><div class="extrato-empty">Nenhum repasse registrado ainda.</div></div>
+      </div>
+      <!-- Aba Lucro -->
+      <div class="extrato-aba-content" id="extrato-aba-lucro">
+        <div class="extrato-empty" id="extrato-lucro-list">Nenhum lucro registrado ainda.</div>
+      </div>
     </div>
 
   </div>
@@ -762,6 +806,16 @@ function isWellness(servico){
   return s.indexOf('wellhub')!==-1||s.indexOf('totalpass')!==-1;
 }
 
+
+/* ── TOGGLE CARDS FINANCEIROS ── */
+function toggleFinCard(bodyId, headerEl){
+  var body=document.getElementById(bodyId);
+  if(!body) return;
+  var hidden=body.classList.toggle('hidden');
+  var chev=headerEl.querySelector('.fin-card-chevron');
+  if(chev) chev.style.transform=hidden?'rotate(-90deg)':'rotate(0deg)';
+}
+
 /* ── CARREGAR DASHBOARD ── */
 async function carregarDashboard(){
   var {data:piscinas,error:ep}=await sb.from('piscinas')
@@ -812,66 +866,124 @@ async function carregarDashboard(){
 
   // Resumo
   var totalReceita=0,totalAReceber=0,piscinasAtivas=0,vagasOcup=0,vagasTotal=0;
-  var provisionadoTotal=0,provisionadoDetalhes=[],outrosTotal=0,outrosCount=0;
+
+  // Card 1: Repasse para pagamento dos planos (valor_membro - lucroSP) por piscina
+  var repasseItems={}; // piscina_id -> {servico, ativos:[], aguardando:[], totalRepasse}
+
+  // Card 2: Lucro do dono (só ativos) — wellness extratificado, família agrupado
+  var lucroWellness=[]; // {servico, plano, membro, val}
+  var lucroOutrosTotal=0, lucroOutrosCount=0;
+  var lucroTotal=0, repasseTotal=0;
+
   piscinas.forEach(function(p){
     var pa=assinsByPool[p.id]||[];
-    pa.filter(function(a){return a.status==='ativo';}).forEach(function(a){
+    var ativos=pa.filter(function(a){return a.status==='ativo';});
+    var aguardando=pa.filter(function(a){return a.status==='aguardando_acesso';});
+
+    ativos.forEach(function(a){
       totalReceita+=Number(a.valor||0);
-      var rep=getRepasse(p.servico,a.plano_nome);
-      if(rep>0){
-        provisionadoTotal+=rep;
-        if(isWellness(p.servico)){
-          // Wellness: lista individualmente
-          provisionadoDetalhes.push({servico:p.servico,plano:a.plano_nome||p.servico,rep:rep,membro:a.profiles?a.profiles.nome||a.profiles.email:'Membro',tipo:'wellness'});
-        } else {
-          // Outros planos: agrupa
-          outrosTotal+=rep;
-          outrosCount++;
-        }
-      }
     });
-    totalAReceber+=pa.filter(function(a){return a.status==='aguardando_acesso';}).reduce(function(s,a){return s+Number(a.valor||0);},0);
+    totalAReceber+=aguardando.reduce(function(s,a){return s+Number(a.valor||0);},0);
     if(p.status==='aberta') piscinasAtivas++;
     vagasOcup+=Number(p.vagas_ocupadas||0);
     vagasTotal+=Number(p.vagas_total||0);
+
+    // Card 1: repasse por piscina (todos com membros)
+    if(ativos.length||aguardando.length){
+      var repPisc=0;
+      ativos.forEach(function(a){
+        var lucroSP=getLucroSP(p.servico,a.plano_nome);
+        repPisc+=Number(a.valor||0)-lucroSP;
+      });
+      aguardando.forEach(function(a){
+        var lucroSP=getLucroSP(p.servico,a.plano_nome);
+        repPisc+=Number(a.valor||0)-lucroSP;
+      });
+      repasseItems[p.id]={
+        servico:p.servico,plano:ativos[0]?ativos[0].plano_nome:'',
+        ativos:ativos,aguardando:aguardando,totalRepasse:repPisc
+      };
+      repasseTotal+=repPisc;
+    }
+
+    // Card 2: lucro só de ativos
+    ativos.forEach(function(a){
+      var lucro=getRepasse(p.servico,a.plano_nome);
+      if(lucro<=0) return;
+      lucroTotal+=lucro;
+      if(isWellness(p.servico)){
+        var nomeMembro=a.profiles?(a.profiles.nome||a.profiles.email):'Membro';
+        lucroWellness.push({servico:p.servico,plano:a.plano_nome||p.servico,val:lucro,membro:nomeMembro});
+      } else {
+        lucroOutrosTotal+=lucro;
+        lucroOutrosCount++;
+      }
+    });
   });
 
-  // Card provisionado (só mostra se tiver valor)
-  var provCard='';
-  if(provisionadoTotal>0){
-    var detHTML=provisionadoDetalhes.map(function(d){
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(0,180,210,0.08);font-size:12px;">'
-        +'<div><div style="font-weight:700;color:var(--bluedark);">'+d.servico+(d.plano&&d.plano!==d.servico?' · '+d.plano:'')+'</div>'
-        +'<div style="font-size:11px;color:var(--bluedark);opacity:.45;">'+d.membro+'</div></div>'
-        +'<div style="font-weight:800;color:#00875A;font-family:Nunito,sans-serif;">R$'+d.rep.toFixed(2).replace('.',',')+'</div>'
+  // Montar Card 1 — Repasse para pagamento dos planos
+  var card1HTML='';
+  if(repasseTotal>0){
+    var rows1=Object.values(repasseItems).map(function(it){
+      var nAtivos=it.ativos.length, nAgua=it.aguardando.length;
+      var badges='';
+      if(nAtivos>0) badges+='<span class="fin-badge ativo">✓ '+nAtivos+' ativo'+(nAtivos>1?'s':'')+'</span>';
+      if(nAgua>0) badges+='<span class="fin-badge aguardando">⏳ '+nAgua+' aguardando</span>';
+      var planoLabel=it.plano&&it.plano!==it.servico?' · '+it.plano:'';
+      return '<div class="fin-row">'
+        +'<div class="fin-row-left">'
+        +'<div class="fin-row-name">🏊 '+it.servico+planoLabel+'</div>'
+        +'<div class="fin-status-badges">'+badges+'</div>'
+        +'</div>'
+        +'<div class="fin-row-val blue">'+fmt(it.totalRepasse)+'</div>'
         +'</div>';
     }).join('');
-    // Adicionar linha "Outros planos" se houver
-    if(outrosCount>0){
-      detHTML+='<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px;">'
-        +'<div><div style="font-weight:700;color:var(--bluedark);">Outros planos</div>'
-        +'<div style="font-size:11px;color:var(--bluedark);opacity:.45;">'+outrosCount+' assinatura'+(outrosCount>1?'s':'')+' confirmada'+(outrosCount>1?'s':'')+'</div></div>'
-        +'<div style="font-weight:800;color:#00875A;font-family:Nunito,sans-serif;">R$'+outrosTotal.toFixed(2).replace('.',',')+'</div>'
-        +'</div>';
-    }
-    provCard='<div id="provisionado-card" style="background:rgba(255,255,255,0.92);border:1.5px solid rgba(0,168,120,0.25);border-radius:16px;padding:18px 20px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,168,120,0.08);">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
-      +'<div>'
-      +'<div style="font-size:12px;font-weight:800;color:#00522a;text-transform:uppercase;letter-spacing:.06em;">💰 Provisionado para saque</div>'
-      +'<div style="font-size:11px;color:#00875A;opacity:.7;margin-top:2px;">Sua margem dos planos wellness confirmados</div>'
-      +'</div>'
-      +'<div style="text-align:right;">'
-      +'<div style="font-family:Nunito,sans-serif;font-size:26px;font-weight:900;color:#00875A;">'+fmt(provisionadoTotal)+'</div>'
-      +'<div style="font-size:10px;color:#00875A;opacity:.6;font-weight:600;">DISPONÍVEL</div>'
-      +'</div>'
-      +'</div>'
-      +'<div style="border-top:1px solid rgba(0,168,120,0.15);padding-top:10px;">'
-      +detHTML
-      +'</div>'
+    card1HTML='<div class="fin-card">'
+      +'<div class="fin-card-header" onclick="toggleFinCard('fin-body-1',this)">'
+      +'<div><div class="fin-card-title blue">💳 Repasse para pagamento dos planos</div>'
+      +'<div class="fin-card-sub">Valor repassado para cobrir o custo dos seus planos</div></div>'
+      +'<div class="fin-card-right">'
+      +'<div class="fin-card-total blue">'+fmt(repasseTotal)+'</div>'
+      +'<span class="fin-card-chevron">▼</span>'
+      +'</div></div>'
+      +'<div class="fin-card-body" id="fin-body-1">'+rows1+'</div>'
       +'</div>';
   }
 
-  // Injetar card provisionado antes da lista de piscinas
+  // Montar Card 2 — Seu lucro como dono
+  var card2HTML='';
+  if(lucroTotal>0){
+    var rows2=lucroWellness.map(function(it){
+      return '<div class="fin-row">'
+        +'<div class="fin-row-left">'
+        +'<div class="fin-row-name">🏊 '+it.servico+(it.plano&&it.plano!==it.servico?' · '+it.plano:'')+'</div>'
+        +'<div class="fin-row-sub">'+it.membro+'</div>'
+        +'</div>'
+        +'<div class="fin-row-val green">'+fmt(it.val)+'</div>'
+        +'</div>';
+    }).join('');
+    if(lucroOutrosCount>0){
+      rows2+='<div class="fin-row">'
+        +'<div class="fin-row-left">'
+        +'<div class="fin-row-name">📦 Outros planos</div>'
+        +'<div class="fin-row-sub">'+lucroOutrosCount+' assinatura'+(lucroOutrosCount>1?'s':'')+' confirmada'+(lucroOutrosCount>1?'s':'')+'</div>'
+        +'</div>'
+        +'<div class="fin-row-val green">'+fmt(lucroOutrosTotal)+'</div>'
+        +'</div>';
+    }
+    card2HTML='<div class="fin-card">'
+      +'<div class="fin-card-header" onclick="toggleFinCard('fin-body-2',this)">'
+      +'<div><div class="fin-card-title green">💰 Seu lucro como dono</div>'
+      +'<div class="fin-card-sub">Margem dos membros ativos e confirmados</div></div>'
+      +'<div class="fin-card-right">'
+      +'<div class="fin-card-total green">'+fmt(lucroTotal)+'</div>'
+      +'<span class="fin-card-chevron">▼</span>'
+      +'</div></div>'
+      +'<div class="fin-card-body" id="fin-body-2">'+rows2+'</div>'
+      +'</div>';
+  }
+
+  // Injetar cards antes da lista de piscinas
   var provEl=document.getElementById('provisionado-card-wrap');
   if(!provEl){
     var wrap=document.createElement('div');
@@ -880,7 +992,7 @@ async function carregarDashboard(){
     if(poolsList&&poolsList.parentNode) poolsList.parentNode.insertBefore(wrap,poolsList);
   }
   var w=document.getElementById('provisionado-card-wrap');
-  if(w) w.innerHTML=provCard;
+  if(w) w.innerHTML=card1HTML+card2HTML;
 
   document.getElementById('resumo-bar').innerHTML=
     '<div class="resumo-item"><div class="resumo-val green">'+fmt(totalReceita)+'</div><div class="resumo-lbl">Receita do mês</div></div>'
@@ -1171,6 +1283,42 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
   .repasse-mes{font-size:12px;}
   .repasse-total{font-size:13px;}
 }
+
+
+/* ── CARDS FINANCEIROS RECOLHÍVEIS ── */
+.fin-card{background:rgba(255,255,255,0.92);border-radius:16px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,20,80,0.07);overflow:hidden;}
+.fin-card-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;user-select:none;border-bottom:1px solid rgba(0,180,210,0.1);}
+.fin-card-header:hover{background:rgba(0,180,210,0.03);}
+.fin-card-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;}
+.fin-card-title.green{color:#00522a;}
+.fin-card-title.blue{color:var(--bluedark);}
+.fin-card-sub{font-size:11px;opacity:.5;margin-top:2px;font-weight:500;}
+.fin-card-right{display:flex;align-items:center;gap:10px;}
+.fin-card-total{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;}
+.fin-card-total.green{color:#00875A;}
+.fin-card-total.blue{color:var(--blue);}
+.fin-card-chevron{font-size:11px;color:var(--bluedark);opacity:.4;transition:transform .2s;}
+.fin-card-body{padding:10px 18px 14px;}
+.fin-card-body.hidden{display:none;}
+.fin-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(0,180,210,0.07);font-size:12px;}
+.fin-row:last-child{border-bottom:none;}
+.fin-row-left{flex:1;}
+.fin-row-name{font-weight:700;color:var(--bluedark);}
+.fin-row-sub{font-size:11px;color:var(--bluedark);opacity:.45;margin-top:2px;}
+.fin-row-val{font-weight:800;font-family:'Nunito',sans-serif;font-size:13px;}
+.fin-row-val.green{color:#00875A;}
+.fin-row-val.blue{color:var(--blue);}
+.fin-status-badges{display:flex;gap:5px;margin-top:3px;flex-wrap:wrap;}
+.fin-badge{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700;}
+.fin-badge.ativo{background:#e6fff8;color:#00522a;}
+.fin-badge.aguardando{background:#fff8e0;color:#8a5c00;}
+/* ── EXTRATO ABAS ── */
+.extrato-wrap{background:rgba(255,255,255,0.92);border-radius:16px;box-shadow:0 2px 12px rgba(0,20,80,0.07);overflow:hidden;}
+.extrato-aba-row{display:flex;border-bottom:2px solid rgba(0,180,210,0.1);}
+.extrato-aba{flex:1;padding:12px 16px;font-size:13px;font-weight:700;color:var(--bluedark);opacity:.45;cursor:pointer;text-align:center;transition:.15s;border:none;background:none;font-family:inherit;}
+.extrato-aba.act{color:var(--blue);opacity:1;border-bottom:2px solid var(--blue);margin-bottom:-2px;}
+.extrato-aba-content{display:none;padding:14px 18px;}
+.extrato-aba-content.act{display:block;}
 
 /* ── EMPTY STATE ── */
 #empty-state{display:none;flex-direction:column;align-items:center;gap:20px;padding:48px 20px;}
@@ -1677,6 +1825,40 @@ async function carregarExtrato(){
     (piscs||[]).forEach(function(p){piscMap[p.id]=p;});
   }
   renderExtrato();
+}
+
+function trocarAbaExtrato(aba,el){
+  document.querySelectorAll('.extrato-aba').forEach(function(b){b.classList.remove('act');});
+  document.querySelectorAll('.extrato-aba-content').forEach(function(c){c.classList.remove('act');});
+  if(el) el.classList.add('act');
+  var target=document.getElementById('extrato-aba-'+aba);
+  if(target) target.classList.add('act');
+  if(aba==='lucro') renderExtratológico();
+}
+
+function renderExtratoLucro(){
+  var el=document.getElementById('extrato-lucro-list');
+  if(!el) return;
+  var lista=todosRepasses.filter(function(r){return r.tipo==='lucro'||r.tipo==='margem';});
+  if(!lista.length){el.innerHTML='<div class="extrato-empty">Nenhum lucro registrado ainda.</div>';return;}
+  // Reutiliza renderExtrato mas só com tipo lucro
+  var porMes={};
+  lista.forEach(function(r){if(!porMes[r.mes_referencia])porMes[r.mes_referencia]=[];porMes[r.mes_referencia].push(r);});
+  var html='';
+  Object.keys(porMes).sort().reverse().forEach(function(mes){
+    var items=porMes[mes];
+    var total=items.reduce(function(s,r){return s+Number(r.valor||0);},0);
+    html+='<div class="repasse-card">';
+    html+='<div class="repasse-header"><div class="repasse-mes">'+formatarMes(mes)+'</div>';
+    html+='<span class="repasse-status '+(items[0].status||'pendente')+'">'+items[0].status+'</span></div>';
+    items.forEach(function(r){
+      var pisc=piscMap[r.piscina_id]||{};
+      html+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;"><span>💰 '+(pisc.servico||'—')+'</span><span style="font-weight:700;color:var(--green);">'+fmt(r.valor)+'</span></div>';
+    });
+    html+='<div class="repasse-total"><span>Total '+formatarMes(mes)+'</span><span class="repasse-val green">'+fmt(total)+'</span></div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
 }
 
 function filtrarExtrato(filtro,el){
