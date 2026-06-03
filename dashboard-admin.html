@@ -566,20 +566,20 @@ function renderPiscinas(){
       else if(p.status==='aberta') acoes='<button class="btn-act btn-pausar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'pausada\')">Pausar</button>';
       else if(p.status==='pausada') acoes='<button class="btn-act btn-reativar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'aberta\')">Reativar</button>';
       html+='<div style="padding:12px 18px 12px 28px;border-bottom:1px solid rgba(18,85,204,0.06);">';
-      html+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;">';
-      // Nome + status + ação
-      html+='<div style="display:flex;align-items:center;gap:8px;min-width:160px;">';
+      html+='<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">';
+      // Nome + status + ação (largura fixa)
+      html+='<div style="display:flex;align-items:center;gap:8px;min-width:200px;">';
       html+='<span style="font-size:13px;font-weight:800;color:var(--bluedark);">🏊 '+p.servico+'</span>';
       html+='<span class="pill '+(p.status==='pendente'?'pendente-aprov':p.status)+'">'+p.status+'</span>';
       html+=acoes;
       html+='</div>';
-      // Campos horizontais
-      html+='<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">';
+      // Campos fixos — sempre na mesma ordem
+      html+='<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">';
       html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Código</div><div style="font-size:12px;font-weight:700;color:var(--blue);font-family:monospace;">'+poolCode(p.id)+'</div></div>';
       html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Vagas</div><div style="font-size:12px;font-weight:700;">'+p.vagas_ocupadas+'/'+p.vagas_total+'</div></div>';
       html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Preço/vaga</div><div style="font-size:12px;font-weight:700;">'+fmt(p.preco_por_vaga)+'</div></div>';
       html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Venc. cartão</div><div style="font-size:12px;font-weight:700;">'+(p.cartao_vencimento||'—')+'</div></div>';
-      if(p.link_convite) html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Link convite</div><div style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="'+p.link_convite+'" target="_blank" style="color:var(--blue);" title="'+p.link_convite+'">'+p.link_convite+'</a></div></div>';
+      if(p.link_convite) html+='<div style="max-width:140px;"><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Link convite</div><div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="'+p.link_convite+'" target="_blank" style="color:var(--blue);" title="'+p.link_convite+'">'+p.link_convite+'</a></div></div>';
       html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Receita/mês</div><div style="font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--green);">'+fmt(receita)+'</div></div>';
       html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Custo dono</div><div style="font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--blue);">'+fmt(lucrodono)+'</div></div>';
       html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Lucro SP</div><div style="font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--teal);">'+fmt(lucroSP)+'</div></div>';
