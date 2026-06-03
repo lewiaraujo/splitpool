@@ -271,6 +271,8 @@ var LUCRO_SP_MAP={
   'microsoft 365':7.65,'duolingo super':5.57,'canva teams':3.98,'notion team':7.50,'alura':14.90
 };
 
+function poolCode(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var s='';for(var i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
+
 function getLucroSP(servico,plano){
   var k=((plano||servico)||'').toLowerCase().trim();
   if(LUCRO_SP_MAP[k]) return LUCRO_SP_MAP[k];
@@ -573,7 +575,7 @@ function renderPiscinas(){
       html+='</div>';
       // Campos horizontais
       html+='<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">';
-      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Código</div><div style="font-size:12px;font-weight:700;color:var(--blue);font-family:monospace;">#'+p.id+'</div></div>';
+      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Código</div><div style="font-size:12px;font-weight:700;color:var(--blue);font-family:monospace;">'+poolCode(p.id)+'</div></div>';
       html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Vagas</div><div style="font-size:12px;font-weight:700;">'+p.vagas_ocupadas+'/'+p.vagas_total+'</div></div>';
       html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Preço/vaga</div><div style="font-size:12px;font-weight:700;">'+fmt(p.preco_por_vaga)+'</div></div>';
       html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Venc. cartão</div><div style="font-size:12px;font-weight:700;">'+(p.cartao_vencimento||'—')+'</div></div>';
