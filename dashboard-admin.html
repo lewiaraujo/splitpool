@@ -266,9 +266,12 @@ var dados={repasses:[],piscinas:[],usuarios:[],assinaturas:null,perfisMap:{},pis
 var filtros={repasses:'todos',piscinas:'todas',usuarios:'todos'};
 var adminSess=null;
 var LUCRO_SP_MAP={
-  'starter':2.40,'basic':2.40,'basic+':2.60,'silver':4.00,'silver+':5.20,'gold':8.40,'gold+':10.00,'platinum':10.00,'diamond':10.00,'diamond+':10.00,
-  'tp go':2.40,'tp1':3.00,'tp1+':4.00,'tp2':5.00,'tp3':7.00,'tp4':9.00,'tp5':10.00,'tp5+':11.00,'tp6':12.00,'tp7':14.00,
-  'microsoft 365':7.65,'duolingo super':5.57,'canva teams':3.98,'notion team':7.50,'alura':14.90
+  // Wellhub — 20% spread líquido (pós taxa cartão proporcional)
+  'starter':2.01,'basic':1.83,'basic+':1.85,'silver':2.91,'silver+':3.77,'gold':6.16,'gold+':6.99,'platinum':6.04,'diamond':5.44,'diamond+':4.96,
+  // TotalPass — 20% spread líquido (pós taxa cartão proporcional)
+  'tp go':2.01,'tp1':2.47,'tp1+':3.26,'tp2':4.06,'tp3':5.52,'tp4':6.86,'tp5':7.23,'tp5+':7.60,'tp6':7.98,'tp7':9.32,
+  // Familia — margem SP líquida (pós taxa cartão proporcional)
+  'microsoft 365':7.08,'duolingo super':4.97,'canva teams':3.41,'notion team':7.16,'alura':13.80
 };
 
 function poolCode(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var s='';for(var i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
@@ -490,9 +493,12 @@ async function carregarPiscinas(){
 }
 
 var REPASSE_MAP={
-  'starter':9.60,'basic':9.60,'basic+':10.40,'silver':16.00,'silver+':20.80,'gold':33.60,'gold+':40.00,'platinum':40.00,'diamond':40.00,'diamond+':40.00,
-  'tp go':9.60,'tp1':12.00,'tp1+':16.00,'tp2':20.00,'tp3':28.00,'tp4':36.00,'tp5':40.00,'tp5+':44.00,'tp6':48.00,'tp7':56.00,
-  'microsoft 365':17.85,'duolingo super':14.33,'canva teams':11.93,'notion team':17.50,'alura':25.00
+  // Wellhub — lucro dono líquido (80% spread − taxa dono proporcional)
+  'starter':8.04,'basic':7.33,'basic+':7.39,'silver':11.62,'silver+':15.08,'gold':24.63,'gold+':27.97,'platinum':24.14,'diamond':21.75,'diamond+':19.83,
+  // TotalPass — lucro dono líquido
+  'tp go':8.05,'tp1':9.90,'tp1+':13.06,'tp2':16.22,'tp3':22.07,'tp4':27.44,'tp5':28.93,'tp5+':30.41,'tp6':31.90,'tp7':37.27,
+  // Familia — lucro dono líquido (repasse − custo vaga − taxa dono proporcional)
+  'microsoft 365':7.28,'duolingo super':3.12,'canva teams':1.83,'notion team':16.70,'alura':24.10
 };
 function getRepasse(servico,plano){
   var k=((plano||servico)||'').toLowerCase().trim();
@@ -686,41 +692,46 @@ function filtrarFin(tipo,el){
 function renderFinanceiro(){
   var assins=dados.assinaturas||[];
   var ativas=assins.filter(function(a){return a.status==='ativo';});
-  var piscs=dados.piscinas||[];
   var users=dados.usuarios||[];
 
-  // Contagens
   var nDonos=users.filter(function(u){return u._isDono;}).length;
   var nMembros=users.filter(function(u){return u._isMembro;}).length;
 
-  // MRR = soma de valor das assinaturas ativas
-  var mrr=ativas.reduce(function(s,a){return s+Number(a.valor||0);},0);
-
-  // Lucro SP = LUCRO_SP_MAP por assinatura ativa (o que a SP retém)
-  var lucroSP=ativas.reduce(function(s,a){
+  function getVals(a){
+    var preco=Number(a.valor||0);
     var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
-    var lsp=LUCRO_SP_MAP[k]||0;
-    if(!lsp){for(var x in LUCRO_SP_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){lsp=LUCRO_SP_MAP[x];break;}}}
-    return s+lsp;
-  },0);
+    var lspLiq=LUCRO_SP_MAP[k]||0;
+    if(!lspLiq){for(var x in LUCRO_SP_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){lspLiq=LUCRO_SP_MAP[x];break;}}}
+    var ldLiq=REPASSE_MAP[k]||0;
+    if(!ldLiq){for(var x in REPASSE_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){ldLiq=REPASSE_MAP[x];break;}}}
+    var taxaTotal=preco*0.0299+0.39;
+    var totalLiq=lspLiq+ldLiq;
+    var ratioSP=totalLiq>0?lspLiq/totalLiq:0.5;
+    var taxaSP=taxaTotal*ratioSP;
+    var taxaDono=taxaTotal*(1-ratioSP);
+    return {preco,lspLiq,ldLiq,taxaTotal,taxaSP,taxaDono};
+  }
 
-  // Custo SP = REPASSE_MAP por assinatura ativa (o que vai pro dono)
-  var custoSP=ativas.reduce(function(s,a){
-    var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
-    var rep=REPASSE_MAP[k]||0;
-    if(!rep){for(var x in REPASSE_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){rep=REPASSE_MAP[x];break;}}}
-    return s+rep;
-  },0);
+  var totReceita=0,totLucroSP=0,totTaxaSP=0,totTaxaDono=0,totLucroDono=0,totRepasse=0;
+  ativas.forEach(function(a){
+    var v=getVals(a);
+    totReceita+=v.preco; totLucroSP+=v.lspLiq; totTaxaSP+=v.taxaSP;
+    totTaxaDono+=v.taxaDono; totLucroDono+=v.ldLiq; totRepasse+=(v.ldLiq+v.taxaDono);
+  });
+  var totTaxa=totTaxaSP+totTaxaDono;
 
   document.getElementById('resumo-financeiro').innerHTML=
-    '<div class="rcard"><div class="rcard-val green">'+fmt(mrr)+'</div><div class="rcard-lbl">MRR (Receita)</div></div>'+
-    '<div class="rcard"><div class="rcard-val red">'+fmt(custoSP)+'</div><div class="rcard-lbl">Custo (repasse donos)</div></div>'+
-    '<div class="rcard"><div class="rcard-val teal">'+fmt(lucroSP)+'</div><div class="rcard-lbl">Lucro SP</div></div>'+
-    '<div class="rcard"><div class="rcard-val blue">'+ativas.length+'</div><div class="rcard-lbl">Assinaturas ativas</div></div>'+
+    '<div class="rcard"><div class="rcard-val green">'+fmt(totReceita)+'</div><div class="rcard-lbl">Receita bruta (MRR)</div></div>'+
+    '<div class="rcard"><div class="rcard-val red">-'+fmt(totTaxa)+'</div><div class="rcard-lbl">Taxa cartão total</div></div>'+
+    '<div class="rcard"><div class="rcard-val" style="color:#E24B4A;">-'+fmt(totTaxaSP)+'</div><div class="rcard-lbl">Taxa sobre SP</div></div>'+
+    '<div class="rcard"><div class="rcard-val" style="color:#BA7517;">-'+fmt(totTaxaDono)+'</div><div class="rcard-lbl">Taxa sobre dono</div></div>'+
+    '<div class="rcard"><div class="rcard-val teal">'+fmt(totLucroSP)+'</div><div class="rcard-lbl">Lucro SP líquido</div></div>'+
+    '<div class="rcard"><div class="rcard-val blue">'+fmt(totRepasse)+'</div><div class="rcard-lbl">Repasse bruto donos</div></div>'+
+    '<div class="rcard"><div class="rcard-val" style="color:#0F6E56;">'+fmt(totLucroDono)+'</div><div class="rcard-lbl">Lucro líquido donos</div></div>'+
+    '<div class="rcard"><div class="rcard-val">'+ativas.length+'</div><div class="rcard-lbl">Assinaturas ativas</div></div>'+
     '<div class="rcard"><div class="rcard-val">'+nDonos+'</div><div class="rcard-lbl">Donos</div></div>'+
     '<div class="rcard"><div class="rcard-val">'+nMembros+'</div><div class="rcard-lbl">Membros</div></div>';
 
-  // Estratificação temporal
   var grupos={};
   ativas.forEach(function(a){
     var dt=a.confirmado_em?new Date(a.confirmado_em):null;
@@ -729,81 +740,91 @@ function renderFinanceiro(){
     if(filtroFin==='diario') chave=dt.toLocaleDateString('pt-BR');
     else if(filtroFin==='mensal') chave=(dt.getMonth()+1).toString().padStart(2,'0')+'/'+dt.getFullYear();
     else chave=dt.getFullYear().toString();
-    if(!grupos[chave]) grupos[chave]={receita:0,custo:0,lucro:0,n:0};
-    var val=Number(a.valor||0);
-    var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
-    var rep=REPASSE_MAP[k]||0;
-    if(!rep){for(var x in REPASSE_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){rep=REPASSE_MAP[x];break;}}}
-    var lsp=LUCRO_SP_MAP[k]||0;
-    if(!lsp){for(var x in LUCRO_SP_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){lsp=LUCRO_SP_MAP[x];break;}}}
-    grupos[chave].receita+=val;
-    grupos[chave].custo+=rep;
-    grupos[chave].lucro+=lsp;
-    grupos[chave].n++;
+    if(!grupos[chave]) grupos[chave]={receita:0,taxaTotal:0,taxaSP:0,taxaDono:0,lucroSP:0,repasse:0,lucroDono:0,n:0};
+    var v=getVals(a);
+    grupos[chave].receita+=v.preco; grupos[chave].taxaTotal+=v.taxaTotal;
+    grupos[chave].taxaSP+=v.taxaSP; grupos[chave].taxaDono+=v.taxaDono;
+    grupos[chave].lucroSP+=v.lspLiq; grupos[chave].repasse+=(v.ldLiq+v.taxaDono);
+    grupos[chave].lucroDono+=v.ldLiq; grupos[chave].n++;
   });
 
-  var titulo={diario:'Estratificação Diária',mensal:'Estratificação Mensal',anual:'Estratificação Anual'};
-  document.getElementById('fin-tabela-titulo').textContent=titulo[filtroFin];
+  var tituloMap={diario:'Estratificacao Diaria',mensal:'Estratificacao Mensal',anual:'Estratificacao Anual'};
+  document.getElementById('fin-tabela-titulo').textContent=(tituloMap[filtroFin]||'Estratificacao')+' — destino de cada R$1,00';
 
+  var th='<th style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.5;padding:8px 10px;border-bottom:1px solid rgba(18,85,204,0.1);white-space:nowrap;">';
   var chaves=Object.keys(grupos).sort(function(a,b){return b>a?1:-1;});
   if(!chaves.length){
-    document.getElementById('fin-tabela').innerHTML='<div class="empty">Sem assinaturas ativas com data de confirmação.</div>';
+    document.getElementById('fin-tabela').innerHTML='<div class="empty">Sem assinaturas ativas com data de confirmacao.</div>';
   } else {
-    var thtml='<table style="width:100%;border-collapse:collapse;">';
-    thtml+='<thead><tr>';
-    thtml+='<th style="text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;border-bottom:1px solid rgba(18,85,204,0.1);">Período</th>';
-    thtml+='<th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;border-bottom:1px solid rgba(18,85,204,0.1);">Assinaturas</th>';
-    thtml+='<th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;border-bottom:1px solid rgba(18,85,204,0.1);">Receita</th>';
-    thtml+='<th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;border-bottom:1px solid rgba(18,85,204,0.1);">Custo (repasse)</th>';
-    thtml+='<th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;border-bottom:1px solid rgba(18,85,204,0.1);">Lucro SP</th>';
+    var thtml='<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:700px;"><thead><tr>';
+    thtml+='<th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.5;padding:8px 10px;border-bottom:1px solid rgba(18,85,204,0.1);">Periodo</th>';
+    thtml+=th+'Qtd</th>'+th+'Receita</th>'+th+'Taxa total</th>'+th+'Parcela SP</th>'+th+'Parcela dono</th>'+th+'Lucro SP liq.</th>'+th+'Repasse dono</th>'+th+'Lucro dono liq.</th>';
     thtml+='</tr></thead><tbody>';
-    chaves.forEach(function(c){
+    chaves.forEach(function(c,i){
       var g=grupos[c];
-      thtml+='<tr style="border-bottom:1px solid rgba(18,85,204,0.05);">';
-      thtml+='<td style="padding:10px 12px;font-size:13px;font-weight:700;">'+c+'</td>';
-      thtml+='<td style="padding:10px 12px;font-size:13px;text-align:right;">'+g.n+'</td>';
-      thtml+='<td style="padding:10px 12px;font-size:13px;font-weight:700;text-align:right;color:var(--green);">'+fmt(g.receita)+'</td>';
-      thtml+='<td style="padding:10px 12px;font-size:13px;text-align:right;color:var(--red);">'+fmt(g.custo)+'</td>';
-      thtml+='<td style="padding:10px 12px;font-size:14px;font-weight:900;text-align:right;color:var(--teal);font-family:Nunito,sans-serif;">'+fmt(g.lucro)+'</td>';
+      var bg=i%2===1?'background:rgba(18,85,204,0.02);':'';
+      thtml+='<tr style="border-bottom:1px solid rgba(18,85,204,0.05);'+bg+'">';
+      thtml+='<td style="padding:9px 10px;font-size:12px;font-weight:700;">'+c+'</td>';
+      thtml+='<td style="padding:9px 10px;font-size:12px;text-align:right;">'+g.n+'</td>';
+      thtml+='<td style="padding:9px 10px;font-size:12px;font-weight:700;text-align:right;color:var(--green);">'+fmt(g.receita)+'</td>';
+      thtml+='<td style="padding:9px 10px;font-size:12px;text-align:right;color:#E24B4A;font-weight:700;">-'+fmt(g.taxaTotal)+'</td>';
+      thtml+='<td style="padding:9px 10px;font-size:11px;text-align:right;color:#E24B4A;">-'+fmt(g.taxaSP)+'</td>';
+      thtml+='<td style="padding:9px 10px;font-size:11px;text-align:right;color:#BA7517;">-'+fmt(g.taxaDono)+'</td>';
+      thtml+='<td style="padding:9px 10px;font-size:13px;font-weight:900;text-align:right;color:var(--teal);font-family:Nunito,sans-serif;">'+fmt(g.lucroSP)+'</td>';
+      thtml+='<td style="padding:9px 10px;font-size:12px;text-align:right;color:var(--blue);">'+fmt(g.repasse)+'</td>';
+      thtml+='<td style="padding:9px 10px;font-size:13px;font-weight:900;text-align:right;color:#0F6E56;font-family:Nunito,sans-serif;">'+fmt(g.lucroDono)+'</td>';
       thtml+='</tr>';
     });
-    thtml+='</tbody></table>';
+    thtml+='</tbody></table></div>';
     document.getElementById('fin-tabela').innerHTML=thtml;
   }
 
-  // Gráfico por serviço — filtrado pelo período atual selecionado
   var agora=new Date();
-  var asSelecionadas=ativas.filter(function(a){
+  var asSel=ativas.filter(function(a){
     var dt=a.confirmado_em?new Date(a.confirmado_em):null;
     if(!dt) return false;
     if(filtroFin==='diario') return dt.toDateString()===agora.toDateString();
     if(filtroFin==='mensal') return dt.getMonth()===agora.getMonth()&&dt.getFullYear()===agora.getFullYear();
-    if(filtroFin==='anual') return dt.getFullYear()===agora.getFullYear();
-    return true;
+    return dt.getFullYear()===agora.getFullYear();
   });
   var porServ={};
-  asSelecionadas.forEach(function(a){
+  asSel.forEach(function(a){
     var s=a.servico||'Outro';
-    if(!porServ[s]) porServ[s]={receita:0,lucro:0};
-    var val=Number(a.valor||0);
-    var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
-    var lsp=LUCRO_SP_MAP[k]||0;
-    if(!lsp){for(var x in LUCRO_SP_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){lsp=LUCRO_SP_MAP[x];break;}}}
-    porServ[s].receita+=val;
-    porServ[s].lucro+=lsp;
+    if(!porServ[s]) porServ[s]={receita:0,lucroSP:0,taxa:0,lucroDono:0};
+    var v=getVals(a);
+    porServ[s].receita+=v.preco; porServ[s].lucroSP+=v.lspLiq;
+    porServ[s].taxa+=v.taxaTotal; porServ[s].lucroDono+=v.ldLiq;
   });
-  var titulosGraf={diario:'Receita por serviço (hoje)',mensal:'Receita por serviço (mês atual)',anual:'Receita por serviço (ano atual)'};
-  document.getElementById('graf-servicos-titulo').textContent=titulosGraf[filtroFin]||'Receita por serviço';
+  var titulosGraf={diario:'Distribuicao por servico (hoje)',mensal:'Distribuicao por servico (mes atual)',anual:'Distribuicao por servico (ano atual)'};
+  document.getElementById('graf-servicos-titulo').textContent=titulosGraf[filtroFin]||'Distribuicao por servico';
   var maxV=Math.max.apply(null,Object.values(porServ).map(function(v){return v.receita;}))||1;
   var ghtml=Object.keys(porServ).sort(function(a,b){return porServ[b].receita-porServ[a].receita;}).map(function(s){
-    var pct=Math.round(porServ[s].receita/maxV*100);
-    return '<div class="chart-bar-row">'+
-      '<div class="chart-bar-lbl">'+s+'</div>'+
-      '<div class="chart-bar-track"><div class="chart-bar-fill" style="width:'+pct+'%"></div></div>'+
-      '<div class="chart-bar-val">'+fmt(porServ[s].receita)+'</div>'+
-      '</div>';
+    var d=porServ[s];
+    var pctLSP=Math.round(d.lucroSP/maxV*100);
+    var pctTaxa=Math.round(d.taxa/maxV*100);
+    var pctLDono=Math.round(d.lucroDono/maxV*100);
+    return '<div class="chart-bar-row" style="margin-bottom:14px;">'
+      +'<div class="chart-bar-lbl">'+s+'</div>'
+      +'<div style="display:flex;flex-direction:column;flex:1;gap:3px;">'
+      +'<div style="display:flex;align-items:center;gap:3px;">'
+      +'<div style="height:10px;background:#1D9E75;border-radius:2px;width:'+pctLSP+'%;min-width:2px;" title="Lucro SP"></div>'
+      +'<div style="height:10px;background:#E24B4A;border-radius:2px;width:'+pctTaxa+'%;min-width:2px;" title="Taxa cartao"></div>'
+      +'<div style="height:10px;background:#0F6E56;border-radius:2px;width:'+pctLDono+'%;min-width:2px;" title="Lucro dono"></div>'
+      +'</div></div>'
+      +'<div style="font-size:11px;min-width:180px;text-align:right;">'
+      +'<span style="color:var(--green);font-weight:700;">'+fmt(d.receita)+'</span>'
+      +' <span style="color:#1D9E75;font-size:10px;">SP:'+fmt(d.lucroSP)+'</span>'
+      +' <span style="color:#E24B4A;font-size:10px;">Taxa:'+fmt(d.taxa)+'</span>'
+      +' <span style="color:#0F6E56;font-size:10px;">Dono:'+fmt(d.lucroDono)+'</span>'
+      +'</div></div>';
   }).join('');
-  document.getElementById('chart-servicos').innerHTML=ghtml||'<div class="empty">Sem dados ainda.</div>';
+  document.getElementById('chart-servicos').innerHTML=
+    '<div style="display:flex;gap:16px;margin-bottom:10px;font-size:11px;flex-wrap:wrap;">'
+    +'<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#1D9E75;border-radius:2px;display:inline-block;"></span>Lucro SP liquido</span>'
+    +'<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#E24B4A;border-radius:2px;display:inline-block;"></span>Taxa cartao</span>'
+    +'<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#0F6E56;border-radius:2px;display:inline-block;"></span>Lucro dono liquido</span>'
+    +'</div>'
+    +(ghtml||'<div class="empty">Sem dados ainda.</div>');
 }
 
 function sair(){localStorage.removeItem('sp_admin_sess');window.location.replace('admin-login.html');}

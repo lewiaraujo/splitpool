@@ -410,7 +410,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
       </div>
       <!-- Aba Lucro -->
       <div class="extrato-aba-content" id="extrato-aba-lucro">
-        <div id="extrato-lucro-list"></div>
+        <div class="extrato-empty" id="extrato-lucro-list">Nenhum lucro registrado ainda.</div>
       </div>
     </div>
 
@@ -771,12 +771,12 @@ function renderPool(pool,assins,vault){
 
 /* ── LUCRO SPLITPOOL MAP (Fase 1) ── */
 var LUCRO_SP_MAP={
-  // Wellhub — 20% do spread
-  'starter':2.40,'basic':2.40,'basic+':2.60,'silver':4.00,'silver+':5.20,'gold':8.40,'gold+':10.00,'platinum':10.00,'diamond':10.00,'diamond+':10.00,
-  // TotalPass — 20% do spread
-  'tp go':2.40,'tp1':3.00,'tp1+':4.00,'tp2':5.00,'tp3':7.00,'tp4':9.00,'tp5':10.00,'tp5+':11.00,'tp6':12.00,'tp7':14.00,
-  // Familia — margem SP sobre preço
-  'microsoft 365':7.65,'duolingo super':5.57,'canva teams':3.98,'notion team':7.50,'alura':14.90
+  // Wellhub — 20% spread líquido (pós taxa cartão proporcional)
+  'starter':2.01,'basic':1.83,'basic+':1.85,'silver':2.91,'silver+':3.77,'gold':6.16,'gold+':6.99,'platinum':6.04,'diamond':5.44,'diamond+':4.96,
+  // TotalPass — 20% spread líquido (pós taxa cartão proporcional)
+  'tp go':2.01,'tp1':2.47,'tp1+':3.26,'tp2':4.06,'tp3':5.52,'tp4':6.86,'tp5':7.23,'tp5+':7.60,'tp6':7.98,'tp7':9.32,
+  // Familia — margem SP líquida (pós taxa cartão proporcional)
+  'microsoft 365':7.08,'duolingo super':4.97,'canva teams':3.41,'notion team':7.16,'alura':13.80
 };
 function getLucroSP(servico,planoNome){
   var key=(planoNome||servico||'').toLowerCase().trim();
@@ -787,12 +787,12 @@ function getLucroSP(servico,planoNome){
 
 /* ── TABELA DE REPASSES (margem do dono) ── */
 var REPASSE_MAP={
-  // Wellhub — lucro dono Fase 1 (80% do spread)
-  'starter':9.60,'basic':9.60,'basic+':10.40,'silver':16.00,'silver+':20.80,'gold':33.60,'gold+':40.00,'platinum':40.00,'diamond':40.00,'diamond+':40.00,
-  // TotalPass — lucro dono Fase 1 (80% do spread)
-  'tp go':9.60,'tp1':12.00,'tp1+':16.00,'tp2':20.00,'tp3':28.00,'tp4':36.00,'tp5':40.00,'tp5+':44.00,'tp6':48.00,'tp7':56.00,
-  // Familia — lucro dono Fase 1 (repasse - custo/vaga)
-  'microsoft 365':7.87,'duolingo super':3.50,'canva teams':2.13,'notion team':17.50,'alura':25.00
+  // Wellhub — lucro dono líquido (80% spread − taxa dono proporcional)
+  'starter':8.04,'basic':7.33,'basic+':7.39,'silver':11.62,'silver+':15.08,'gold':24.63,'gold+':27.97,'platinum':24.14,'diamond':21.75,'diamond+':19.83,
+  // TotalPass — lucro dono líquido
+  'tp go':8.05,'tp1':9.90,'tp1+':13.06,'tp2':16.22,'tp3':22.07,'tp4':27.44,'tp5':28.93,'tp5+':30.41,'tp6':31.90,'tp7':37.27,
+  // Familia — lucro dono líquido (repasse − custo vaga − taxa dono proporcional)
+  'microsoft 365':7.28,'duolingo super':3.12,'canva teams':1.83,'notion team':16.70,'alura':24.10
 };
 function getRepasse(servico,planoNome){
   var key=(planoNome||servico||'').toLowerCase().trim();
@@ -994,25 +994,9 @@ async function carregarDashboard(){
   var w=document.getElementById('provisionado-card-wrap');
   if(w) w.innerHTML=card1HTML+card2HTML;
 
-  // Calcular recebido e lucro acumulado a partir dos repasses pagos
-  var totalRecebido=0, totalLucroAcumulado=0;
-  (todosRepasses||[]).filter(function(r){return r.status==='pago';}).forEach(function(r){
-    totalRecebido+=Number(r.valor||0);
-    // Extrair lucro SP da observação para calcular lucro real
-    var obs=r.observacao||'';
-    var idx=obs.indexOf('SP reteve R$');
-    if(idx!==-1){
-      var parte=obs.substring(idx+12).trim();
-      var num=parseFloat(parte.split(/[^0-9,]/)[0].replace(',','.'))||0;
-      totalLucroAcumulado+=num;
-    }
-  });
-
   document.getElementById('resumo-bar').innerHTML=
     '<div class="resumo-item"><div class="resumo-val green">'+fmt(totalReceita)+'</div><div class="resumo-lbl">Receita do mês</div></div>'
     +'<div class="resumo-item"><div class="resumo-val blue">'+fmt(totalAReceber)+'</div><div class="resumo-lbl">A receber</div></div>'
-    +'<div class="resumo-item"><div class="resumo-val green" id="resumo-recebido">'+fmt(totalRecebido)+'</div><div class="resumo-lbl">Recebido</div></div>'
-    +'<div class="resumo-item"><div class="resumo-val teal" id="resumo-lucro-acum">'+fmt(totalLucroAcumulado)+'</div><div class="resumo-lbl">Lucro acumulado</div></div>'
     +'<div class="resumo-item"><div class="resumo-val teal">'+piscinasAtivas+'</div><div class="resumo-lbl">Piscinas ativas</div></div>'
     +'<div class="resumo-item"><div class="resumo-val">'+vagasOcup+'/'+vagasTotal+'</div><div class="resumo-lbl">Vagas ocupadas</div></div>';
 
@@ -1187,7 +1171,7 @@ async function gerarRepassePiscina(piscinaId, e){
   if(valRepasse>0) inserts.push({
     dono_id:userId,piscina_id:piscinaId,tipo:'repasse',valor:valRepasse,
     mes_referencia:mesRef,status:'pendente',
-    observacao:pool.servico+' · '+assins.length+' membro(s) · SP reteve '+fmt(valLucroSP)+obsData
+    observacao:pool.servico+' · '+assins.length+' membro(s) · Lucro dono R$ '+valRepasse.toFixed(2).replace('.',',')+obsData
   });
 
   if(inserts.length){
@@ -1221,7 +1205,7 @@ async function gerarRepasses(){
     var valRepasse=calcRepasseReal(pool,assins);
     var valLucroSP=calcLucroSPPiscina(pool,assins);
     var inserts=[];
-    if(valRepasse>0) inserts.push({dono_id:userId,piscina_id:pool.id,tipo:'repasse',valor:valRepasse,mes_referencia:mesRef,status:'pendente',observacao:pool.servico+' · '+assins.length+' membro(s) · SP reteve '+fmt(valLucroSP)});
+    if(valRepasse>0) inserts.push({dono_id:userId,piscina_id:pool.id,tipo:'repasse',valor:valRepasse,mes_referencia:mesRef,status:'pendente',observacao:pool.servico+' · '+assins.length+' membro(s) · Lucro dono R$ '+valRepasse.toFixed(2).replace('.',',')});
     if(inserts.length){await sb.from('repasses').insert(inserts);inseridos+=inserts.length;}
   }
   if(btn){btn.disabled=false;btn.textContent='⚡ Gerar todos os repasses';}
@@ -1286,24 +1270,6 @@ async function carregarExtrato(){
     (piscs||[]).forEach(function(p){piscMap[p.id]=p;});
   }
   renderExtrato();
-  atualizarResumoRecebido();
-}
-
-function atualizarResumoRecebido(){
-  var totalRecebido=0,totalLucroAcum=0;
-  (todosRepasses||[]).filter(function(r){return r.status==='pago';}).forEach(function(r){
-    totalRecebido+=Number(r.valor||0);
-    var obs=r.observacao||'';
-    var idx=obs.indexOf('SP reteve R$');
-    if(idx!==-1){
-      var parte=obs.substring(idx+12).trim();
-      totalLucroAcum+=parseFloat(parte.split(/[^0-9,]/)[0].replace(',','.'))||0;
-    }
-  });
-  var recebidoEl=document.getElementById('resumo-recebido');
-  var lucroAcumEl=document.getElementById('resumo-lucro-acum');
-  if(recebidoEl) recebidoEl.textContent=fmt(totalRecebido);
-  if(lucroAcumEl) lucroAcumEl.textContent=fmt(totalLucroAcum);
 }
 
 function trocarAbaExtrato(aba,el){
@@ -1320,20 +1286,26 @@ function renderExtratoLucro(){
   if(!el) return;
   var lista=todosRepasses.filter(function(r){return r.tipo==='repasse';});
   if(!lista.length){el.innerHTML='<div class="extrato-empty">Nenhum lucro registrado ainda.</div>';return;}
-  function extrairLucroSP(obs){
+
+  function extrairLucroDono(obs,valorRepasse){
+    // Formato novo: "Wellhub · 1 membro(s) · Lucro dono R$ 11,62 · ..."
     var s=obs||'';
-    var idx=s.indexOf('SP reteve R$');
-    if(idx===-1) return 0;
-    var parte=s.substring(idx+12).trim();
-    var num=parte.split(/[^0-9,]/)[0].replace(',','.');
-    return parseFloat(num)||0;
+    var idx=s.indexOf('Lucro dono R$');
+    if(idx!==-1){
+      var parte=s.substring(idx+13).trim();
+      var num=parseFloat(parte.split(/[^0-9,]/)[0].replace(',','.'))||0;
+      if(num>0) return num;
+    }
+    // Fallback para repasses antigos: valor do repasse é o lucro do dono
+    return Number(valorRepasse||0);
   }
+
   var porMes={};
   lista.forEach(function(r){if(!porMes[r.mes_referencia])porMes[r.mes_referencia]=[];porMes[r.mes_referencia].push(r);});
   var html='';
   Object.keys(porMes).sort().reverse().forEach(function(mes){
     var items=porMes[mes];
-    var totalLucro=items.reduce(function(s,r){return s+extrairLucroSP(r.observacao);},0);
+    var totalLucro=items.reduce(function(s,r){return s+extrairLucroDono(r.observacao,r.valor);},0);
     var statusGeral=items.every(function(r){return r.status==='pago';})?'pago'
       :items.some(function(r){return r.status==='aprovado';})?'aprovado':'pendente';
     var statusLabel={pendente:'Pendente',aprovado:'Aprovado',pago:'Pago'}[statusGeral];
@@ -1344,13 +1316,13 @@ function renderExtratoLucro(){
     html+='</div>';
     items.forEach(function(r){
       var pisc=piscMap[r.piscina_id]||{};
-      var sp=extrairLucroSP(r.observacao);
-      html+='<div style="background:rgba(0,180,210,0.04);border-radius:8px;padding:8px 10px;margin-bottom:6px;">';
+      var lucro=extrairLucroDono(r.observacao,r.valor);
+      html+='<div style="background:rgba(0,168,120,0.04);border-radius:8px;padding:8px 10px;margin-bottom:6px;">';
       html+='<div style="display:flex;justify-content:space-between;align-items:center;">';
       html+='<div style="font-size:12px;font-weight:700;color:var(--bluedark);">💰 '+(pisc.servico||'—')+'</div>';
-      html+='<div style="font-size:14px;font-weight:800;color:#00875A;font-family:Nunito,sans-serif;">'+fmt(sp)+'</div>';
+      html+='<div style="font-size:14px;font-weight:800;color:#00875A;font-family:Nunito,sans-serif;">'+fmt(lucro)+'</div>';
       html+='</div>';
-      html+='<div style="font-size:11px;font-weight:600;color:var(--bluedark);opacity:.5;margin-top:3px;">SP reteve: '+fmt(sp)+'</div>';
+      html+='<div style="font-size:11px;font-weight:600;color:var(--bluedark);opacity:.5;margin-top:3px;">Seu lucro nesta piscina</div>';
       html+='</div>';
     });
     html+='<div class="repasse-total"><span>Lucro '+formatarMes(mes)+'</span><span class="repasse-val green">'+fmt(totalLucro)+'</span></div>';
