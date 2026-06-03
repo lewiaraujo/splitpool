@@ -195,18 +195,17 @@ tbody td{padding:12px 16px;font-size:13px;}
     <div class="sec-header">
       <div><div class="sec-title">🏊 Piscinas</div><div class="sec-sub">Gerenciar todas as piscinas da plataforma</div></div>
     </div>
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+      <input id="busca-piscinas" type="text" placeholder="🔍 Buscar por dono ou serviço..." oninput="renderPiscinas()"
+        style="flex:1;min-width:200px;padding:8px 14px;border:1.5px solid rgba(18,85,204,0.2);border-radius:8px;font-size:13px;font-family:inherit;color:var(--bluedark);outline:none;">
+    </div>
     <div class="filters">
       <div class="fbtn act" onclick="filtrar('piscinas','todas',this)">Todas</div>
       <div class="fbtn" onclick="filtrar('piscinas','aberta',this)">Abertas</div>
       <div class="fbtn" onclick="filtrar('piscinas','pendente',this)">Pendentes</div>
       <div class="fbtn" onclick="filtrar('piscinas','pausada',this)">Pausadas</div>
     </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Dono</th><th>Serviço</th><th>Vagas</th><th>Preço/vaga</th><th>Receita/mês</th><th>Status</th><th>Ação</th></tr></thead>
-        <tbody id="tbody-piscinas"><tr><td colspan="7"><div class="empty">Carregando...</div></td></tr></tbody>
-      </table>
-    </div>
+    <div id="piscinas-list"><div class="empty">Carregando...</div></div>
   </div>
 
   <!-- ── USUÁRIOS ── -->
@@ -232,10 +231,24 @@ tbody td{padding:12px 16px;font-size:13px;}
   <div class="section" id="sec-financeiro">
     <div class="resumo" id="resumo-financeiro"></div>
     <div class="sec-header">
-      <div><div class="sec-title">📊 Financeiro</div><div class="sec-sub">MRR, lucro Splitpool e métricas gerais</div></div>
+      <div><div class="sec-title">📊 Financeiro</div><div class="sec-sub">Bússola do negócio — receita, custo e lucro Splitpool</div></div>
     </div>
+    <!-- Abas temporais -->
+    <div class="filters" style="margin-bottom:20px;">
+      <div class="fbtn act" onclick="filtrarFin('mensal',this)">Mensal</div>
+      <div class="fbtn" onclick="filtrarFin('diario',this)">Diário</div>
+      <div class="fbtn" onclick="filtrarFin('anual',this)">Anual</div>
+    </div>
+    <!-- Cards métricas -->
+    <div class="resumo" id="resumo-fin2" style="margin-bottom:20px;"></div>
+    <!-- Tabela estratificada -->
+    <div style="background:#fff;border-radius:14px;padding:20px 24px;border:1px solid rgba(18,85,204,0.1);box-shadow:0 2px 8px rgba(0,20,80,0.05);margin-bottom:20px;">
+      <div style="font-size:14px;font-weight:700;color:var(--bluedark);margin-bottom:16px;" id="fin-tabela-titulo">Estratificação Mensal</div>
+      <div id="fin-tabela"></div>
+    </div>
+    <!-- Gráfico por serviço -->
     <div style="background:#fff;border-radius:14px;padding:20px 24px;border:1px solid rgba(18,85,204,0.1);box-shadow:0 2px 8px rgba(0,20,80,0.05);">
-      <div style="font-size:14px;font-weight:700;color:var(--bluedark);margin-bottom:16px;">Lucro Splitpool por serviço</div>
+      <div style="font-size:14px;font-weight:700;color:var(--bluedark);margin-bottom:16px;">Receita por serviço (assinaturas ativas)</div>
       <div id="chart-servicos"></div>
     </div>
   </div>
@@ -249,7 +262,7 @@ const SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
 const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
 const sb=supabase.createClient(SBU,SBK);
 
-var dados={repasses:[],piscinas:[],usuarios:[],perfisMap:{},piscMap:{}};
+var dados={repasses:[],piscinas:[],usuarios:[],assinaturas:null,perfisMap:{},piscMap:{}};
 var filtros={repasses:'todos',piscinas:'todas',usuarios:'todos'};
 var adminSess=null;
 var LUCRO_SP_MAP={
@@ -297,6 +310,8 @@ async function irPara(sec,el){
   }
   if(sec==='financeiro'){
     if(!dados.piscinas.length) await carregarPiscinas();
+    if(!dados.usuarios.length) await carregarUsuarios();
+    if(!dados.assinaturas) await carregarAssinaturas();
     renderFinanceiro();
   }
 }
@@ -472,6 +487,18 @@ async function carregarPiscinas(){
   renderPiscinas();
 }
 
+var REPASSE_MAP={
+  'starter':9.60,'basic':9.60,'basic+':10.40,'silver':16.00,'silver+':20.80,'gold':33.60,'gold+':40.00,'platinum':40.00,'diamond':40.00,'diamond+':40.00,
+  'tp go':9.60,'tp1':12.00,'tp1+':16.00,'tp2':20.00,'tp3':28.00,'tp4':36.00,'tp5':40.00,'tp5+':44.00,'tp6':48.00,'tp7':56.00,
+  'microsoft 365':17.85,'duolingo super':14.33,'canva teams':11.93,'notion team':17.50,'alura':25.00
+};
+function getRepasse(servico,plano){
+  var k=((plano||servico)||'').toLowerCase().trim();
+  if(REPASSE_MAP[k]) return REPASSE_MAP[k];
+  for(var x in REPASSE_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1) return REPASSE_MAP[x];}
+  return 0;
+}
+
 function renderResumoPiscinas(){
   var p=dados.piscinas;
   var abertas=p.filter(function(x){return x.status==='aberta';}).length;
@@ -488,26 +515,81 @@ function renderResumoPiscinas(){
 
 function renderPiscinas(){
   var f=filtros.piscinas;
+  var busca=(document.getElementById('busca-piscinas')||{}).value||'';
+  busca=busca.toLowerCase().trim();
   var lista=f==='todas'?dados.piscinas:dados.piscinas.filter(function(p){return p.status===f;});
-  if(!lista.length){document.getElementById('tbody-piscinas').innerHTML='<tr><td colspan="7"><div class="empty">Nenhuma piscina encontrada.</div></td></tr>';return;}
-  var html=lista.map(function(p){
-    var dono=(p.profiles&&p.profiles.nome)||'—';
-    var receita=p.vagas_ocupadas*Number(p.preco_por_vaga||0);
-    var acoes='';
-    if(p.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="aprovarPiscina('+p.id+')">Aprovar</button>';
-    else if(p.status==='aberta') acoes='<button class="btn-act btn-pausar" onclick="alterarStatus('+p.id+',\'pausada\')">Pausar</button>';
-    else if(p.status==='pausada') acoes='<button class="btn-act btn-reativar" onclick="alterarStatus('+p.id+',\'aberta\')">Reativar</button>';
-    return '<tr>'+
-      '<td data-label="Dono">'+dono+'</td>'+
-      '<td data-label="Serviço" style="font-weight:600;">'+p.servico+'</td>'+
-      '<td data-label="Vagas">'+p.vagas_ocupadas+'/'+p.vagas_total+'</td>'+
-      '<td data-label="Preço/vaga">'+fmt(p.preco_por_vaga)+'</td>'+
-      '<td data-label="Receita/mês" style="font-weight:700;color:var(--green);">'+fmt(receita)+'</td>'+
-      '<td data-label="Status"><span class="pill '+(p.status==='pendente'?'pendente-aprov':p.status)+'">'+p.status+'</span></td>'+
-      '<td data-label="Ação">'+acoes+'</td>'+
-      '</tr>';
-  }).join('');
-  document.getElementById('tbody-piscinas').innerHTML=html;
+  if(busca){
+    lista=lista.filter(function(p){
+      var dono=((p.profiles&&p.profiles.nome)||'').toLowerCase();
+      var email=((p.profiles&&p.profiles.email)||'').toLowerCase();
+      var serv=(p.servico||'').toLowerCase();
+      return dono.indexOf(busca)!==-1||email.indexOf(busca)!==-1||serv.indexOf(busca)!==-1;
+    });
+  }
+  var el=document.getElementById('piscinas-list');
+  if(!lista.length){el.innerHTML='<div class="empty">Nenhuma piscina encontrada.</div>';return;}
+
+  // Agrupar por dono
+  var porDono={};
+  lista.forEach(function(p){
+    var donoId=p.dono_id;
+    if(!porDono[donoId]) porDono[donoId]=[];
+    porDono[donoId].push(p);
+  });
+
+  var html='';
+  Object.keys(porDono).forEach(function(donoId){
+    var piscs=porDono[donoId];
+    var perfil=(piscs[0].profiles)||{};
+    var nome=perfil.nome||perfil.email||'—';
+    var email=perfil.email||'';
+    var totalReceita=piscs.reduce(function(s,p){return s+Number(p.preco_por_vaga||0)*Number(p.vagas_ocupadas||0);},0);
+    var totalLucroSP=piscs.reduce(function(s,p){return s+getLucroSP(p.servico,'')*Number(p.vagas_ocupadas||0);},0);
+    var bodyId='pisc-body-'+donoId.replace(/-/g,'');
+    html+='<div class="dono-group">';
+    html+='<div class="dono-header" onclick="toggleDonoGroup(\''+bodyId+'\',this)">';
+    html+='<div><div class="dono-nome">👤 '+nome+' <span class="dono-chevron" style="font-size:11px;">▼</span></div><div class="dono-email">'+email+'</div></div>';
+    html+='<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">';
+    html+='<div class="dono-total"><div class="dono-total-val">'+fmt(totalReceita)+'</div><div class="dono-total-lbl">Receita/mês</div></div>';
+    html+='<div class="dono-total"><div class="dono-total-val" style="color:var(--teal);">'+fmt(totalLucroSP)+'</div><div class="dono-total-lbl">Lucro SP</div></div>';
+    html+='<div class="dono-total"><div style="font-family:Nunito,sans-serif;font-size:16px;font-weight:900;color:rgba(255,255,255,.7);">'+piscs.length+' piscina'+(piscs.length>1?'s':'')+'</div><div class="dono-total-lbl">Total</div></div>';
+    html+='</div></div>';
+    html+='<div class="dono-body" id="'+bodyId+'">';
+    piscs.forEach(function(p){
+      var lucroSP=getLucroSP(p.servico,'')*Number(p.vagas_ocupadas||0);
+      var lucrodono=getRepasse(p.servico,'')*Number(p.vagas_ocupadas||0);
+      var receita=Number(p.preco_por_vaga||0)*Number(p.vagas_ocupadas||0);
+      var acoes='';
+      if(p.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="event.stopPropagation();aprovarPiscina('+p.id+')">Aprovar</button>';
+      else if(p.status==='aberta') acoes='<button class="btn-act btn-pausar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'pausada\')">Pausar</button>';
+      else if(p.status==='pausada') acoes='<button class="btn-act btn-reativar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'aberta\')">Reativar</button>';
+      html+='<div style="padding:14px 18px 14px 28px;border-bottom:1px solid rgba(18,85,204,0.06);">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">';
+      // Esquerda
+      html+='<div style="display:flex;flex-direction:column;gap:6px;">';
+      html+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">';
+      html+='<span style="font-size:14px;font-weight:800;color:var(--bluedark);">🏊 '+p.servico+'</span>';
+      html+='<span class="pill '+(p.status==='pendente'?'pendente-aprov':p.status)+'">'+p.status+'</span>';
+      html+=acoes;
+      html+='</div>';
+      html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px 20px;margin-top:4px;">';
+      html+='<div><span style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">ID Piscina</span><div style="font-size:12px;font-weight:700;color:var(--blue);">#'+p.id+'</div></div>';
+      html+='<div><span style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Vagas</span><div style="font-size:12px;font-weight:700;">'+p.vagas_ocupadas+'/'+p.vagas_total+'</div></div>';
+      html+='<div><span style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Preço/vaga</span><div style="font-size:12px;font-weight:700;">'+fmt(p.preco_por_vaga)+'</div></div>';
+      html+='<div><span style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Vencimento cartão</span><div style="font-size:12px;font-weight:700;">'+(p.cartao_vencimento||'—')+'</div></div>';
+      if(p.link_convite) html+='<div style="grid-column:1/-1;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Link convite</span><div style="font-size:11px;word-break:break-all;"><a href="'+p.link_convite+'" target="_blank" style="color:var(--blue);">'+p.link_convite+'</a></div></div>';
+      html+='</div></div>';
+      // Direita — métricas financeiras
+      html+='<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">';
+      html+='<div style="text-align:right;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Receita/mês</div><div style="font-size:16px;font-weight:900;font-family:Nunito,sans-serif;color:var(--green);">'+fmt(receita)+'</div></div>';
+      html+='<div style="text-align:right;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Custo (repasse dono)</div><div style="font-size:16px;font-weight:900;font-family:Nunito,sans-serif;color:var(--blue);">'+fmt(lucrodono)+'</div></div>';
+      html+='<div style="text-align:right;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Lucro SP</div><div style="font-size:16px;font-weight:900;font-family:Nunito,sans-serif;color:var(--teal);">'+fmt(lucroSP)+'</div></div>';
+      html+='</div>';
+      html+='</div></div>';
+    });
+    html+='</div></div>'; // fecha dono-body e dono-group
+  });
+  el.innerHTML=html;
 }
 
 async function aprovarPiscina(id){
@@ -561,7 +643,7 @@ function renderUsuarios(){
   });
   if(!lista.length){document.getElementById('tbody-usuarios').innerHTML='<tr><td colspan="6"><div class="empty">Nenhum usuário encontrado.</div></td></tr>';return;}
   var html=lista.map(function(u){
-    var tipo=u._isDono&&u._isMembro?'dono+membro':u._isDono?'dono':'membro';
+    var tipo=u._isDono&&u._isMembro?'dono+membro':u._isDono?'dono':u._isMembro?'membro':'—';
     return '<tr>'+
       '<td data-label="Nome" style="font-weight:600;">'+u.nome+'</td>'+
       '<td data-label="Email" style="font-size:12px;opacity:.7;">'+u.email+'</td>'+
@@ -574,40 +656,124 @@ function renderUsuarios(){
   document.getElementById('tbody-usuarios').innerHTML=html;
 }
 
+// ── ASSINATURAS ──
+async function carregarAssinaturas(){
+  var {data:a}=await sb.rpc('buscar_assinaturas_admin');
+  dados.assinaturas=a||[];
+}
+
 // ── FINANCEIRO ──
+var filtroFin='mensal';
+function filtrarFin(tipo,el){
+  filtroFin=tipo;
+  document.querySelectorAll('#sec-financeiro .fbtn').forEach(function(b){b.classList.remove('act');});
+  if(el) el.classList.add('act');
+  renderFinanceiro();
+}
+
 function renderFinanceiro(){
-  var r=dados.repasses;
-  var totalRepassado=r.filter(function(x){return x.status==='pago';}).reduce(function(s,x){return s+Number(x.valor||0);},0);
-  var totalPend=r.filter(function(x){return x.status==='pendente';}).reduce(function(s,x){return s+Number(x.valor||0);},0);
-  // Estimar lucro SP
-  var lucroSP=0;
-  dados.piscinas.forEach(function(p){
-    lucroSP+=getLucroSP(p.servico,'')*Number(p.vagas_ocupadas||0);
-  });
-  var mrr=dados.piscinas.filter(function(p){return p.status==='aberta';}).reduce(function(s,p){return s+Number(p.preco_por_vaga||0)*Number(p.vagas_ocupadas||0);},0);
+  var assins=dados.assinaturas||[];
+  var ativas=assins.filter(function(a){return a.status==='ativo';});
+  var piscs=dados.piscinas||[];
+  var users=dados.usuarios||[];
+
+  // Contagens
+  var nDonos=users.filter(function(u){return u._isDono;}).length;
+  var nMembros=users.filter(function(u){return u._isMembro;}).length;
+
+  // MRR = soma de valor das assinaturas ativas
+  var mrr=ativas.reduce(function(s,a){return s+Number(a.valor||0);},0);
+
+  // Custo SP = soma REPASSE_MAP por assinatura ativa
+  var custoSP=ativas.reduce(function(s,a){
+    var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
+    var rep=REPASSE_MAP[k]||0;
+    if(!rep){for(var x in REPASSE_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){rep=REPASSE_MAP[x];break;}}}
+    return s+rep;
+  },0);
+
+  // Lucro SP = MRR - Custo SP
+  var lucroSP=mrr-custoSP;
+
   document.getElementById('resumo-financeiro').innerHTML=
-    '<div class="rcard"><div class="rcard-val green">'+fmt(mrr)+'</div><div class="rcard-lbl">MRR</div></div>'+
-    '<div class="rcard"><div class="rcard-val blue">'+fmt(lucroSP)+'</div><div class="rcard-lbl">Lucro SP/mês</div></div>'+
-    '<div class="rcard"><div class="rcard-val">'+fmt(totalRepassado)+'</div><div class="rcard-lbl">Total pago donos</div></div>'+
-    '<div class="rcard"><div class="rcard-val red">'+fmt(totalPend)+'</div><div class="rcard-lbl">A pagar donos</div></div>';
+    '<div class="rcard"><div class="rcard-val green">'+fmt(mrr)+'</div><div class="rcard-lbl">MRR (Receita)</div></div>'+
+    '<div class="rcard"><div class="rcard-val red">'+fmt(custoSP)+'</div><div class="rcard-lbl">Custo (repasse donos)</div></div>'+
+    '<div class="rcard"><div class="rcard-val teal">'+fmt(lucroSP)+'</div><div class="rcard-lbl">Lucro SP</div></div>'+
+    '<div class="rcard"><div class="rcard-val blue">'+ativas.length+'</div><div class="rcard-lbl">Assinaturas ativas</div></div>'+
+    '<div class="rcard"><div class="rcard-val">'+nDonos+'</div><div class="rcard-lbl">Donos</div></div>'+
+    '<div class="rcard"><div class="rcard-val">'+nMembros+'</div><div class="rcard-lbl">Membros</div></div>';
+
+  // Estratificação temporal
+  var grupos={};
+  ativas.forEach(function(a){
+    var dt=a.confirmado_em?new Date(a.confirmado_em):null;
+    if(!dt) return;
+    var chave='';
+    if(filtroFin==='diario') chave=dt.toLocaleDateString('pt-BR');
+    else if(filtroFin==='mensal') chave=(dt.getMonth()+1).toString().padStart(2,'0')+'/'+dt.getFullYear();
+    else chave=dt.getFullYear().toString();
+    if(!grupos[chave]) grupos[chave]={receita:0,custo:0,lucro:0,n:0};
+    var val=Number(a.valor||0);
+    var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
+    var rep=REPASSE_MAP[k]||0;
+    if(!rep){for(var x in REPASSE_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){rep=REPASSE_MAP[x];break;}}}
+    grupos[chave].receita+=val;
+    grupos[chave].custo+=rep;
+    grupos[chave].lucro+=(val-rep);
+    grupos[chave].n++;
+  });
+
+  var titulo={diario:'Estratificação Diária',mensal:'Estratificação Mensal',anual:'Estratificação Anual'};
+  document.getElementById('fin-tabela-titulo').textContent=titulo[filtroFin];
+
+  var chaves=Object.keys(grupos).sort(function(a,b){return b>a?1:-1;});
+  if(!chaves.length){
+    document.getElementById('fin-tabela').innerHTML='<div class="empty">Sem assinaturas ativas com data de confirmação.</div>';
+  } else {
+    var thtml='<table style="width:100%;border-collapse:collapse;">';
+    thtml+='<thead><tr>';
+    thtml+='<th style="text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;border-bottom:1px solid rgba(18,85,204,0.1);">Período</th>';
+    thtml+='<th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;border-bottom:1px solid rgba(18,85,204,0.1);">Assinaturas</th>';
+    thtml+='<th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;border-bottom:1px solid rgba(18,85,204,0.1);">Receita</th>';
+    thtml+='<th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;border-bottom:1px solid rgba(18,85,204,0.1);">Custo (repasse)</th>';
+    thtml+='<th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;border-bottom:1px solid rgba(18,85,204,0.1);">Lucro SP</th>';
+    thtml+='</tr></thead><tbody>';
+    chaves.forEach(function(c){
+      var g=grupos[c];
+      thtml+='<tr style="border-bottom:1px solid rgba(18,85,204,0.05);">';
+      thtml+='<td style="padding:10px 12px;font-size:13px;font-weight:700;">'+c+'</td>';
+      thtml+='<td style="padding:10px 12px;font-size:13px;text-align:right;">'+g.n+'</td>';
+      thtml+='<td style="padding:10px 12px;font-size:13px;font-weight:700;text-align:right;color:var(--green);">'+fmt(g.receita)+'</td>';
+      thtml+='<td style="padding:10px 12px;font-size:13px;text-align:right;color:var(--red);">'+fmt(g.custo)+'</td>';
+      thtml+='<td style="padding:10px 12px;font-size:14px;font-weight:900;text-align:right;color:var(--teal);font-family:Nunito,sans-serif;">'+fmt(g.lucro)+'</td>';
+      thtml+='</tr>';
+    });
+    thtml+='</tbody></table>';
+    document.getElementById('fin-tabela').innerHTML=thtml;
+  }
 
   // Gráfico por serviço
   var porServ={};
-  dados.piscinas.forEach(function(p){
-    var s=p.servico||'Outro';
-    if(!porServ[s]) porServ[s]=0;
-    porServ[s]+=getLucroSP(p.servico,'')*Number(p.vagas_ocupadas||0);
+  ativas.forEach(function(a){
+    var s=a.servico||'Outro';
+    if(!porServ[s]) porServ[s]={receita:0,lucro:0};
+    var val=Number(a.valor||0);
+    var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
+    var lsp=LUCRO_SP_MAP[k]||0;
+    if(!lsp){for(var x in LUCRO_SP_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){lsp=LUCRO_SP_MAP[x];break;}}}
+    porServ[s].receita+=val;
+    porServ[s].lucro+=lsp;
   });
-  var maxV=Math.max.apply(null,Object.values(porServ))||1;
-  var html=Object.keys(porServ).sort(function(a,b){return porServ[b]-porServ[a];}).map(function(s){
-    var pct=Math.round(porServ[s]/maxV*100);
+  var maxV=Math.max.apply(null,Object.values(porServ).map(function(v){return v.receita;}))||1;
+  var ghtml=Object.keys(porServ).sort(function(a,b){return porServ[b].receita-porServ[a].receita;}).map(function(s){
+    var pct=Math.round(porServ[s].receita/maxV*100);
     return '<div class="chart-bar-row">'+
       '<div class="chart-bar-lbl">'+s+'</div>'+
       '<div class="chart-bar-track"><div class="chart-bar-fill" style="width:'+pct+'%"></div></div>'+
-      '<div class="chart-bar-val">'+fmt(porServ[s])+'</div>'+
+      '<div class="chart-bar-val">'+fmt(porServ[s].receita)+'</div>'+
       '</div>';
   }).join('');
-  document.getElementById('chart-servicos').innerHTML=html||'<div class="empty">Sem dados ainda.</div>';
+  document.getElementById('chart-servicos').innerHTML=ghtml||'<div class="empty">Sem dados ainda.</div>';
 }
 
 function sair(){localStorage.removeItem('sp_admin_sess');window.location.replace('admin-login.html');}
