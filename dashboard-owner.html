@@ -410,7 +410,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
       </div>
       <!-- Aba Lucro -->
       <div class="extrato-aba-content" id="extrato-aba-lucro">
-        <div class="extrato-empty" id="extrato-lucro-list">Nenhum lucro registrado ainda.</div>
+        <div id="extrato-lucro-list"></div>
       </div>
     </div>
 
@@ -1316,7 +1316,7 @@ function renderExtratoLucro(){
       html+='<div style="font-size:12px;font-weight:700;color:var(--bluedark);">💰 '+(pisc.servico||'—')+'</div>';
       html+='<div style="font-size:14px;font-weight:800;color:#00875A;font-family:Nunito,sans-serif;">'+fmt(sp)+'</div>';
       html+='</div>';
-      html+='<div style="font-size:11px;font-weight:600;color:var(--bluedark);margin-top:3px;">SP reteve: '+fmt(sp)+'</div>';
+      html+='<div style="font-size:11px;font-weight:600;color:var(--bluedark);opacity:.5;margin-top:3px;">SP reteve: '+fmt(sp)+'</div>';
       html+='</div>';
     });
     html+='<div class="repasse-total"><span>Lucro '+formatarMes(mes)+'</span><span class="repasse-val green">'+fmt(totalLucro)+'</span></div>';

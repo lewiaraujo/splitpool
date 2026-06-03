@@ -695,16 +695,21 @@ function renderFinanceiro(){
   // MRR = soma de valor das assinaturas ativas
   var mrr=ativas.reduce(function(s,a){return s+Number(a.valor||0);},0);
 
-  // Custo SP = soma REPASSE_MAP por assinatura ativa
+  // Lucro SP = LUCRO_SP_MAP por assinatura ativa (o que a SP retém)
+  var lucroSP=ativas.reduce(function(s,a){
+    var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
+    var lsp=LUCRO_SP_MAP[k]||0;
+    if(!lsp){for(var x in LUCRO_SP_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){lsp=LUCRO_SP_MAP[x];break;}}}
+    return s+lsp;
+  },0);
+
+  // Custo SP = REPASSE_MAP por assinatura ativa (o que vai pro dono)
   var custoSP=ativas.reduce(function(s,a){
     var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
     var rep=REPASSE_MAP[k]||0;
     if(!rep){for(var x in REPASSE_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){rep=REPASSE_MAP[x];break;}}}
     return s+rep;
   },0);
-
-  // Lucro SP = MRR - Custo SP
-  var lucroSP=mrr-custoSP;
 
   document.getElementById('resumo-financeiro').innerHTML=
     '<div class="rcard"><div class="rcard-val green">'+fmt(mrr)+'</div><div class="rcard-lbl">MRR (Receita)</div></div>'+
@@ -728,9 +733,11 @@ function renderFinanceiro(){
     var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
     var rep=REPASSE_MAP[k]||0;
     if(!rep){for(var x in REPASSE_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){rep=REPASSE_MAP[x];break;}}}
+    var lsp=LUCRO_SP_MAP[k]||0;
+    if(!lsp){for(var x in LUCRO_SP_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){lsp=LUCRO_SP_MAP[x];break;}}}
     grupos[chave].receita+=val;
     grupos[chave].custo+=rep;
-    grupos[chave].lucro+=(val-rep);
+    grupos[chave].lucro+=lsp;
     grupos[chave].n++;
   });
 
