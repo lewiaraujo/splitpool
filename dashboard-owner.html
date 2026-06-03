@@ -994,9 +994,25 @@ async function carregarDashboard(){
   var w=document.getElementById('provisionado-card-wrap');
   if(w) w.innerHTML=card1HTML+card2HTML;
 
+  // Calcular recebido e lucro acumulado a partir dos repasses pagos
+  var totalRecebido=0, totalLucroAcumulado=0;
+  (todosRepasses||[]).filter(function(r){return r.status==='pago';}).forEach(function(r){
+    totalRecebido+=Number(r.valor||0);
+    // Extrair lucro SP da observação para calcular lucro real
+    var obs=r.observacao||'';
+    var idx=obs.indexOf('SP reteve R$');
+    if(idx!==-1){
+      var parte=obs.substring(idx+12).trim();
+      var num=parseFloat(parte.split(/[^0-9,]/)[0].replace(',','.'))||0;
+      totalLucroAcumulado+=num;
+    }
+  });
+
   document.getElementById('resumo-bar').innerHTML=
     '<div class="resumo-item"><div class="resumo-val green">'+fmt(totalReceita)+'</div><div class="resumo-lbl">Receita do mês</div></div>'
     +'<div class="resumo-item"><div class="resumo-val blue">'+fmt(totalAReceber)+'</div><div class="resumo-lbl">A receber</div></div>'
+    +'<div class="resumo-item"><div class="resumo-val green" id="resumo-recebido">'+fmt(totalRecebido)+'</div><div class="resumo-lbl">Recebido</div></div>'
+    +'<div class="resumo-item"><div class="resumo-val teal" id="resumo-lucro-acum">'+fmt(totalLucroAcumulado)+'</div><div class="resumo-lbl">Lucro acumulado</div></div>'
     +'<div class="resumo-item"><div class="resumo-val teal">'+piscinasAtivas+'</div><div class="resumo-lbl">Piscinas ativas</div></div>'
     +'<div class="resumo-item"><div class="resumo-val">'+vagasOcup+'/'+vagasTotal+'</div><div class="resumo-lbl">Vagas ocupadas</div></div>';
 
@@ -1270,9 +1286,25 @@ async function carregarExtrato(){
     (piscs||[]).forEach(function(p){piscMap[p.id]=p;});
   }
   renderExtrato();
+  atualizarResumoRecebido();
 }
 
-function trocarAbaExtrato(aba,el){
+function atualizarResumoRecebido(){
+  var totalRecebido=0,totalLucroAcum=0;
+  (todosRepasses||[]).filter(function(r){return r.status==='pago';}).forEach(function(r){
+    totalRecebido+=Number(r.valor||0);
+    var obs=r.observacao||'';
+    var idx=obs.indexOf('SP reteve R$');
+    if(idx!==-1){
+      var parte=obs.substring(idx+12).trim();
+      totalLucroAcum+=parseFloat(parte.split(/[^0-9,]/)[0].replace(',','.'))||0;
+    }
+  });
+  var recebidoEl=document.getElementById('resumo-recebido');
+  var lucroAcumEl=document.getElementById('resumo-lucro-acum');
+  if(recebidoEl) recebidoEl.textContent=fmt(totalRecebido);
+  if(lucroAcumEl) lucroAcumEl.textContent=fmt(totalLucroAcum);
+}
   document.querySelectorAll('.extrato-aba').forEach(function(b){b.classList.remove('act');});
   document.querySelectorAll('.extrato-aba-content').forEach(function(c){c.classList.remove('act');});
   if(el) el.classList.add('act');
