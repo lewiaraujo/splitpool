@@ -248,7 +248,7 @@ tbody td{padding:12px 16px;font-size:13px;}
     </div>
     <!-- Gráfico por serviço -->
     <div style="background:#fff;border-radius:14px;padding:20px 24px;border:1px solid rgba(18,85,204,0.1);box-shadow:0 2px 8px rgba(0,20,80,0.05);">
-      <div style="font-size:14px;font-weight:700;color:var(--bluedark);margin-bottom:16px;">Receita por serviço (assinaturas ativas)</div>
+      <div style="font-size:14px;font-weight:700;color:var(--bluedark);margin-bottom:16px;" id="graf-servicos-titulo">Receita por serviço (mês atual)</div>
       <div id="chart-servicos"></div>
     </div>
   </div>
@@ -563,27 +563,24 @@ function renderPiscinas(){
       if(p.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="event.stopPropagation();aprovarPiscina('+p.id+')">Aprovar</button>';
       else if(p.status==='aberta') acoes='<button class="btn-act btn-pausar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'pausada\')">Pausar</button>';
       else if(p.status==='pausada') acoes='<button class="btn-act btn-reativar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'aberta\')">Reativar</button>';
-      html+='<div style="padding:14px 18px 14px 28px;border-bottom:1px solid rgba(18,85,204,0.06);">';
-      html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">';
-      // Esquerda
-      html+='<div style="display:flex;flex-direction:column;gap:6px;">';
-      html+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">';
-      html+='<span style="font-size:14px;font-weight:800;color:var(--bluedark);">🏊 '+p.servico+'</span>';
+      html+='<div style="padding:12px 18px 12px 28px;border-bottom:1px solid rgba(18,85,204,0.06);">';
+      html+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;">';
+      // Nome + status + ação
+      html+='<div style="display:flex;align-items:center;gap:8px;min-width:160px;">';
+      html+='<span style="font-size:13px;font-weight:800;color:var(--bluedark);">🏊 '+p.servico+'</span>';
       html+='<span class="pill '+(p.status==='pendente'?'pendente-aprov':p.status)+'">'+p.status+'</span>';
       html+=acoes;
       html+='</div>';
-      html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px 20px;margin-top:4px;">';
-      html+='<div><span style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">ID Piscina</span><div style="font-size:12px;font-weight:700;color:var(--blue);">#'+p.id+'</div></div>';
-      html+='<div><span style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Vagas</span><div style="font-size:12px;font-weight:700;">'+p.vagas_ocupadas+'/'+p.vagas_total+'</div></div>';
-      html+='<div><span style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Preço/vaga</span><div style="font-size:12px;font-weight:700;">'+fmt(p.preco_por_vaga)+'</div></div>';
-      html+='<div><span style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Vencimento cartão</span><div style="font-size:12px;font-weight:700;">'+(p.cartao_vencimento||'—')+'</div></div>';
-      if(p.link_convite) html+='<div style="grid-column:1/-1;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Link convite</span><div style="font-size:11px;word-break:break-all;"><a href="'+p.link_convite+'" target="_blank" style="color:var(--blue);">'+p.link_convite+'</a></div></div>';
-      html+='</div></div>';
-      // Direita — métricas financeiras
-      html+='<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">';
-      html+='<div style="text-align:right;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Receita/mês</div><div style="font-size:16px;font-weight:900;font-family:Nunito,sans-serif;color:var(--green);">'+fmt(receita)+'</div></div>';
-      html+='<div style="text-align:right;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Custo (repasse dono)</div><div style="font-size:16px;font-weight:900;font-family:Nunito,sans-serif;color:var(--blue);">'+fmt(lucrodono)+'</div></div>';
-      html+='<div style="text-align:right;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Lucro SP</div><div style="font-size:16px;font-weight:900;font-family:Nunito,sans-serif;color:var(--teal);">'+fmt(lucroSP)+'</div></div>';
+      // Campos horizontais
+      html+='<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">';
+      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Código</div><div style="font-size:12px;font-weight:700;color:var(--blue);font-family:monospace;">#'+p.id+'</div></div>';
+      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Vagas</div><div style="font-size:12px;font-weight:700;">'+p.vagas_ocupadas+'/'+p.vagas_total+'</div></div>';
+      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Preço/vaga</div><div style="font-size:12px;font-weight:700;">'+fmt(p.preco_por_vaga)+'</div></div>';
+      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Venc. cartão</div><div style="font-size:12px;font-weight:700;">'+(p.cartao_vencimento||'—')+'</div></div>';
+      if(p.link_convite) html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Link convite</div><div style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="'+p.link_convite+'" target="_blank" style="color:var(--blue);" title="'+p.link_convite+'">'+p.link_convite+'</a></div></div>';
+      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Receita/mês</div><div style="font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--green);">'+fmt(receita)+'</div></div>';
+      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Custo dono</div><div style="font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--blue);">'+fmt(lucrodono)+'</div></div>';
+      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Lucro SP</div><div style="font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--teal);">'+fmt(lucroSP)+'</div></div>';
       html+='</div>';
       html+='</div></div>';
     });
@@ -752,9 +749,18 @@ function renderFinanceiro(){
     document.getElementById('fin-tabela').innerHTML=thtml;
   }
 
-  // Gráfico por serviço
+  // Gráfico por serviço — filtrado pelo período atual selecionado
+  var agora=new Date();
+  var asSelecionadas=ativas.filter(function(a){
+    var dt=a.confirmado_em?new Date(a.confirmado_em):null;
+    if(!dt) return false;
+    if(filtroFin==='diario') return dt.toDateString()===agora.toDateString();
+    if(filtroFin==='mensal') return dt.getMonth()===agora.getMonth()&&dt.getFullYear()===agora.getFullYear();
+    if(filtroFin==='anual') return dt.getFullYear()===agora.getFullYear();
+    return true;
+  });
   var porServ={};
-  ativas.forEach(function(a){
+  asSelecionadas.forEach(function(a){
     var s=a.servico||'Outro';
     if(!porServ[s]) porServ[s]={receita:0,lucro:0};
     var val=Number(a.valor||0);
@@ -764,6 +770,8 @@ function renderFinanceiro(){
     porServ[s].receita+=val;
     porServ[s].lucro+=lsp;
   });
+  var titulosGraf={diario:'Receita por serviço (hoje)',mensal:'Receita por serviço (mês atual)',anual:'Receita por serviço (ano atual)'};
+  document.getElementById('graf-servicos-titulo').textContent=titulosGraf[filtroFin]||'Receita por serviço';
   var maxV=Math.max.apply(null,Object.values(porServ).map(function(v){return v.receita;}))||1;
   var ghtml=Object.keys(porServ).sort(function(a,b){return porServ[b].receita-porServ[a].receita;}).map(function(s){
     var pct=Math.round(porServ[s].receita/maxV*100);
