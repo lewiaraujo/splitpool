@@ -557,6 +557,21 @@ function renderPiscinas(){
     html+='<div class="dono-total"><div style="font-family:Nunito,sans-serif;font-size:16px;font-weight:900;color:rgba(255,255,255,.7);">'+piscs.length+' piscina'+(piscs.length>1?'s':'')+'</div><div class="dono-total-lbl">Total</div></div>';
     html+='</div></div>';
     html+='<div class="dono-body" id="'+bodyId+'">';
+    html+='<div style="overflow-x:auto;">';
+    html+='<table style="width:100%;border-collapse:collapse;min-width:800px;">';
+    html+='<thead><tr style="background:rgba(18,85,204,0.04);">';
+    html+='<th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Serviço</th>';
+    html+='<th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Código</th>';
+    html+='<th style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Vagas</th>';
+    html+='<th style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Preço/vaga</th>';
+    html+='<th style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Venc. cartão</th>';
+    html+='<th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Link convite</th>';
+    html+='<th style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Receita/mês</th>';
+    html+='<th style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Custo dono</th>';
+    html+='<th style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Lucro SP</th>';
+    html+='<th style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Status</th>';
+    html+='<th style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Ação</th>';
+    html+='</tr></thead><tbody>';
     piscs.forEach(function(p){
       var lucroSP=getLucroSP(p.servico,'')*Number(p.vagas_ocupadas||0);
       var lucrodono=getRepasse(p.servico,'')*Number(p.vagas_ocupadas||0);
@@ -565,27 +580,24 @@ function renderPiscinas(){
       if(p.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="event.stopPropagation();aprovarPiscina('+p.id+')">Aprovar</button>';
       else if(p.status==='aberta') acoes='<button class="btn-act btn-pausar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'pausada\')">Pausar</button>';
       else if(p.status==='pausada') acoes='<button class="btn-act btn-reativar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'aberta\')">Reativar</button>';
-      html+='<div style="padding:12px 18px 12px 28px;border-bottom:1px solid rgba(18,85,204,0.06);">';
-      html+='<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">';
-      // Nome + status + ação (largura fixa)
-      html+='<div style="display:flex;align-items:center;gap:8px;min-width:200px;">';
-      html+='<span style="font-size:13px;font-weight:800;color:var(--bluedark);">🏊 '+p.servico+'</span>';
-      html+='<span class="pill '+(p.status==='pendente'?'pendente-aprov':p.status)+'">'+p.status+'</span>';
-      html+=acoes;
-      html+='</div>';
-      // Campos fixos — sempre na mesma ordem
-      html+='<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">';
-      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Código</div><div style="font-size:12px;font-weight:700;color:var(--blue);font-family:monospace;">'+poolCode(p.id)+'</div></div>';
-      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Vagas</div><div style="font-size:12px;font-weight:700;">'+p.vagas_ocupadas+'/'+p.vagas_total+'</div></div>';
-      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Preço/vaga</div><div style="font-size:12px;font-weight:700;">'+fmt(p.preco_por_vaga)+'</div></div>';
-      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Venc. cartão</div><div style="font-size:12px;font-weight:700;">'+(p.cartao_vencimento||'—')+'</div></div>';
-      if(p.link_convite) html+='<div style="max-width:140px;"><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Link convite</div><div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="'+p.link_convite+'" target="_blank" style="color:var(--blue);" title="'+p.link_convite+'">'+p.link_convite+'</a></div></div>';
-      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Receita/mês</div><div style="font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--green);">'+fmt(receita)+'</div></div>';
-      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Custo dono</div><div style="font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--blue);">'+fmt(lucrodono)+'</div></div>';
-      html+='<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;letter-spacing:.05em;">Lucro SP</div><div style="font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--teal);">'+fmt(lucroSP)+'</div></div>';
-      html+='</div>';
-      html+='</div></div>';
+      var linkHtml=p.link_convite
+        ?'<a href="'+p.link_convite+'" target="_blank" style="color:var(--blue);font-size:11px;display:block;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+p.link_convite+'">'+p.link_convite+'</a>'
+        :'<span style="opacity:.3;">—</span>';
+      html+='<tr style="border-bottom:1px solid rgba(18,85,204,0.06);">';
+      html+='<td style="padding:10px 12px;font-size:13px;font-weight:800;color:var(--bluedark);white-space:nowrap;">🏊 '+p.servico+'</td>';
+      html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;color:var(--blue);font-family:monospace;white-space:nowrap;">'+poolCode(p.id)+'</td>';
+      html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;">'+p.vagas_ocupadas+'/'+p.vagas_total+'</td>';
+      html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;text-align:right;white-space:nowrap;">'+fmt(p.preco_por_vaga)+'</td>';
+      html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;">'+(p.cartao_vencimento||'—')+'</td>';
+      html+='<td style="padding:10px 12px;">'+linkHtml+'</td>';
+      html+='<td style="padding:10px 12px;font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--green);text-align:right;white-space:nowrap;">'+fmt(receita)+'</td>';
+      html+='<td style="padding:10px 12px;font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--blue);text-align:right;white-space:nowrap;">'+fmt(lucrodono)+'</td>';
+      html+='<td style="padding:10px 12px;font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--teal);text-align:right;white-space:nowrap;">'+fmt(lucroSP)+'</td>';
+      html+='<td style="padding:10px 12px;text-align:center;white-space:nowrap;"><span class="pill '+(p.status==='pendente'?'pendente-aprov':p.status)+'">'+p.status+'</span></td>';
+      html+='<td style="padding:10px 12px;text-align:center;white-space:nowrap;">'+acoes+'</td>';
+      html+='</tr>';
     });
+    html+='</tbody></table></div>';
     html+='</div></div>'; // fecha dono-body e dono-group
   });
   el.innerHTML=html;

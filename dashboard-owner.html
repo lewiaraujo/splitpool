@@ -1284,18 +1284,13 @@ function trocarAbaExtrato(aba,el){
 function renderExtratoLucro(){
   var el=document.getElementById('extrato-lucro-list');
   if(!el) return;
-  // Todos os repasses são do tipo 'repasse' — o lucro é calculado subtraindo o que SP reteve
-  // que está na observação "SP reteve R$X,XX"
   var lista=todosRepasses.filter(function(r){return r.tipo==='repasse';});
   if(!lista.length){el.innerHTML='<div class="extrato-empty">Nenhum lucro registrado ainda.</div>';return;}
-  // Reutiliza renderExtrato mas só com tipo lucro
-  // Extrair lucro SP da observação para calcular lucro real do dono
   function extrairLucroSP(obs){
     var s=obs||'';
-    // Formato: "SP reteve R$ 4,00" ou "SP reteve R$4,00"
     var idx=s.indexOf('SP reteve R$');
     if(idx===-1) return 0;
-    var parte=s.substring(idx+12).trim(); // depois de "SP reteve R$", remove espacos
+    var parte=s.substring(idx+12).trim();
     var num=parte.split(/[^0-9,]/)[0].replace(',','.');
     return parseFloat(num)||0;
   }
@@ -1304,24 +1299,25 @@ function renderExtratoLucro(){
   var html='';
   Object.keys(porMes).sort().reverse().forEach(function(mes){
     var items=porMes[mes];
-    var totalLucro=items.reduce(function(s,r){
-      var sp=extrairLucroSP(r.observacao);
-      return s+getLucroSPFromRepasse(r.valor,sp);
-    },0);
+    var totalLucro=items.reduce(function(s,r){return s+extrairLucroSP(r.observacao);},0);
+    var statusGeral=items.every(function(r){return r.status==='pago';})?'pago'
+      :items.some(function(r){return r.status==='aprovado';})?'aprovado':'pendente';
+    var statusLabel={pendente:'Pendente',aprovado:'Aprovado',pago:'Pago'}[statusGeral];
     html+='<div class="repasse-card">';
-    html+='<div class="repasse-header"><div class="repasse-mes">'+formatarMes(mes)+'</div>';
-    html+='<span class="repasse-status '+(items[0].status||'pendente')+'">'+items[0].status+'</span></div>';
+    html+='<div class="repasse-header">';
+    html+='<div class="repasse-mes">'+formatarMes(mes)+'</div>';
+    html+='<span class="repasse-status '+statusGeral+'">'+statusLabel+'</span>';
+    html+='</div>';
     items.forEach(function(r){
       var pisc=piscMap[r.piscina_id]||{};
       var sp=extrairLucroSP(r.observacao);
-      var lucro=getLucroSPFromRepasse(r.valor,sp);
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(0,180,210,0.08);">'
-        +'<div>'
-        +'<div style="font-size:12px;font-weight:700;color:var(--bluedark);">💰 '+(pisc.servico||'—')+'</div>'
-        +'<div style="font-size:11px;color:var(--bluedark);opacity:.5;margin-top:2px;">SP reteve: '+fmt(sp)+'</div>'
-        +'</div>'
-        +'<div style="font-size:14px;font-weight:800;color:#00875A;font-family:Nunito,sans-serif;">'+fmt(lucro)+'</div>'
-        +'</div>';
+      html+='<div style="background:rgba(0,180,210,0.04);border-radius:8px;padding:8px 10px;margin-bottom:6px;">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;">';
+      html+='<div style="font-size:12px;font-weight:700;color:var(--bluedark);">💰 '+(pisc.servico||'—')+'</div>';
+      html+='<div style="font-size:14px;font-weight:800;color:#00875A;font-family:Nunito,sans-serif;">'+fmt(sp)+'</div>';
+      html+='</div>';
+      html+='<div style="font-size:11px;font-weight:600;color:var(--bluedark);margin-top:3px;">SP reteve: '+fmt(sp)+'</div>';
+      html+='</div>';
     });
     html+='<div class="repasse-total"><span>Lucro '+formatarMes(mes)+'</span><span class="repasse-val green">'+fmt(totalLucro)+'</span></div>';
     html+='</div>';
