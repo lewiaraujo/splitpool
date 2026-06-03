@@ -649,18 +649,19 @@ function renderUsuarios(){
   var f=filtros.usuarios;
   var lista=dados.usuarios.filter(function(u){
     if(f==='dono') return u._isDono;
-    if(f==='membro') return u._isMembro&&!u._isDono;
+    if(f==='membro') return u._isMembro;
     return true;
   });
   if(!lista.length){document.getElementById('tbody-usuarios').innerHTML='<tr><td colspan="6"><div class="empty">Nenhum usuário encontrado.</div></td></tr>';return;}
   var html=lista.map(function(u){
-    var tipo=u._isDono&&u._isMembro?'dono+membro':u._isDono?'dono':u._isMembro?'membro':'—';
+    var tipo=u._isDono&&u._isMembro?'dono/membro':u._isDono?'dono':u._isMembro?'membro':'—';
+    var pillClass=u._isDono&&u._isMembro?'repasse':u._isDono?'aberta':u._isMembro?'membro':'';
     return '<tr>'+
       '<td data-label="Nome" style="font-weight:600;">'+u.nome+'</td>'+
       '<td data-label="Email" style="font-size:12px;opacity:.7;">'+u.email+'</td>'+
       '<td data-label="Piscinas">'+u._nPisc+'</td>'+
       '<td data-label="Assinaturas">'+u._nAssins+'</td>'+
-      '<td data-label="Tipo"><span class="pill '+(u._isDono?'aberta':'membro')+'">'+tipo+'</span></td>'+
+      '<td data-label="Tipo"><span class="pill '+pillClass+'">'+tipo+'</span></td>'+
       '<td data-label="Cadastro" style="font-size:12px;opacity:.6;">'+fmtData(u.created_at)+'</td>'+
       '</tr>';
   }).join('');
