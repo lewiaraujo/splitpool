@@ -458,7 +458,15 @@ function exportarCSV(){
 
 // ── PISCINAS ──
 async function carregarPiscinas(){
-  var {data:p}=await sb.from('piscinas').select('*,profiles(nome,email)').order('created_at',{ascending:false});
+  var {data:p}=await sb.rpc('buscar_piscinas_admin');
+  // Enriquecer com nome do dono via perfisMap (já carregado nos repasses) ou busca adicional
+  if(p&&p.length){
+    var donoIds=[...new Set(p.map(function(x){return x.dono_id;}))];
+    var {data:prfs}=await sb.rpc('buscar_usuarios_admin');
+    var perfMap={};
+    (prfs||[]).forEach(function(u){perfMap[u.id]=u;});
+    p.forEach(function(x){x.profiles=perfMap[x.dono_id]||null;});
+  }
   dados.piscinas=p||[];
   renderResumoPiscinas();
   renderPiscinas();
@@ -503,21 +511,21 @@ function renderPiscinas(){
 }
 
 async function aprovarPiscina(id){
-  await sb.from('piscinas').update({status:'aberta'}).eq('id',id);
+  await sb.rpc('admin_atualizar_piscina',{p_id:id,p_status:'aberta'});
   showToast('Piscina aprovada e aberta!','success');
   await carregarPiscinas();
 }
 async function alterarStatus(id,status){
-  await sb.from('piscinas').update({status:status}).eq('id',id);
+  await sb.rpc('admin_atualizar_piscina',{p_id:id,p_status:status});
   showToast('Status atualizado!','success');
   await carregarPiscinas();
 }
 
 // ── USUÁRIOS ──
 async function carregarUsuarios(){
-  var {data:profs}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
-  var {data:piscs}=await sb.from('piscinas').select('dono_id');
-  var {data:assins}=await sb.from('assinaturas').select('membro_id');
+  var {data:profs}=await sb.rpc('buscar_usuarios_admin');
+  var {data:piscs}=await sb.rpc('buscar_dono_ids_piscinas');
+  var {data:assins}=await sb.rpc('buscar_membros_ids_assinaturas');
   var donos=new Set((piscs||[]).map(function(p){return p.dono_id;}));
   var membros=new Set((assins||[]).map(function(a){return a.membro_id;}));
   var contPisc={},contAssins={};
