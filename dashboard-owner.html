@@ -1278,16 +1278,9 @@ async function carregarExtrato(){
 function atualizarResumoRecebido(){
   var totalRecebido=0,totalLucroAcum=0;
   (todosRepasses||[]).filter(function(r){return r.status==='pago';}).forEach(function(r){
-    totalRecebido+=Number(r.valor||0);
-    var obs=r.observacao||'';
-    var idx=obs.indexOf('Lucro dono R$');
-    if(idx!==-1){
-      var parte=obs.substring(idx+13).trim();
-      totalLucroAcum+=parseFloat(parte.split(/[^0-9,]/)[0].replace(',','.'))||0;
-    } else {
-      // fallback repasses antigos
-      totalLucroAcum+=Number(r.valor||0);
-    }
+    var v=Number(r.valor||0);
+    totalRecebido+=v;
+    totalLucroAcum+=v;
   });
   var el1=document.getElementById('resumo-recebido');
   var el2=document.getElementById('resumo-lucro-acum');
@@ -1310,15 +1303,8 @@ function renderExtratoLucro(){
   var lista=todosRepasses.filter(function(r){return r.tipo==='repasse';});
   if(!lista.length){el.innerHTML='<div class="extrato-empty">Nenhum lucro registrado ainda.</div>';return;}
   function extrairLucroDono(obs,valorRepasse){
-    // Formato novo: "Wellhub · 1 membro(s) · Lucro dono R$ 11,62"
-    var s=obs||'';
-    var idx=s.indexOf('Lucro dono R$');
-    if(idx!==-1){
-      var parte=s.substring(idx+13).trim();
-      var num=parseFloat(parte.split(/[^0-9,]/)[0].replace(',','.'))||0;
-      if(num>0) return num;
-    }
-    // Fallback repasses antigos: valor do repasse é o lucro do dono
+    // O valor do repasse JÁ É o lucro do dono (repasse bruto ao dono)
+    // Tanto no formato novo "Lucro dono R$ X,XX" quanto no formato antigo "SP reteve R$ X,XX"
     return Number(valorRepasse||0);
   }
   var porMes={};
