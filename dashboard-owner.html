@@ -771,11 +771,10 @@ function renderPool(pool,assins,vault){
 
 /* ── LUCRO SPLITPOOL MAP (Fase 1) ── */
 var LUCRO_SP_MAP={
-  // Wellhub — 20% spread líquido (pós taxa cartão proporcional)
   'starter':2.01,'basic':1.83,'basic+':1.85,'silver':2.91,'silver+':3.77,'gold':6.16,'gold+':6.99,'platinum':6.04,'diamond':5.44,'diamond+':4.96,
-  // TotalPass — 20% spread líquido (pós taxa cartão proporcional)
+  'wellhub':2.91,
   'tp go':2.01,'tp1':2.47,'tp1+':3.26,'tp2':4.06,'tp3':5.52,'tp4':6.86,'tp5':7.23,'tp5+':7.60,'tp6':7.98,'tp7':9.32,
-  // Familia — margem SP líquida (pós taxa cartão proporcional)
+  'totalpass':6.86,
   'microsoft 365':7.08,'duolingo super':4.97,'canva teams':3.41,'notion team':7.16,'alura':13.80
 };
 function getLucroSP(servico,planoNome){
@@ -790,16 +789,20 @@ function getLucroSP(servico,planoNome){
 var REPASSE_MAP={
   'starter':49.98,'basic':80.16,'basic+':111.14,'silver':167.08,'silver+':222.22,
   'gold':355.83,'gold+':483.00,'platinum':643.95,'diamond':744.55,'diamond+':825.03,
+  'wellhub':167.08,
   'tp go':49.89,'tp1':72.43,'tp1+':106.64,'tp2':140.84,'tp3':229.38,'tp4':338.04,
   'tp5':442.67,'tp5+':547.30,'tp6':651.92,'tp7':760.58,
+  'totalpass':338.04,
   'microsoft 365':18.42,'duolingo super':14.93,'canva teams':12.49,'notion team':17.84,'alura':35.57
 };
 // LUCRO_DONO_MAP = lucro líquido do dono após pagar a fatura (repasse - custo_real_vaga)
 var LUCRO_DONO_MAP={
   'starter':9.99,'basic':10.17,'basic+':11.15,'silver':17.09,'silver+':22.23,
   'gold':35.84,'gold+':43.01,'platinum':43.96,'diamond':44.56,'diamond+':45.04,
+  'wellhub':17.09,
   'tp go':9.99,'tp1':12.53,'tp1+':16.74,'tp2':20.94,'tp3':29.48,'tp4':38.14,
   'tp5':42.77,'tp5+':47.40,'tp6':52.02,'tp7':60.68,
+  'totalpass':38.14,
   'microsoft 365':8.44,'duolingo super':4.10,'canva teams':2.70,'notion team':17.84,'alura':35.57
 };
 function getRepasse(servico,planoNome){
