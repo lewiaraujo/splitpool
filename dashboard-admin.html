@@ -150,10 +150,10 @@ tbody td{padding:12px 16px;font-size:13px;}
   <div class="nav-in">
     <div class="nav-logo">Spli<span>T</span>Pool<span class="nav-badge">ADMIN</span></div>
     <div class="nav-links">
-      <button class="nav-link act" onclick="irPara('repasses',this)">💸 Repasses</button>
-      <button class="nav-link" onclick="irPara('piscinas',this)">🏊 Piscinas</button>
-      <button class="nav-link" onclick="irPara('usuarios',this)">👥 Usuários</button>
-      <button class="nav-link" onclick="irPara('financeiro',this)">📊 Financeiro</button>
+      <button class="nav-link act" data-sec="repasses" onclick="irPara('repasses',this)">💸 Repasses</button>
+      <button class="nav-link" data-sec="piscinas" onclick="irPara('piscinas',this)">🏊 Piscinas</button>
+      <button class="nav-link" data-sec="usuarios" onclick="irPara('usuarios',this)">👥 Usuários</button>
+      <button class="nav-link" data-sec="financeiro" onclick="irPara('financeiro',this)">📊 Financeiro</button>
     </div>
     <div class="nav-right">
       <span class="nav-admin" id="nav-admin-nome"></span>
@@ -300,11 +300,14 @@ function toggleMobNav(){
 }
 
 async function irPara(sec,el){
+  localStorage.setItem('sp_admin_aba',sec);
   document.querySelectorAll('.section').forEach(function(s){s.classList.remove('act');});
   document.getElementById('sec-'+sec).classList.add('act');
   document.querySelectorAll('.nav-link').forEach(function(l){l.classList.remove('act');});
   document.querySelectorAll('#mob-nav .nav-link').forEach(function(l){l.classList.remove('act');});
   if(el) el.classList.add('act');
+  // Marcar nav-link correto mesmo sem el (ex: restauração de aba)
+  document.querySelectorAll('.nav-link[data-sec="'+sec+'"]').forEach(function(l){l.classList.add('act');});
   if(sec==='piscinas'){
     if(!dados.piscinas.length) await carregarPiscinas();
     else renderPiscinas();
@@ -340,6 +343,9 @@ async function init(){
     if(n) n.textContent=sess.nome||sess.email;
   }catch(e){window.location.replace('admin-login.html');return;}
   await carregarRepasses();
+  // Restaurar aba que estava ativa antes do refresh
+  var abaGuardada=localStorage.getItem('sp_admin_aba')||'repasses';
+  if(abaGuardada!=='repasses') await irPara(abaGuardada);
 }
 
 // ── REPASSES ──
@@ -492,18 +498,32 @@ async function carregarPiscinas(){
   renderPiscinas();
 }
 
+// REPASSE_TRANSFER_MAP = valor transferido ao dono (valor_membro - lucroSP_liq)
 var REPASSE_MAP={
-  // Wellhub — lucro dono líquido (80% spread − taxa dono proporcional)
-  'starter':8.04,'basic':7.33,'basic+':7.39,'silver':11.62,'silver+':15.08,'gold':24.63,'gold+':27.97,'platinum':24.14,'diamond':21.75,'diamond+':19.83,
-  // TotalPass — lucro dono líquido
-  'tp go':8.05,'tp1':9.90,'tp1+':13.06,'tp2':16.22,'tp3':22.07,'tp4':27.44,'tp5':28.93,'tp5+':30.41,'tp6':31.90,'tp7':37.27,
-  // Familia — lucro dono líquido (repasse − custo vaga − taxa dono proporcional)
-  'microsoft 365':7.28,'duolingo super':3.12,'canva teams':1.83,'notion team':16.70,'alura':33.68
+  'starter':49.98,'basic':80.16,'basic+':111.14,'silver':167.08,'silver+':222.22,
+  'gold':355.83,'gold+':483.00,'platinum':643.95,'diamond':744.55,'diamond+':825.03,
+  'tp go':49.89,'tp1':72.43,'tp1+':106.64,'tp2':140.84,'tp3':229.38,'tp4':338.04,
+  'tp5':442.67,'tp5+':547.30,'tp6':651.92,'tp7':760.58,
+  'microsoft 365':18.42,'duolingo super':14.93,'canva teams':12.49,'notion team':17.84,'alura':35.57
+};
+// LUCRO_DONO_MAP = lucro líquido do dono após pagar a fatura
+var LUCRO_DONO_MAP={
+  'starter':9.99,'basic':10.17,'basic+':11.15,'silver':17.09,'silver+':22.23,
+  'gold':35.84,'gold+':43.01,'platinum':43.96,'diamond':44.56,'diamond+':45.04,
+  'tp go':9.99,'tp1':12.53,'tp1+':16.74,'tp2':20.94,'tp3':29.48,'tp4':38.14,
+  'tp5':42.77,'tp5+':47.40,'tp6':52.02,'tp7':60.68,
+  'microsoft 365':8.44,'duolingo super':4.10,'canva teams':2.70,'notion team':17.84,'alura':35.57
 };
 function getRepasse(servico,plano){
   var k=((plano||servico)||'').toLowerCase().trim();
   if(REPASSE_MAP[k]) return REPASSE_MAP[k];
   for(var x in REPASSE_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1) return REPASSE_MAP[x];}
+  return 0;
+}
+function getLucroDono(servico,plano){
+  var k=((plano||servico)||'').toLowerCase().trim();
+  if(LUCRO_DONO_MAP[k]) return LUCRO_DONO_MAP[k];
+  for(var x in LUCRO_DONO_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1) return LUCRO_DONO_MAP[x];}
   return 0;
 }
 
@@ -700,23 +720,29 @@ function renderFinanceiro(){
   function getVals(a){
     var preco=Number(a.valor||0);
     var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
+    // LucroSP liquido
     var lspLiq=LUCRO_SP_MAP[k]||0;
     if(!lspLiq){for(var x in LUCRO_SP_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){lspLiq=LUCRO_SP_MAP[x];break;}}}
-    var ldLiq=REPASSE_MAP[k]||0;
-    if(!ldLiq){for(var x in REPASSE_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){ldLiq=REPASSE_MAP[x];break;}}}
+    // Repasse bruto ao dono (transferencia = valor_membro - lucroSP)
+    var repasse=REPASSE_MAP[k]||0;
+    if(!repasse){for(var x in REPASSE_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){repasse=REPASSE_MAP[x];break;}}}
+    // Lucro liquido do dono (apos pagar a fatura)
+    var ldLiq=LUCRO_DONO_MAP[k]||0;
+    if(!ldLiq){for(var x in LUCRO_DONO_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){ldLiq=LUCRO_DONO_MAP[x];break;}}}
+    // Taxa cartao: ratio baseado em lucroSP vs lucro dono
     var taxaTotal=preco*0.0299+0.39;
-    var totalLiq=lspLiq+ldLiq;
-    var ratioSP=totalLiq>0?lspLiq/totalLiq:0.5;
+    var totLiq=lspLiq+ldLiq;
+    var ratioSP=totLiq>0?lspLiq/totLiq:0.5;
     var taxaSP=taxaTotal*ratioSP;
     var taxaDono=taxaTotal*(1-ratioSP);
-    return {preco,lspLiq,ldLiq,taxaTotal,taxaSP,taxaDono};
+    return {preco,lspLiq,repasse,ldLiq,taxaTotal,taxaSP,taxaDono};
   }
 
   var totReceita=0,totLucroSP=0,totTaxaSP=0,totTaxaDono=0,totLucroDono=0,totRepasse=0;
   ativas.forEach(function(a){
     var v=getVals(a);
     totReceita+=v.preco; totLucroSP+=v.lspLiq; totTaxaSP+=v.taxaSP;
-    totTaxaDono+=v.taxaDono; totLucroDono+=v.ldLiq; totRepasse+=(v.ldLiq+v.taxaDono);
+    totTaxaDono+=v.taxaDono; totLucroDono+=v.ldLiq; totRepasse+=v.repasse;
   });
   var totTaxa=totTaxaSP+totTaxaDono;
 
@@ -744,7 +770,7 @@ function renderFinanceiro(){
     var v=getVals(a);
     grupos[chave].receita+=v.preco; grupos[chave].taxaTotal+=v.taxaTotal;
     grupos[chave].taxaSP+=v.taxaSP; grupos[chave].taxaDono+=v.taxaDono;
-    grupos[chave].lucroSP+=v.lspLiq; grupos[chave].repasse+=(v.ldLiq+v.taxaDono);
+    grupos[chave].lucroSP+=v.lspLiq; grupos[chave].repasse+=v.repasse;
     grupos[chave].lucroDono+=v.ldLiq; grupos[chave].n++;
   });
 
