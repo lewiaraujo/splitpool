@@ -410,7 +410,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
       </div>
       <!-- Aba Lucro -->
       <div class="extrato-aba-content" id="extrato-aba-lucro">
-        <div class="extrato-empty" id="extrato-lucro-list">Nenhum lucro registrado ainda.</div>
+        <div id="extrato-lucro-list"></div>
       </div>
     </div>
 
@@ -997,6 +997,8 @@ async function carregarDashboard(){
   document.getElementById('resumo-bar').innerHTML=
     '<div class="resumo-item"><div class="resumo-val green">'+fmt(totalReceita)+'</div><div class="resumo-lbl">Receita do mês</div></div>'
     +'<div class="resumo-item"><div class="resumo-val blue">'+fmt(totalAReceber)+'</div><div class="resumo-lbl">A receber</div></div>'
+    +'<div class="resumo-item"><div class="resumo-val green" id="resumo-recebido">R$0,00</div><div class="resumo-lbl">Recebido</div></div>'
+    +'<div class="resumo-item"><div class="resumo-val teal" id="resumo-lucro-acum">R$0,00</div><div class="resumo-lbl">Lucro acumulado</div></div>'
     +'<div class="resumo-item"><div class="resumo-val teal">'+piscinasAtivas+'</div><div class="resumo-lbl">Piscinas ativas</div></div>'
     +'<div class="resumo-item"><div class="resumo-val">'+vagasOcup+'/'+vagasTotal+'</div><div class="resumo-lbl">Vagas ocupadas</div></div>';
 
@@ -1270,9 +1272,28 @@ async function carregarExtrato(){
     (piscs||[]).forEach(function(p){piscMap[p.id]=p;});
   }
   renderExtrato();
+  atualizarResumoRecebido();
 }
 
-function trocarAbaExtrato(aba,el){
+function atualizarResumoRecebido(){
+  var totalRecebido=0,totalLucroAcum=0;
+  (todosRepasses||[]).filter(function(r){return r.status==='pago';}).forEach(function(r){
+    totalRecebido+=Number(r.valor||0);
+    var obs=r.observacao||'';
+    var idx=obs.indexOf('Lucro dono R$');
+    if(idx!==-1){
+      var parte=obs.substring(idx+13).trim();
+      totalLucroAcum+=parseFloat(parte.split(/[^0-9,]/)[0].replace(',','.'))||0;
+    } else {
+      // fallback repasses antigos
+      totalLucroAcum+=Number(r.valor||0);
+    }
+  });
+  var el1=document.getElementById('resumo-recebido');
+  var el2=document.getElementById('resumo-lucro-acum');
+  if(el1) el1.textContent=fmt(totalRecebido);
+  if(el2) el2.textContent=fmt(totalLucroAcum);
+}
   document.querySelectorAll('.extrato-aba').forEach(function(b){b.classList.remove('act');});
   document.querySelectorAll('.extrato-aba-content').forEach(function(c){c.classList.remove('act');});
   if(el) el.classList.add('act');
@@ -1286,9 +1307,8 @@ function renderExtratoLucro(){
   if(!el) return;
   var lista=todosRepasses.filter(function(r){return r.tipo==='repasse';});
   if(!lista.length){el.innerHTML='<div class="extrato-empty">Nenhum lucro registrado ainda.</div>';return;}
-
   function extrairLucroDono(obs,valorRepasse){
-    // Formato novo: "Wellhub · 1 membro(s) · Lucro dono R$ 11,62 · ..."
+    // Formato novo: "Wellhub · 1 membro(s) · Lucro dono R$ 11,62"
     var s=obs||'';
     var idx=s.indexOf('Lucro dono R$');
     if(idx!==-1){
@@ -1296,10 +1316,9 @@ function renderExtratoLucro(){
       var num=parseFloat(parte.split(/[^0-9,]/)[0].replace(',','.'))||0;
       if(num>0) return num;
     }
-    // Fallback para repasses antigos: valor do repasse é o lucro do dono
+    // Fallback repasses antigos: valor do repasse é o lucro do dono
     return Number(valorRepasse||0);
   }
-
   var porMes={};
   lista.forEach(function(r){if(!porMes[r.mes_referencia])porMes[r.mes_referencia]=[];porMes[r.mes_referencia].push(r);});
   var html='';
@@ -1308,12 +1327,9 @@ function renderExtratoLucro(){
     var totalLucro=items.reduce(function(s,r){return s+extrairLucroDono(r.observacao,r.valor);},0);
     var statusGeral=items.every(function(r){return r.status==='pago';})?'pago'
       :items.some(function(r){return r.status==='aprovado';})?'aprovado':'pendente';
-    var statusLabel={pendente:'Pendente',aprovado:'Aprovado',pago:'Pago'}[statusGeral];
     html+='<div class="repasse-card">';
-    html+='<div class="repasse-header">';
-    html+='<div class="repasse-mes">'+formatarMes(mes)+'</div>';
-    html+='<span class="repasse-status '+statusGeral+'">'+statusLabel+'</span>';
-    html+='</div>';
+    html+='<div class="repasse-header"><div class="repasse-mes">'+formatarMes(mes)+'</div>';
+    html+='<span class="repasse-status '+statusGeral+'">'+(statusGeral==='pago'?'Sacado':statusGeral==='aprovado'?'Aprovado':'Pendente')+'</span></div>';
     items.forEach(function(r){
       var pisc=piscMap[r.piscina_id]||{};
       var lucro=extrairLucroDono(r.observacao,r.valor);
