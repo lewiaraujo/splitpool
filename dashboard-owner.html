@@ -1183,11 +1183,11 @@ async function gerarRepassePiscina(piscinaId, e){
     obsData=' · Pagar até '+dtVenc.toLocaleDateString('pt-BR');
   }
 
+  var valLucroDono=assins.filter(function(a){return a.status==='ativo';}).reduce(function(s,a){return s+getLucroDono(pool.servico,a.plano_nome);},0);
   var inserts=[];
   if(valRepasse>0) inserts.push({
     dono_id:userId,piscina_id:piscinaId,tipo:'repasse',valor:valRepasse,
     mes_referencia:mesRef,status:'pendente',
-    var valLucroDono=assins.filter(function(a){return a.status==='ativo';}).reduce(function(s,a){return s+getLucroDono(pool.servico,a.plano_nome);},0);
     observacao:pool.servico+' · '+assins.length+' membro(s) · Lucro dono R$ '+valLucroDono.toFixed(2).replace('.',',')+obsData
   });
 
