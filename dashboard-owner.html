@@ -1008,6 +1008,8 @@ async function carregarDashboard(){
   document.getElementById('loading-state').style.display='none';
   document.getElementById('dash-content').style.display='flex';
   carregarTodosMiniExtratos(piscinas);
+  // Atualizar cards Recebido/Lucro se extrato já carregou
+  atualizarResumoRecebido();
 }
 
 /* ── INIT ── */
@@ -1027,8 +1029,8 @@ async function init(){
   var mob=document.getElementById('nav-mob-user');if(mob)mob.textContent=nome;
   var m=document.getElementById('nav-user-mobile');if(m)m.textContent=nome;
 
-  carregarDashboard();
-  carregarExtrato();
+  await carregarDashboard();
+  await carregarExtrato();
 }
 
 init();
