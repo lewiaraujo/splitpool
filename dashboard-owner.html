@@ -1112,12 +1112,11 @@ function formatarMes(mesRef){
 }
 
 function calcRepasseReal(pool, assins){
-  // Repasse ao dono = valor_pago_membro - lucro_SP
+  // Repasse ao dono = REPASSE_MAP[plano] = lucro líquido do dono após taxa cartão
   var ativos=assins.filter(function(a){return a.status==='ativo';});
   var total=0;
   ativos.forEach(function(a){
-    var lucroSP=getLucroSP(pool.servico,a.plano_nome);
-    total+=Number(a.valor||0)-lucroSP;
+    total+=getRepasse(pool.servico,a.plano_nome);
   });
   return Math.max(0,total);
 }
