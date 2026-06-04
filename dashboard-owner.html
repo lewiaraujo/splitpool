@@ -1294,6 +1294,8 @@ function atualizarResumoRecebido(){
   if(el1) el1.textContent=fmt(totalRecebido);
   if(el2) el2.textContent=fmt(totalLucroAcum);
 }
+
+function trocarAbaExtrato(aba,el){
   document.querySelectorAll('.extrato-aba').forEach(function(b){b.classList.remove('act');});
   document.querySelectorAll('.extrato-aba-content').forEach(function(c){c.classList.remove('act');});
   if(el) el.classList.add('act');
