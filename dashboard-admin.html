@@ -232,7 +232,6 @@ tbody td{padding:12px 16px;font-size:13px;}
     <div class="resumo" id="resumo-financeiro"></div>
     <div class="sec-header">
       <div><div class="sec-title">📊 Financeiro</div><div class="sec-sub">Bússola do negócio — receita, custo e lucro Splitpool</div></div>
-      <button onclick="abrirSimulador()" style="padding:8px 16px;background:linear-gradient(135deg,#1255CC,#0A3080);color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">📈 Simulador de Margens</button>
     </div>
     <!-- Abas temporais -->
     <div class="filters" style="margin-bottom:20px;">
@@ -288,22 +287,6 @@ tbody td{padding:12px 16px;font-size:13px;}
     </div>
   </div>
 
-</div>
-
-<!-- Modal Simulador -->
-<div id="modal-simulador" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,48,128,0.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#fff;border-radius:18px;width:100%;max-width:900px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,0.25);overflow:hidden;">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(18,85,204,0.1);flex-shrink:0;">
-      <div>
-        <div style="font-size:15px;font-weight:800;color:#0A3080;font-family:'Nunito',sans-serif;">📈 Simulador de Margens</div>
-        <div style="font-size:11px;color:#0A3080;opacity:.5;margin-top:2px;">Projeção financeira interativa por fase</div>
-      </div>
-      <button onclick="fecharSimulador()" style="width:32px;height:32px;border-radius:50%;border:none;background:rgba(18,85,204,0.08);color:#1255CC;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;">×</button>
-    </div>
-    <div style="flex:1;overflow:auto;padding:0;">
-      <iframe id="iframe-simulador" src="" style="width:100%;height:700px;border:none;display:block;" title="Simulador de margens Splitpool"></iframe>
-    </div>
-  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -930,9 +913,41 @@ function renderGraficoProjecaoVsReal(assinaturas){
   var canvas=document.getElementById('chart-projecao-real');
   if(!canvas||typeof Chart==='undefined') return;
 
-  // Ratios do simulador validado (Fase 1, 30% família, 20% wellness, com taxa cartão)
-  // MRR projetado → ratio Lucro SP ≈ 26.6%, ratio Repasse ≈ 73.4%
-  var RATIO_LSP=0.266;
+// Dados dos serviços — mesmos do simulador validado (Fase 1)
+var SVCS_SIM=[
+  {precoSP:25.50,custoVaga:9.984,tipo:'familia',margem:0.30},
+  {precoSP:19.90,custoVaga:10.832,tipo:'familia',margem:0.28},
+  {precoSP:15.90,custoVaga:9.792,tipo:'familia',margem:0.25},
+  {precoSP:25.00,custoVaga:0,tipo:'familia',margem:0.30},
+  {precoSP:169.99,spread:20.00,tipo:'wellness',margem:0.20},
+  {precoSP:344.90,spread:45.00,tipo:'wellness',margem:0.20},
+];
+
+function calcRatiosSim(fase){
+  // Margens por fase (do simulador validado)
+  var mgFamilia={1:[0.30,0.28,0.25,0.30],2:[0.38,0.35,0.32,0.38],3:[0.41,0.40,0.37,0.40]};
+  var mgWellness={1:0.20,2:0.25,3:0.30};
+  var mF=mgFamilia[fase]||mgFamilia[1];
+  var mW=mgWellness[fase]||0.20;
+  var totLSP=0,totRep=0,totTaxa=0,count=0;
+  SVCS_SIM.forEach(function(s,i){
+    var m=s.tipo==='wellness'?mW:mF[i]||0.30;
+    var t=s.precoSP*0.0299+0.39;
+    if(s.tipo==='wellness'){
+      var lspB=s.spread*m,ldB=s.spread*(1-m);
+      var tSP=t*m,tD=t*(1-m);
+      totLSP+=(lspB-tSP); totRep+=(ldB-tD); totTaxa+=t;
+    } else {
+      var lspB=s.precoSP*m,repB=s.precoSP-lspB,ldB=repB-s.custoVaga;
+      var tot=lspB+(ldB>0?ldB:0),rSP=tot>0?lspB/tot:0.5;
+      var tSP=t*rSP,tD=t*(1-rSP);
+      totLSP+=(lspB-tSP); totRep+=(repB-tD-s.custoVaga); totTaxa+=t;
+    }
+    count++;
+  });
+  var base=totLSP+totRep;
+  return{rLSP:base>0?totLSP/base:0.27,rRep:base>0?totRep/base:0.73,taxaMedia:count>0?totTaxa/count:0};
+}
 
   // MRR real por mês do banco
   var mrrReal={};
@@ -951,6 +966,7 @@ function renderGraficoProjecaoVsReal(assinaturas){
   var mesInicio=new Date(parseInt(p[1]),parseInt(p[0])-1,1);
 
   var nMeses=_projFiltro==='anual'?24:6;
+  var rF1=calcRatiosSim(1),rF2=calcRatiosSim(2),rF3=calcRatiosSim(3);
   var labels=[],mrrProjArr=[],lspProjArr=[],mrrRealArr=[],metaArr=[];
 
   for(var i=0;i<nMeses;i++){
@@ -958,15 +974,16 @@ function renderGraficoProjecaoVsReal(assinaturas){
     var label=(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
     labels.push(label);
 
-    // Projeção por fase
-    var piscinas,mg,meta;
-    if(i<6){piscinas=Math.round(10+(140*(i/5)));mg=38;meta=5700;}
-    else if(i<18){piscinas=Math.round(150+(1850*((i-6)/11)));mg=40;meta=80000;}
-    else{piscinas=Math.round(2000+(3000*(Math.min((i-18)/5,1))));mg=42;meta=210000;}
+    var piscinas,mg,meta,r;
+    if(i<6){piscinas=Math.round(10+(140*(i/5)));mg=38;meta=5700;r=rF1;}
+    else if(i<18){piscinas=Math.round(150+(1850*((i-6)/11)));mg=40;meta=80000;r=rF2;}
+    else{piscinas=Math.round(2000+(3000*(Math.min((i-18)/5,1))));mg=42;meta=210000;r=rF3;}
 
-    var mrrProj=piscinas*mg;
-    mrrProjArr.push(mrrProj);
-    lspProjArr.push(Math.round(mrrProj*RATIO_LSP));
+    var mrrBruto=piscinas*mg;
+    var taxaM=Math.round(piscinas*r.taxaMedia*2);
+    var mrrLiq=mrrBruto-taxaM;
+    mrrProjArr.push(mrrBruto);
+    lspProjArr.push(Math.round(mrrLiq*r.rLSP));
     mrrRealArr.push(mrrReal[label]!==undefined?mrrReal[label]:null);
     metaArr.push(meta);
   }
@@ -1056,18 +1073,6 @@ function renderGraficoProjecaoVsReal(assinaturas){
     }
   });
 }
-
-function abrirSimulador(){
-  window.open('https://lewiaraujo.github.io/splitpool/splitpool_margin_simulator_v5.html','_blank');
-}
-function fecharSimulador(){
-  document.getElementById('modal-simulador').style.display='none';
-  document.body.style.overflow='';
-}
-// Fechar ao clicar fora
-document.getElementById('modal-simulador').addEventListener('click',function(e){
-  if(e.target===this) fecharSimulador();
-});
 
 function sair(){localStorage.removeItem('sp_admin_sess');window.location.replace('admin-login.html');}
 
