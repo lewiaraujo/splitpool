@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splitpool — Simulador de Margens v5</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#1255CC;--bluedark:#0A3080;--teal:#00C8D7;--green:#00875A;
+  --red:#C0392B;--amber:#BA7517;--bg:#F4F7FD;--card:#fff;
+  --border:rgba(18,85,204,0.12);--text:#0C2461;--sub:rgba(12,36,97,0.5);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0;}
+.header{background:linear-gradient(135deg,var(--bluedark),var(--blue));padding:16px 24px;display:flex;align-items:center;gap:12px;}
+.logo{font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;color:#fff;}
+.logo span{color:var(--teal);}
+.badge{background:rgba(255,255,255,0.15);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.06em;}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px;}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+.tab{padding:6px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--blue);transition:.15s;font-family:inherit;}
+.tab.act{background:var(--blue);color:#fff;border-color:var(--blue);}
+.toggle-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:10px 16px;background:var(--card);border-radius:10px;border:1px solid var(--border);}
+.toggle-label{font-size:13px;font-weight:600;color:var(--text);flex:1;}
+.toggle-sub{font-size:11px;color:var(--sub);margin-top:2px;}
+.tog{position:relative;width:40px;height:22px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-sl{position:absolute;inset:0;background:#ccc;border-radius:22px;cursor:pointer;transition:.2s;}
+.tog input:checked+.tog-sl{background:var(--green);}
+.tog-sl:before{content:'';position:absolute;width:16px;height:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+.tog input:checked+.tog-sl:before{transform:translateX(18px);}
+.slider-block{background:var(--card);border-radius:10px;border:1px solid var(--border);padding:14px 16px;margin-bottom:16px;}
+.sg-title{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;margin-top:10px;}
+.sg-title:first-child{margin-top:0;}
+.sr{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.sr label{font-size:12px;color:var(--sub);min-width:150px;}
+.sr input[type=range]{flex:1;accent-color:var(--blue);}
+.sr span{font-size:12px;font-weight:700;color:var(--blue);min-width:34px;text-align:right;}
+.alert{border-radius:8px;padding:8px 14px;font-size:12px;margin-bottom:14px;font-weight:500;}
+.alert.warn{background:#FFF3CD;color:#856404;border:1px solid #FFEAA7;}
+.alert.ok{background:#D4EDDA;color:#155724;border:1px solid #C3E6CB;}
+.alert.info{background:#D1ECF1;color:#0C5460;border:1px solid #BEE5EB;}
+.lucro-sp-card{background:var(--card);border:2px solid var(--green);border-radius:12px;padding:16px 20px;margin-bottom:16px;}
+.lucro-sp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.lucro-sp-title{font-size:13px;font-weight:700;color:var(--green);}
+.lucro-sp-total{font-size:24px;font-weight:900;color:var(--green);font-family:'Nunito',sans-serif;}
+.lucro-sp-sub{font-size:11px;color:var(--sub);}
+.lucro-sp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;}
+.lucro-sp-item{background:var(--bg);border-radius:8px;padding:8px 10px;}
+.lucro-sp-svc{font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.lucro-sp-row{display:flex;justify-content:space-between;font-size:10px;color:var(--sub);margin-bottom:2px;}
+.servicos{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px;margin-bottom:16px;}
+.svc-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.svc-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:5px;}
+.svc-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:5px;margin-bottom:6px;font-weight:600;}
+.badge-familia{background:#E6F1FB;color:#0C447C;}
+.badge-wellness{background:#E1F5EE;color:#085041;}
+.svc-row{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:3px;}
+.svc-val{font-weight:600;color:var(--text);}
+.svc-val.green{color:var(--green);} .svc-val.amber{color:var(--amber);} .svc-val.red{color:var(--red);}
+.svc-divider{border-top:1px solid var(--border);margin:6px 0;}
+.svc-taxa-row{display:flex;justify-content:space-between;font-size:10px;color:var(--sub);margin-bottom:2px;padding:2px 4px;background:var(--bg);border-radius:4px;}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:16px;}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;}
+.metric-label{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;font-weight:600;}
+.metric-val{font-size:20px;font-weight:700;font-family:'Nunito',sans-serif;}
+.chart-section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;}
+.chart-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;}
+.linha-filtros{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.lb{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:7px;font-size:12px;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--sub);transition:.15s;user-select:none;font-weight:500;}
+.lb.ativo{background:var(--blue);color:#fff;border-color:var(--blue);}
+.lb .sq{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.chart-wrap{position:relative;width:100%;height:280px;margin-bottom:8px;}
+.painel-mes{background:var(--bg);border-radius:10px;padding:14px 16px;margin-top:12px;}
+.mes-nav{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.mes-nav button{padding:4px 12px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--blue);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;}
+.mes-sel{font-size:14px;font-weight:700;color:var(--text);flex:1;text-align:center;}
+.painel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;}
+.painel-item{background:var(--card);border-radius:8px;padding:10px 12px;border:1px solid var(--border);}
+.painel-lbl{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;font-weight:600;}
+.painel-val{font-size:20px;font-weight:700;font-family:'Nunito',sans-serif;}
+.painel-hint{font-size:10px;color:var(--sub);margin-top:2px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Spli<span>T</span>Pool</div>
+  <div class="badge">SIMULADOR DE MARGENS v5</div>
+</div>
+
+<div class="wrap">
+
+<div class="tabs" id="tabs">
+  <div class="tab act" onclick="setFase(1,this)">Fase 1 (M1–6)</div>
+  <div class="tab" onclick="setFase(2,this)">Fase 2 (M7–18)</div>
+  <div class="tab" onclick="setFase(3,this)">Fase 3 (M19+)</div>
+</div>
+
+<div class="toggle-row">
+  <div>
+    <div class="toggle-label">Taxa cartão recorrente</div>
+    <div class="toggle-sub">2,99% + R$0,39 por transação — divisão proporcional entre SP e dono</div>
+  </div>
+  <label class="tog">
+    <input type="checkbox" id="toggle-taxa" checked onchange="atualizar()">
+    <span class="tog-sl"></span>
+  </label>
+</div>
+
+<div class="slider-block">
+  <div class="sg-title">Planos família — margem SP sobre preço da vaga</div>
+  <div class="sr"><label>Microsoft 365</label><input type="range" min="20" max="60" step="1" value="41" id="sl-ms" oninput="atualizar()"><span id="out-ms">41%</span></div>
+  <div class="sr"><label>Duolingo Super</label><input type="range" min="20" max="60" step="1" value="40" id="sl-du" oninput="atualizar()"><span id="out-du">40%</span></div>
+  <div class="sr"><label>Canva Teams</label><input type="range" min="20" max="60" step="1" value="37" id="sl-ca" oninput="atualizar()"><span id="out-ca">37%</span></div>
+  <div class="sr"><label>Notion Team</label><input type="range" min="20" max="60" step="1" value="40" id="sl-no" oninput="atualizar()"><span id="out-no">40%</span></div>
+  <div class="sg-title">Wellness — margem SP sobre o spread adicional</div>
+  <div class="sr"><label>Wellhub / TotalPass</label><input type="range" min="10" max="60" step="1" value="30" id="sl-wh" oninput="atualizar()"><span id="out-wh">30%</span></div>
+</div>
+
+<div id="alert-box"></div>
+
+<div class="lucro-sp-card" id="lucro-sp-card"></div>
+
+<div class="chart-title" style="margin-bottom:8px;">Lucro por vaga — piscina cheia</div>
+<div class="servicos" id="servicos"></div>
+
+<div class="metrics" id="metrics"></div>
+
+<div class="chart-section">
+  <div class="chart-title">Projeção 24 meses</div>
+  <div class="linha-filtros" id="linha-filtros">
+    <div class="lb ativo" data-linha="fat" onclick="toggleLinha('fat',this)"><span class="sq" style="background:#378ADD"></span>Faturamento bruto</div>
+    <div class="lb ativo" data-linha="lsp" onclick="toggleLinha('lsp',this)"><span class="sq" style="background:#1D9E75"></span>Lucro SP líquido</div>
+    <div class="lb ativo" data-linha="rep" onclick="toggleLinha('rep',this)"><span class="sq" style="background:#BA7517"></span>Repasse donos</div>
+    <div class="lb ativo" data-linha="tax" onclick="toggleLinha('tax',this)"><span class="sq" style="background:#E24B4A"></span>Taxa cartão</div>
+  </div>
+  <div class="chart-wrap">
+    <canvas id="projChart"></canvas>
+  </div>
+  <div style="font-size:11px;color:var(--sub);text-align:center;margin-bottom:10px;">Clique num ponto ou use as setas para ver os valores do mês</div>
+  <div class="painel-mes" id="painel-mes">
+    <div class="mes-nav">
+      <button onclick="navegarMes(-1)">←</button>
+      <div class="mes-sel" id="mes-sel-label">M6 — 150 piscinas</div>
+      <button onclick="navegarMes(1)">→</button>
+    </div>
+    <div class="painel-grid" id="painel-grid"></div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+var faseAtual=1;
+var projChart=null;
+var linhasAtivas={fat:true,lsp:true,rep:true,tax:true};
+var mesSelecionado=5;
+var dadosMeses=[];
+
+var SVCS=[
+  {id:'ms',nome:'Microsoft 365',tipo:'familia',precoSP:25.50,custoVaga:9.984,slId:'sl-ms',outId:'out-ms'},
+  {id:'du',nome:'Duolingo Super',tipo:'familia',precoSP:19.90,custoVaga:10.832,slId:'sl-du',outId:'out-du'},
+  {id:'ca',nome:'Canva Teams',tipo:'familia',precoSP:15.90,custoVaga:9.792,slId:'sl-ca',outId:'out-ca'},
+  {id:'no',nome:'Notion Team',tipo:'familia',precoSP:25.00,custoVaga:0,slId:'sl-no',outId:'out-no'},
+  {id:'wh',nome:'Wellhub Silver',tipo:'wellness',precoSP:169.99,custoVaga:0,spread:20.00,slId:'sl-wh',outId:'out-wh'},
+  {id:'tp',nome:'TotalPass TP4',tipo:'wellness',precoSP:344.90,custoVaga:0,spread:45.00,slId:'sl-wh',outId:'out-wh'},
+];
+
+var FASES={
+  1:{piscinas:150,donos:80,membros:300,mg:38,label:'Fase 1 · mês 6'},
+  2:{piscinas:2000,donos:800,membros:6000,mg:40,label:'Fase 2 · mês 18'},
+  3:{piscinas:5000,donos:2000,membros:18000,mg:42,label:'Fase 3 · mês 24'},
+};
+
+function taxaCartao(v){return v*0.0299+0.39;}
+function fmt(v){return 'R$'+Math.abs(v).toFixed(2).replace('.',',');}
+function fmtR(v){return 'R$'+Math.round(v).toLocaleString('pt-BR');}
+
+function calc(svc){
+  var m=parseInt(document.getElementById(svc.slId).value)/100;
+  var comTaxa=document.getElementById('toggle-taxa').checked;
+  var taxa=comTaxa?taxaCartao(svc.precoSP):0;
+  if(svc.tipo==='wellness'){
+    var lspB=svc.spread*m,repB=svc.spread-lspB;
+    var tSP=taxa*m,tD=taxa*(1-m);
+    return{lspB,lspL:lspB-tSP,repB,repL:repB-tD,lucro:repB-tD,custo:0,taxa,taxaSP:tSP,taxaDono:tD};
+  } else {
+    var lspB=svc.precoSP*m,repB=svc.precoSP-lspB,ldB=repB-svc.custoVaga;
+    var tot=lspB+(ldB>0?ldB:0),rSP=tot>0?lspB/tot:0.5;
+    var tSP=taxa*rSP,tD=taxa*(1-rSP);
+    return{lspB,lspL:lspB-tSP,repB,repL:repB-tD,lucro:(repB-tD)-svc.custoVaga,custo:svc.custoVaga,taxa,taxaSP:tSP,taxaDono:tD};
+  }
+}
+
+function calcRatios(){
+  var comTaxa=document.getElementById('toggle-taxa').checked;
+  var totLSP=0,totRep=0,totTaxa=0,count=0;
+  SVCS.forEach(function(s){
+    var c=calc(s);
+    totLSP+=c.lspL; totRep+=c.lucro; totTaxa+=c.taxa; count++;
+  });
+  var base=totLSP+totRep;
+  return{rLSP:base>0?totLSP/base:0.4,rRep:base>0?totRep/base:0.6,taxaMedia:count>0?totTaxa/count:0,comTaxa};
+}
+
+function calcMeses(r){
+  var d=[];
+  for(var m=1;m<=24;m++){
+    var p,mg;
+    if(m<=6){p=Math.round(10+(140*((m-1)/5)));mg=38;}
+    else if(m<=18){p=Math.round(150+(1850*((m-7)/11)));mg=40;}
+    else{p=Math.round(2000+(3000*(Math.min((m-19)/5,1))));mg=42;}
+    var fat=p*mg;
+    var taxa=r.comTaxa?Math.round(p*r.taxaMedia*2):0;
+    var liq=fat-taxa;
+    d.push({mes:'M'+m,fat,lsp:Math.round(liq*r.rLSP),rep:Math.round(liq*r.rRep),tax:taxa,piscinas:p});
+  }
+  return d;
+}
+
+function toggleLinha(key,el){
+  linhasAtivas[key]=!linhasAtivas[key];
+  el.classList.toggle('ativo',linhasAtivas[key]);
+  if(projChart){
+    var idx={fat:0,lsp:1,rep:2,tax:3}[key];
+    if(idx!==undefined){projChart.data.datasets[idx].hidden=!linhasAtivas[key];projChart.update('none');}
+  }
+}
+
+function mostrarMes(idx){
+  if(idx<0||idx>23) return;
+  mesSelecionado=idx;
+  var d=dadosMeses[idx];
+  document.getElementById('mes-sel-label').textContent=d.mes+' — '+d.piscinas.toLocaleString('pt-BR')+' piscinas';
+  var itens=[
+    {lbl:'Faturamento bruto',val:d.fat,cor:'#378ADD',hint:'Total cobrado aos membros'},
+    {lbl:'Taxa cartão',val:d.tax,cor:'#E24B4A',hint:'2,99%+R$0,39 × transações',neg:true},
+    {lbl:'Lucro SP líquido',val:d.lsp,cor:'#1D9E75',hint:'O que a Splitpool retém'},
+    {lbl:'Repasse donos',val:d.rep,cor:'#BA7517',hint:'Lucro líquido dos donos'},
+  ];
+  document.getElementById('painel-grid').innerHTML=itens.map(function(it){
+    return '<div class="painel-item">'
+      +'<div class="painel-lbl">'+it.lbl+'</div>'
+      +'<div class="painel-val" style="color:'+it.cor+';">'+(it.neg&&it.val>0?'-':'')+fmtR(it.val)+'</div>'
+      +'<div class="painel-hint">'+it.hint+'</div>'
+      +'</div>';
+  }).join('');
+  if(projChart){
+    projChart.data.datasets.forEach(function(ds){ds.pointRadius=new Array(24).fill(0);});
+    ['fat','lsp','rep','tax'].forEach(function(key,i){
+      var arr=new Array(24).fill(0); arr[idx]=6;
+      projChart.data.datasets[i].pointRadius=arr;
+      projChart.data.datasets[i].pointBackgroundColor=arr.map(function(v){return v>0?['#378ADD','#1D9E75','#BA7517','#E24B4A'][i]:'transparent';});
+    });
+    projChart.update('none');
+  }
+}
+
+function navegarMes(d){
+  var n=(mesSelecionado===null?0:mesSelecionado)+d;
+  if(n<0)n=0; if(n>23)n=23;
+  mostrarMes(n);
+}
+
+function atualizar(){
+  ['ms','du','ca','no','wh'].forEach(function(id){
+    document.getElementById('out-'+id).textContent=document.getElementById('sl-'+id).value+'%';
+  });
+  var comTaxa=document.getElementById('toggle-taxa').checked;
+  var svcsHTML='',algumNeg=false,minLucro=999,totLSP=0,totRep=0,totTaxa=0,count=0;
+  var lspItems=[];
+
+  SVCS.forEach(function(s){
+    var c=calc(s);
+    var lc=c.lucro<0?'red':c.lucro<2?'amber':'green';
+    if(c.lucro<0)algumNeg=true; if(c.lucro<minLucro)minLucro=c.lucro;
+    totLSP+=c.lspL; totRep+=c.lucro; totTaxa+=c.taxa; count++;
+    var base=s.tipo==='wellness'?s.spread:s.precoSP;
+    lspItems.push({nome:s.nome,tipo:s.tipo,bruto:c.lspB,taxa:c.taxaSP,liq:c.lspL,pct:base>0?(c.lspL/base*100):0});
+
+    svcsHTML+='<div class="svc-card">'
+      +'<div class="svc-name">'+s.nome+'</div>'
+      +'<div><span class="svc-badge '+(s.tipo==='wellness'?'badge-wellness':'badge-familia')+'">'+(s.tipo==='wellness'?'Wellness':'Família')+'</span></div>'
+      +(s.tipo==='wellness'
+        ?'<div class="svc-row"><span>Spread</span><span class="svc-val">'+fmt(s.spread)+'</span></div>'
+         +'<div class="svc-row"><span>Lucro SP bruto</span><span class="svc-val">'+fmt(c.lspB)+'</span></div>'
+        :'<div class="svc-row"><span>Preço SP</span><span class="svc-val">'+fmt(s.precoSP)+'</span></div>'
+         +'<div class="svc-row"><span>Lucro SP bruto</span><span class="svc-val">'+fmt(c.lspB)+'</span></div>'
+         +(s.custoVaga>0?'<div class="svc-row"><span>Custo dono/vaga</span><span class="svc-val red">-'+fmt(s.custoVaga)+'</span></div>':'')
+      )
+      +(comTaxa?'<div class="svc-taxa-row"><span>Taxa SP</span><span style="color:var(--red);">-'+fmt(c.taxaSP)+'</span></div>'
+               +'<div class="svc-taxa-row"><span>Taxa dono</span><span style="color:var(--red);">-'+fmt(c.taxaDono)+'</span></div>':'')
+      +'<div class="svc-divider"></div>'
+      +'<div class="svc-row"><span>Lucro SP líquido</span><span class="svc-val '+(c.lspL<0?'red':c.lspL<2?'amber':'green')+'">'+fmt(c.lspL)+'</span></div>'
+      +'<div class="svc-row"><span>Lucro dono/vaga</span><span class="svc-val '+lc+'">'+fmt(c.lucro)+'</span></div>'
+      +'</div>';
+  });
+  document.getElementById('servicos').innerHTML=svcsHTML;
+
+  var alertEl=document.getElementById('alert-box');
+  if(algumNeg) alertEl.innerHTML='<div class="alert warn">⚠ Algum serviço tem lucro negativo para o dono.</div>';
+  else if(minLucro<2) alertEl.innerHTML='<div class="alert warn">⚠ Margem do dono abaixo de R$2,00 em algum serviço.</div>';
+  else if(comTaxa) alertEl.innerHTML='<div class="alert info">💳 Taxa cartão ativa — divisão proporcional. Todos os valores são líquidos.</div>';
+  else alertEl.innerHTML='<div class="alert ok">✅ Margens equilibradas — todos os serviços oferecem lucro positivo.</div>';
+
+  var lspGrid=lspItems.map(function(i){
+    return '<div class="lucro-sp-item">'
+      +'<div class="lucro-sp-svc">'+i.nome+'</div>'
+      +'<div class="lucro-sp-row"><span>Bruto</span><span style="font-weight:600;color:var(--text);">'+fmt(i.bruto)+'</span></div>'
+      +(comTaxa?'<div class="lucro-sp-row"><span>Taxa</span><span style="font-weight:600;color:var(--red);">-'+fmt(i.taxa)+'</span></div>':'')
+      +'<div class="lucro-sp-row"><span>Líquido</span><span style="font-weight:700;color:'+(i.liq<0?'var(--red)':i.liq<2?'var(--amber)':'var(--green)')+';">'+fmt(i.liq)+'</span></div>'
+      +'<div class="lucro-sp-row"><span>% base</span><span style="color:var(--sub);">'+i.pct.toFixed(1)+'%</span></div>'
+      +'</div>';
+  }).join('');
+
+  document.getElementById('lucro-sp-card').innerHTML=
+    '<div class="lucro-sp-header">'
+    +'<div><div class="lucro-sp-title">Lucro Splitpool por vaga preenchida</div>'
+    +'<div class="lucro-sp-sub">'+(comTaxa?'Líquido após taxa de cartão':'Bruto, sem taxa de cartão')+'</div></div>'
+    +'<div style="text-align:right;"><div class="lucro-sp-total">'+fmt(totLSP)+'</div>'
+    +'<div class="lucro-sp-sub">total/vaga (todos serviços)</div></div></div>'
+    +'<div class="lucro-sp-grid">'+lspGrid+'</div>';
+
+  var r=calcRatios();
+  dadosMeses=calcMeses(r);
+  var fase=FASES[faseAtual];
+  var fatB=fase.piscinas*fase.mg;
+  var taxaM=comTaxa?Math.round(fase.piscinas*totTaxa/count*2):0;
+  var fatL=fatB-taxaM,lspM=Math.round(fatL*r.rLSP),repM=Math.round(fatL*r.rRep);
+
+  document.getElementById('metrics').innerHTML=
+    '<div class="metric"><div class="metric-label">Fase</div><div class="metric-val" style="font-size:14px;color:var(--blue);">'+fase.label+'</div></div>'
+    +'<div class="metric"><div class="metric-label">Piscinas</div><div class="metric-val" style="color:#378ADD;">'+fase.piscinas.toLocaleString('pt-BR')+'</div></div>'
+    +'<div class="metric"><div class="metric-label">Donos</div><div class="metric-val" style="color:#185FA5;">'+fase.donos.toLocaleString('pt-BR')+'</div></div>'
+    +'<div class="metric"><div class="metric-label">Membros</div><div class="metric-val" style="color:#0F6E56;">'+fase.membros.toLocaleString('pt-BR')+'</div></div>'
+    +(comTaxa?'<div class="metric"><div class="metric-label">Taxa cartão/mês</div><div class="metric-val" style="color:var(--red);">-R$'+taxaM.toLocaleString('pt-BR')+'</div></div>':'')
+    +'<div class="metric"><div class="metric-label">Lucro SP/mês</div><div class="metric-val" style="color:var(--green);">R$'+lspM.toLocaleString('pt-BR')+'</div></div>'
+    +'<div class="metric"><div class="metric-label">Lucro SP/ano</div><div class="metric-val" style="color:var(--green);">R$'+(lspM*12).toLocaleString('pt-BR')+'</div></div>'
+    +'<div class="metric"><div class="metric-label">Repasse donos/mês</div><div class="metric-val" style="color:var(--amber);">R$'+repM.toLocaleString('pt-BR')+'</div></div>';
+
+  var ds=[
+    {label:'Faturamento bruto',data:dadosMeses.map(function(d){return d.fat;}),hidden:!linhasAtivas.fat,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.05)',fill:true,tension:0.35,pointRadius:0,borderWidth:1.5,borderDash:[4,2]},
+    {label:'Lucro SP líquido',data:dadosMeses.map(function(d){return d.lsp;}),hidden:!linhasAtivas.lsp,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',fill:true,tension:0.35,pointRadius:0,borderWidth:2},
+    {label:'Repasse donos',data:dadosMeses.map(function(d){return d.rep;}),hidden:!linhasAtivas.rep,borderColor:'#BA7517',backgroundColor:'rgba(186,117,23,0.06)',fill:true,tension:0.35,pointRadius:0,borderWidth:1.5,borderDash:[5,3]},
+    {label:'Taxa cartão',data:dadosMeses.map(function(d){return d.tax;}),hidden:!linhasAtivas.tax,borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.04)',fill:true,tension:0.35,pointRadius:0,borderWidth:1.5,borderDash:[2,2]},
+  ];
+  if(projChart)projChart.destroy();
+  projChart=new Chart(document.getElementById('projChart'),{
+    type:'line',data:{labels:dadosMeses.map(function(d){return d.mes;}),datasets:ds},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      onClick:function(evt,els){if(els&&els.length>0)mostrarMes(els[0].index);},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:function(c){var neg=c.datasetIndex===3&&c.raw>0?'-':'';return ' '+c.dataset.label+': '+neg+'R$'+Math.round(c.raw).toLocaleString('pt-BR');}}}},
+      scales:{
+        x:{ticks:{font:{size:10},color:'#888',maxRotation:0,autoSkip:true,maxTicksLimit:12},grid:{display:false}},
+        y:{ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';},font:{size:10},color:'#888'},grid:{color:'rgba(0,0,0,0.03)'}}
+      }
+    }
+  });
+  mostrarMes(mesSelecionado);
+}
+
+function setFase(n,el){
+  faseAtual=n;
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('act');});
+  el.classList.add('act');
+  atualizar();
+}
+
+atualizar();
+</script>
+</body>
+</html>

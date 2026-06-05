@@ -232,6 +232,7 @@ tbody td{padding:12px 16px;font-size:13px;}
     <div class="resumo" id="resumo-financeiro"></div>
     <div class="sec-header">
       <div><div class="sec-title">📊 Financeiro</div><div class="sec-sub">Bússola do negócio — receita, custo e lucro Splitpool</div></div>
+      <button onclick="abrirSimulador()" style="padding:8px 16px;background:linear-gradient(135deg,#1255CC,#0A3080);color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">📈 Simulador de Margens</button>
     </div>
     <!-- Abas temporais -->
     <div class="filters" style="margin-bottom:20px;">
@@ -287,6 +288,22 @@ tbody td{padding:12px 16px;font-size:13px;}
     </div>
   </div>
 
+</div>
+
+<!-- Modal Simulador -->
+<div id="modal-simulador" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,48,128,0.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:18px;width:100%;max-width:900px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,0.25);overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(18,85,204,0.1);flex-shrink:0;">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:#0A3080;font-family:'Nunito',sans-serif;">📈 Simulador de Margens</div>
+        <div style="font-size:11px;color:#0A3080;opacity:.5;margin-top:2px;">Projeção financeira interativa por fase</div>
+      </div>
+      <button onclick="fecharSimulador()" style="width:32px;height:32px;border-radius:50%;border:none;background:rgba(18,85,204,0.08);color:#1255CC;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;">×</button>
+    </div>
+    <div style="flex:1;overflow:auto;padding:0;">
+      <iframe id="iframe-simulador" src="" style="width:100%;height:700px;border:none;display:block;" title="Simulador de margens Splitpool"></iframe>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1039,6 +1056,25 @@ function renderGraficoProjecaoVsReal(assinaturas){
     }
   });
 }
+
+function abrirSimulador(){
+  var modal=document.getElementById('modal-simulador');
+  var iframe=document.getElementById('iframe-simulador');
+  // Carrega o simulador salvo no repositório
+  if(!iframe.src||iframe.src==='about:blank'||iframe.src===''){
+    iframe.src='https://lewiaraujo.github.io/splitpool/splitpool_margin_simulator_v5.html';
+  }
+  modal.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function fecharSimulador(){
+  document.getElementById('modal-simulador').style.display='none';
+  document.body.style.overflow='';
+}
+// Fechar ao clicar fora
+document.getElementById('modal-simulador').addEventListener('click',function(e){
+  if(e.target===this) fecharSimulador();
+});
 
 function sair(){localStorage.removeItem('sp_admin_sess');window.location.replace('admin-login.html');}
 
