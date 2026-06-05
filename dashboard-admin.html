@@ -254,35 +254,39 @@ tbody td{padding:12px 16px;font-size:13px;}
 
     <!-- Gráfico projeção vs real -->
     <div style="background:#fff;border-radius:14px;padding:20px 24px;border:1px solid rgba(18,85,204,0.1);box-shadow:0 2px 8px rgba(0,20,80,0.05);margin-top:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
         <div>
           <div style="font-size:14px;font-weight:700;color:var(--bluedark);">📈 Projeção vs Real</div>
-          <div style="font-size:12px;color:var(--bluedark);opacity:.5;margin-top:2px;">Curva real vs meta por fase — clique num ponto para ver os valores</div>
+          <div style="font-size:12px;color:var(--bluedark);opacity:.5;margin-top:2px;">Selecione as linhas para comparar projetado com real — clique num ponto para ver os valores</div>
         </div>
         <div id="meta-indicator" style="text-align:right;"></div>
       </div>
-      <!-- Filtros temporais -->
-      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
-        <div style="display:flex;gap:6px;">
-          <button onclick="setProjFiltro('mensal',this)" class="proj-filtro-btn act" style="padding:4px 12px;border-radius:7px;font-size:12px;font-weight:600;border:1.5px solid #1255CC;background:#1255CC;color:#fff;cursor:pointer;font-family:inherit;">Mensal</button>
-          <button onclick="setProjFiltro('anual',this)" class="proj-filtro-btn" style="padding:4px 12px;border-radius:7px;font-size:12px;font-weight:600;border:1.5px solid rgba(18,85,204,0.2);background:#fff;color:#1255CC;cursor:pointer;font-family:inherit;">Anual (24m)</button>
+      <!-- Filtros período -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <button onclick="setProjFiltro('mensal',this)" class="proj-filtro-btn act" style="padding:4px 12px;border-radius:7px;font-size:12px;font-weight:600;border:1.5px solid #1255CC;background:#1255CC;color:#fff;cursor:pointer;font-family:inherit;">Fase 1 (6m)</button>
+        <button onclick="setProjFiltro('anual',this)" class="proj-filtro-btn" style="padding:4px 12px;border-radius:7px;font-size:12px;font-weight:600;border:1.5px solid rgba(18,85,204,0.2);background:#fff;color:#1255CC;cursor:pointer;font-family:inherit;">24 meses</button>
+        <div style="font-size:11px;color:var(--bluedark);opacity:.4;margin-left:4px;">F1: M1–6 · F2: M7–18 · F3: M19–24</div>
+      </div>
+      <!-- Filtros de linha toggleáveis -->
+      <div id="proj-linha-filtros" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
+      <!-- Gráfico -->
+      <div style="position:relative;width:100%;height:400px;">
+        <canvas id="chart-projecao-real" role="img" aria-label="Gráfico projeção vs real Splitpool com 8 linhas selecionáveis">Projeção vs real.</canvas>
+      </div>
+      <!-- Painel ao clicar num ponto -->
+      <div id="proj-painel" style="display:none;margin-top:14px;background:rgba(18,85,204,0.03);border-radius:10px;padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:700;color:var(--bluedark);" id="proj-painel-titulo">Valores do mês</div>
+          <div style="font-size:10px;color:var(--bluedark);opacity:.4;">📊 Projetado vs Real</div>
         </div>
-        <div style="font-size:11px;color:var(--bluedark);opacity:.4;margin-left:4px;">Fase 1: M1–6 | Fase 2: M7–18 | Fase 3: M19–24</div>
+        <div id="proj-painel-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;"></div>
       </div>
-      <!-- Legendas -->
-      <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:11px;color:var(--bluedark);opacity:.7;">
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:3px;background:#378ADD;border-radius:2px;display:inline-block;border-top:1px dashed #378ADD;"></span>MRR projetado</span>
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:3px;background:#00C8D7;border-radius:2px;display:inline-block;border-top:1px dashed #00C8D7;"></span>Lucro SP projetado</span>
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:3px;background:#1D9E75;border-radius:2px;display:inline-block;"></span>MRR real</span>
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:3px;background:#E24B4A;border-radius:2px;display:inline-block;border-top:1px dashed #E24B4A;"></span>Meta fase</span>
-      </div>
-      <div style="position:relative;width:100%;height:360px;">
-        <canvas id="chart-projecao-real" role="img" aria-label="Gráfico projeção vs real Splitpool 24 meses com fases marcadas">Projeção vs real.</canvas>
-      </div>
-      <!-- Painel de valores ao clicar -->
-      <div id="proj-painel" style="display:none;margin-top:16px;background:rgba(18,85,204,0.03);border-radius:10px;padding:14px 16px;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:.5;letter-spacing:.05em;margin-bottom:10px;" id="proj-painel-titulo">Valores do mês</div>
-        <div id="proj-painel-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;"></div>
+      <!-- Tabela de referência: valores projetados por mês -->
+      <div style="margin-top:20px;">
+        <div style="font-size:12px;font-weight:700;color:var(--bluedark);margin-bottom:8px;opacity:.7;">📋 Referência — valores projetados por mês</div>
+        <div style="overflow-x:auto;">
+          <table id="proj-tabela-ref" style="width:100%;border-collapse:collapse;font-size:11px;min-width:800px;"></table>
+        </div>
       </div>
     </div>
   </div>
@@ -899,6 +903,16 @@ function renderFinanceiro(){
 
 var _projecaoChart=null;
 var _projFiltro='mensal';
+var _linhasAtivas={mrr_proj:true,lsp_proj:true,rep_proj:true,taxa_proj:true,mrr_real:true,meta:true};
+
+var LINHAS_DEF=[
+  {key:'mrr_proj',  label:'MRR projetado',      cor:'#378ADD',dash:[6,4],  fill:false},
+  {key:'lsp_proj',  label:'Lucro SP projetado',  cor:'#00C8D7',dash:[4,3],  fill:false},
+  {key:'rep_proj',  label:'Repasse donos proj.', cor:'#BA7517',dash:[5,3],  fill:false},
+  {key:'taxa_proj', label:'Taxa cartão proj.',   cor:'#E24B4A',dash:[3,3],  fill:false},
+  {key:'mrr_real',  label:'MRR real',            cor:'#1D9E75',dash:null,   fill:true},
+  {key:'meta',      label:'Meta fase',           cor:'#9B59B6',dash:[4,4],  fill:false},
+];
 
 function setProjFiltro(f,el){
   _projFiltro=f;
@@ -909,22 +923,33 @@ function setProjFiltro(f,el){
   renderGraficoProjecaoVsReal(dados.assinaturas||[]);
 }
 
-function renderGraficoProjecaoVsReal(assinaturas){
-  var canvas=document.getElementById('chart-projecao-real');
-  if(!canvas||typeof Chart==='undefined') return;
+function toggleProjLinha(key){
+  _linhasAtivas[key]=!_linhasAtivas[key];
+  var btn=document.querySelector('[data-proj-linha="'+key+'"]');
+  if(btn){
+    var def=LINHAS_DEF.find(function(l){return l.key===key;});
+    if(_linhasAtivas[key]){
+      btn.style.background=def.cor;btn.style.color='#fff';btn.style.borderColor=def.cor;btn.style.opacity='1';
+    } else {
+      btn.style.background='#fff';btn.style.color=def.cor;btn.style.borderColor=def.cor;btn.style.opacity='0.5';
+    }
+  }
+  if(_projecaoChart){
+    var idx=LINHAS_DEF.findIndex(function(l){return l.key===key;});
+    if(idx!==-1){_projecaoChart.data.datasets[idx].hidden=!_linhasAtivas[key];_projecaoChart.update('none');}
+  }
+}
 
-// Dados dos serviços — mesmos do simulador validado (Fase 1)
 var SVCS_SIM=[
-  {precoSP:25.50,custoVaga:9.984,tipo:'familia',margem:0.30},
-  {precoSP:19.90,custoVaga:10.832,tipo:'familia',margem:0.28},
-  {precoSP:15.90,custoVaga:9.792,tipo:'familia',margem:0.25},
-  {precoSP:25.00,custoVaga:0,tipo:'familia',margem:0.30},
-  {precoSP:169.99,spread:20.00,tipo:'wellness',margem:0.20},
-  {precoSP:344.90,spread:45.00,tipo:'wellness',margem:0.20},
+  {precoSP:25.50,custoVaga:9.984,tipo:'familia'},
+  {precoSP:19.90,custoVaga:10.832,tipo:'familia'},
+  {precoSP:15.90,custoVaga:9.792,tipo:'familia'},
+  {precoSP:25.00,custoVaga:0,tipo:'familia'},
+  {precoSP:169.99,spread:20.00,tipo:'wellness'},
+  {precoSP:344.90,spread:45.00,tipo:'wellness'},
 ];
 
 function calcRatiosSim(fase){
-  // Margens por fase (do simulador validado)
   var mgFamilia={1:[0.30,0.28,0.25,0.30],2:[0.38,0.35,0.32,0.38],3:[0.41,0.40,0.37,0.40]};
   var mgWellness={1:0.20,2:0.25,3:0.30};
   var mF=mgFamilia[fase]||mgFamilia[1];
@@ -934,14 +959,13 @@ function calcRatiosSim(fase){
     var m=s.tipo==='wellness'?mW:mF[i]||0.30;
     var t=s.precoSP*0.0299+0.39;
     if(s.tipo==='wellness'){
-      var lspB=s.spread*m,ldB=s.spread*(1-m);
-      var tSP=t*m,tD=t*(1-m);
-      totLSP+=(lspB-tSP); totRep+=(ldB-tD); totTaxa+=t;
+      var lspB=s.spread*m,ldB=s.spread*(1-m),tSP=t*m,tD=t*(1-m);
+      totLSP+=(lspB-tSP);totRep+=(ldB-tD);totTaxa+=t;
     } else {
       var lspB=s.precoSP*m,repB=s.precoSP-lspB,ldB=repB-s.custoVaga;
       var tot=lspB+(ldB>0?ldB:0),rSP=tot>0?lspB/tot:0.5;
       var tSP=t*rSP,tD=t*(1-rSP);
-      totLSP+=(lspB-tSP); totRep+=(repB-tD-s.custoVaga); totTaxa+=t;
+      totLSP+=(lspB-tSP);totRep+=(repB-tD-s.custoVaga);totTaxa+=t;
     }
     count++;
   });
@@ -949,7 +973,13 @@ function calcRatiosSim(fase){
   return{rLSP:base>0?totLSP/base:0.27,rRep:base>0?totRep/base:0.73,taxaMedia:count>0?totTaxa/count:0};
 }
 
-  // MRR real por mês do banco
+function fmtK(v){if(v===null||v===undefined)return'—';var a=Math.abs(v);return(v<0?'-':'')+'R$'+(a>=1000?(a/1000).toFixed(1).replace('.',',')+'k':Math.round(a));}
+
+function renderGraficoProjecaoVsReal(assinaturas){
+  var canvas=document.getElementById('chart-projecao-real');
+  if(!canvas||typeof Chart==='undefined') return;
+
+  // Dados reais do banco
   var mrrReal={};
   (assinaturas||[]).filter(function(a){return a.status==='ativo'&&a.confirmado_em;}).forEach(function(a){
     var dt=new Date(a.confirmado_em);
@@ -957,121 +987,162 @@ function calcRatiosSim(fase){
     mrrReal[chave]=(mrrReal[chave]||0)+Number(a.valor||0);
   });
 
-  // Mês de início = mês mais antigo com dado real ou 6 meses atrás
   var hoje=new Date();
   var mesesChaves=Object.keys(mrrReal).sort();
   var mesInicioStr=mesesChaves.length>0?mesesChaves[0]
     :((new Date(hoje.getFullYear(),hoje.getMonth()-5,1).getMonth()+1).toString().padStart(2,'0')+'/'+(new Date(hoje.getFullYear(),hoje.getMonth()-5,1).getFullYear()));
-  var p=mesInicioStr.split('/');
-  var mesInicio=new Date(parseInt(p[1]),parseInt(p[0])-1,1);
-
+  var pp=mesInicioStr.split('/');
+  var mesInicio=new Date(parseInt(pp[1]),parseInt(pp[0])-1,1);
   var nMeses=_projFiltro==='anual'?24:6;
+
   var rF1=calcRatiosSim(1),rF2=calcRatiosSim(2),rF3=calcRatiosSim(3);
-  var labels=[],mrrProjArr=[],lspProjArr=[],mrrRealArr=[],metaArr=[];
+
+  // Arrays para cada linha
+  var labels=[],
+      arr_mrr_proj=[],arr_lsp_proj=[],arr_rep_proj=[],arr_taxa_proj=[],
+      arr_mrr_real=[],arr_meta=[],
+      dadosMeses=[];
 
   for(var i=0;i<nMeses;i++){
     var d=new Date(mesInicio.getFullYear(),mesInicio.getMonth()+i,1);
     var label=(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
     labels.push(label);
-
-    var piscinas,mg,meta,r;
-    if(i<6){piscinas=Math.round(10+(140*(i/5)));mg=38;meta=5700;r=rF1;}
-    else if(i<18){piscinas=Math.round(150+(1850*((i-6)/11)));mg=40;meta=80000;r=rF2;}
-    else{piscinas=Math.round(2000+(3000*(Math.min((i-18)/5,1))));mg=42;meta=210000;r=rF3;}
-
+    var piscinas,mg,meta,r,fase;
+    if(i<6){piscinas=Math.round(10+(140*(i/5)));mg=38;meta=5700;r=rF1;fase=1;}
+    else if(i<18){piscinas=Math.round(150+(1850*((i-6)/11)));mg=40;meta=80000;r=rF2;fase=2;}
+    else{piscinas=Math.round(2000+(3000*(Math.min((i-18)/5,1))));mg=42;meta=210000;r=rF3;fase=3;}
     var mrrBruto=piscinas*mg;
     var taxaM=Math.round(piscinas*r.taxaMedia*2);
     var mrrLiq=mrrBruto-taxaM;
-    mrrProjArr.push(mrrBruto);
-    lspProjArr.push(Math.round(mrrLiq*r.rLSP));
-    mrrRealArr.push(mrrReal[label]!==undefined?mrrReal[label]:null);
-    metaArr.push(meta);
+    var lspProj=Math.round(mrrLiq*r.rLSP);
+    var repProj=Math.round(mrrLiq*r.rRep);
+    var mrrRealVal=mrrReal[label]!==undefined?mrrReal[label]:null;
+    arr_mrr_proj.push(mrrBruto);
+    arr_lsp_proj.push(lspProj);
+    arr_rep_proj.push(repProj);
+    arr_taxa_proj.push(taxaM);
+    arr_mrr_real.push(mrrRealVal);
+    arr_meta.push(meta);
+    dadosMeses.push({label,piscinas,mrrBruto,taxaM,mrrLiq,lspProj,repProj,mrrRealVal,meta,fase});
   }
 
-  // Indicador de meta — mês atual
+  // Indicador de meta
   var mesAtualKey=(hoje.getMonth()+1).toString().padStart(2,'0')+'/'+hoje.getFullYear();
   var mrrAtual=mrrReal[mesAtualKey]||0;
-  var metaAtual=5700;
-  var pct=Math.min(Math.round(mrrAtual/metaAtual*100),100);
+  // Determinar fase atual
+  var idxAtual=labels.indexOf(mesAtualKey);
+  var faseAtualMeta=idxAtual<0?1:idxAtual<6?1:idxAtual<18?2:3;
+  var metaFaseAtual={1:5700,2:80000,3:210000}[faseAtualMeta];
+  var metaLabel={1:'Fase 1 — faturamento R$5.700/mês',2:'Fase 2 — faturamento R$80k/mês',3:'Fase 3 — faturamento R$210k/mês'}[faseAtualMeta];
+  var pct=Math.min(Math.round(mrrAtual/metaFaseAtual*100),100);
   var cor=pct>=100?'#1D9E75':pct>=60?'#BA7517':'#E24B4A';
   var metaEl=document.getElementById('meta-indicator');
   if(metaEl){
     metaEl.innerHTML=
-      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:.5;letter-spacing:.05em;margin-bottom:4px;">Meta mês atual (Fase 1)</div>'
-      +'<div style="font-size:28px;font-weight:900;font-family:Nunito,sans-serif;color:'+cor+';">'+pct+'%</div>'
-      +'<div style="font-size:11px;color:var(--bluedark);opacity:.5;">R$'+Math.round(mrrAtual).toLocaleString('pt-BR')+' / R$5.700</div>'
-      +'<div style="width:140px;height:6px;background:rgba(18,85,204,0.1);border-radius:3px;margin-top:6px;margin-left:auto;">'
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;opacity:.5;letter-spacing:.05em;margin-bottom:2px;">Meta mês atual</div>'
+      +'<div style="font-size:26px;font-weight:900;font-family:Nunito,sans-serif;color:'+cor+';">'+pct+'%</div>'
+      +'<div style="font-size:10px;color:var(--bluedark);opacity:.5;margin-bottom:4px;">R$'+Math.round(mrrAtual).toLocaleString('pt-BR')+' faturado</div>'
+      +'<div style="font-size:10px;color:var(--bluedark);opacity:.4;margin-bottom:4px;">'+metaLabel+'</div>'
+      +'<div style="width:150px;height:6px;background:rgba(18,85,204,0.1);border-radius:3px;margin-left:auto;">'
       +'<div style="width:'+pct+'%;height:100%;background:'+cor+';border-radius:3px;transition:.4s;"></div>'
       +'</div>';
   }
 
-  // Anotações de fase (linhas verticais via plugin annotation ou via afterDraw)
-  if(_projecaoChart) _projecaoChart.destroy();
+  // Renderizar botões de linha
+  var filtrosEl=document.getElementById('proj-linha-filtros');
+  if(filtrosEl){
+    filtrosEl.innerHTML=LINHAS_DEF.map(function(l){
+      var ativo=_linhasAtivas[l.key];
+      return '<button data-proj-linha="'+l.key+'" onclick="toggleProjLinha(''+l.key+'')" style="'
+        +'display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;'
+        +'border:1.5px solid '+l.cor+';'
+        +'background:'+(ativo?l.cor:'#fff')+';'
+        +'color:'+(ativo?'#fff':l.cor)+';'
+        +'opacity:'+(ativo?'1':'0.5')+';'
+        +'transition:.15s;">'
+        +'<span style="width:8px;height:8px;border-radius:2px;background:'+(ativo?'#fff':l.cor)+';display:inline-block;flex-shrink:0;"></span>'
+        +l.label+'</button>';
+    }).join('');
+  }
 
+  // Datasets
+  var allData={mrr_proj:arr_mrr_proj,lsp_proj:arr_lsp_proj,rep_proj:arr_rep_proj,taxa_proj:arr_taxa_proj,mrr_real:arr_mrr_real,meta:arr_meta};
+  var datasets=LINHAS_DEF.map(function(l){
+    var d={label:l.label,data:allData[l.key],hidden:!_linhasAtivas[l.key],
+      borderColor:l.cor,backgroundColor:l.fill?'rgba(29,158,117,0.08)':'transparent',
+      fill:l.fill,tension:0.4,borderWidth:l.key==='mrr_real'?2.5:1.8,
+      pointRadius:l.key==='mrr_real'?4:1.5,
+      pointBackgroundColor:l.key==='mrr_real'?'#1D9E75':l.cor,
+      spanGaps:false};
+    if(l.dash) d.borderDash=l.dash;
+    return d;
+  });
+
+  if(_projecaoChart) _projecaoChart.destroy();
   _projecaoChart=new Chart(canvas,{
-    type:'line',
-    data:{
-      labels:labels,
-      datasets:[
-        {label:'MRR projetado',data:mrrProjArr,
-         borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.04)',
-         fill:true,tension:0.4,pointRadius:2,borderWidth:2,borderDash:[6,4]},
-        {label:'Lucro SP projetado',data:lspProjArr,
-         borderColor:'#00C8D7',backgroundColor:'rgba(0,200,215,0.04)',
-         fill:false,tension:0.4,pointRadius:2,borderWidth:2,borderDash:[4,3]},
-        {label:'MRR real',data:mrrRealArr,
-         borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.10)',
-         fill:true,tension:0.3,pointRadius:5,pointBackgroundColor:'#1D9E75',borderWidth:2.5,spanGaps:false},
-        {label:'Meta fase',data:metaArr,
-         borderColor:'#E24B4A',backgroundColor:'transparent',
-         fill:false,tension:0,pointRadius:0,borderWidth:1.5,borderDash:[4,4]},
-      ]
-    },
+    type:'line',data:{labels,datasets},
     options:{
       responsive:true,maintainAspectRatio:false,
       onClick:function(evt,els){
         if(!els||!els.length) return;
         var idx=els[0].index;
-        var mrr=mrrProjArr[idx],lsp=lspProjArr[idx],real=mrrRealArr[idx],meta=metaArr[idx];
-        var fase=idx<6?'Fase 1':idx<18?'Fase 2':'Fase 3';
+        var dm=dadosMeses[idx];
+        var faseLabel='Fase '+dm.fase;
         document.getElementById('proj-painel').style.display='block';
-        document.getElementById('proj-painel-titulo').textContent=labels[idx]+' — '+fase;
-        document.getElementById('proj-painel-grid').innerHTML=
-          '<div style="background:#fff;border-radius:8px;padding:8px 12px;">'
-          +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;">MRR projetado</div>'
-          +'<div style="font-size:18px;font-weight:700;color:#378ADD;">R$'+Math.round(mrr).toLocaleString('pt-BR')+'</div></div>'
-          +'<div style="background:#fff;border-radius:8px;padding:8px 12px;">'
-          +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;">Lucro SP projetado</div>'
-          +'<div style="font-size:18px;font-weight:700;color:#00C8D7;">R$'+Math.round(lsp).toLocaleString('pt-BR')+'</div></div>'
-          +'<div style="background:#fff;border-radius:8px;padding:8px 12px;">'
-          +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;">MRR real</div>'
-          +'<div style="font-size:18px;font-weight:700;color:#1D9E75;">'+(real!==null?'R$'+Math.round(real).toLocaleString('pt-BR'):'—')+'</div></div>'
-          +'<div style="background:#fff;border-radius:8px;padding:8px 12px;">'
-          +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;">Meta '+fase+'</div>'
-          +'<div style="font-size:18px;font-weight:700;color:#E24B4A;">R$'+Math.round(meta).toLocaleString('pt-BR')+'</div></div>'
-          +(real!==null?'<div style="background:#fff;border-radius:8px;padding:8px 12px;">'
-          +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;">% da meta</div>'
-          +'<div style="font-size:18px;font-weight:700;color:'+(real>=meta?'#1D9E75':'#E24B4A')+';">'+Math.round(real/meta*100)+'%</div></div>':'');
-      },
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          mode:'index',intersect:false,
-          callbacks:{
-            label:function(c){
-              if(c.raw===null) return c.dataset.label+': —';
-              return c.dataset.label+': R$'+Math.round(c.raw).toLocaleString('pt-BR');
-            }
-          }
+        document.getElementById('proj-painel-titulo').textContent=dm.label+' — '+faseLabel+' — '+dm.piscinas.toLocaleString('pt-BR')+' piscinas';
+        var itens=[
+          {lbl:'MRR projetado',proj:dm.mrrBruto,real:dm.mrrRealVal,cor:'#378ADD'},
+          {lbl:'Taxa cartão proj.',proj:dm.taxaM,real:null,cor:'#E24B4A',neg:true},
+          {lbl:'Lucro SP projetado',proj:dm.lspProj,real:null,cor:'#00C8D7'},
+          {lbl:'Repasse donos proj.',proj:dm.repProj,real:null,cor:'#BA7517'},
+          {lbl:'Meta '+faseLabel,proj:dm.meta,real:null,cor:'#9B59B6'},
+        ];
+        if(dm.mrrRealVal!==null){
+          itens.push({lbl:'% da meta',proj:null,real:Math.round(dm.mrrRealVal/dm.meta*100)+'%',cor:dm.mrrRealVal>=dm.meta?'#1D9E75':'#E24B4A'});
         }
+        document.getElementById('proj-painel-grid').innerHTML=itens.map(function(it){
+          return '<div style="background:#fff;border-radius:8px;padding:8px 12px;border:1px solid rgba(18,85,204,0.08);">'
+            +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;font-weight:600;margin-bottom:3px;">'+it.lbl+'</div>'
+            +(it.proj!==null?'<div style="font-size:11px;opacity:.5;margin-bottom:2px;">Proj: <span style="font-weight:700;color:'+it.cor+';">'+(it.neg&&it.proj>0?'-':'')+'R$'+Math.round(it.proj).toLocaleString('pt-BR')+'</span></div>':'')
+            +(it.real!==null?'<div style="font-size:13px;font-weight:900;color:'+(typeof it.real==="string"?it.cor:'#1D9E75')+';font-family:Nunito,sans-serif;">'+(typeof it.real==="string"?it.real:'R$'+Math.round(it.real).toLocaleString('pt-BR'))+'</div>':'')
+            +'</div>';
+        }).join('');
       },
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:function(c){if(c.raw===null)return c.dataset.label+': —';return c.dataset.label+': R$'+Math.round(c.raw).toLocaleString('pt-BR');}}}},
       scales:{
         x:{ticks:{font:{size:10},color:'#888',maxRotation:0,autoSkip:true,maxTicksLimit:12},grid:{display:false}},
-        y:{ticks:{callback:function(v){return v>=1000?'R$'+Math.round(v/1000)+'k':'R$'+v;},font:{size:10},color:'#888'},
-           grid:{color:'rgba(0,0,0,0.03)'}}
+        y:{ticks:{callback:function(v){return v>=1000?'R$'+Math.round(v/1000)+'k':'R$'+v;},font:{size:10},color:'#888'},grid:{color:'rgba(0,0,0,0.03)'}}
       }
     }
   });
+
+  // Tabela de referência escrita
+  var th='<th style="padding:6px 10px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.5;white-space:nowrap;border-bottom:2px solid rgba(18,85,204,0.1);">';
+  var thtml='<thead><tr>'
+    +'<th style="padding:6px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.5;border-bottom:2px solid rgba(18,85,204,0.1);">Mês</th>'
+    +th+'Fase</th>'+th+'Piscinas</th>'+th+'MRR proj.</th>'+th+'Taxa cartão</th>'+th+'Lucro SP</th>'+th+'Repasse donos</th>'+th+'Meta</th>'+th+'Real</th>'+th+'% Meta</th>'
+    +'</tr></thead><tbody>';
+  dadosMeses.forEach(function(dm,i){
+    var bg=i%2===1?'background:rgba(18,85,204,0.02);':'';
+    var faseColors={1:'#1255CC',2:'#00875A',3:'#BA7517'};
+    var pctMeta=dm.mrrRealVal!==null?Math.round(dm.mrrRealVal/dm.meta*100):null;
+    var pctCor=pctMeta===null?'#aaa':pctMeta>=100?'#1D9E75':pctMeta>=60?'#BA7517':'#E24B4A';
+    thtml+='<tr style="border-bottom:1px solid rgba(18,85,204,0.05);'+bg+'">'
+      +'<td style="padding:6px 10px;font-size:12px;font-weight:700;">'+dm.label+'</td>'
+      +'<td style="padding:6px 10px;text-align:right;"><span style="font-size:10px;font-weight:700;color:'+faseColors[dm.fase]+';background:'+faseColors[dm.fase]+'18;padding:2px 6px;border-radius:4px;">F'+dm.fase+'</span></td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right;color:#378ADD;font-weight:700;">'+dm.piscinas.toLocaleString('pt-BR')+'</td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right;color:#378ADD;font-weight:700;">'+fmtK(dm.mrrBruto)+'</td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right;color:#E24B4A;">-'+fmtK(dm.taxaM)+'</td>'
+      +'<td style="padding:6px 10px;font-size:12px;text-align:right;color:#00C8D7;font-weight:700;">'+fmtK(dm.lspProj)+'</td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right;color:#BA7517;">'+fmtK(dm.repProj)+'</td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right;color:#9B59B6;font-weight:700;">'+fmtK(dm.meta)+'</td>'
+      +'<td style="padding:6px 10px;font-size:12px;text-align:right;color:#1D9E75;font-weight:700;">'+(dm.mrrRealVal!==null?fmtK(dm.mrrRealVal):'—')+'</td>'
+      +'<td style="padding:6px 10px;font-size:12px;text-align:right;font-weight:700;color:'+pctCor+';">'+(pctMeta!==null?pctMeta+'%':'—')+'</td>'
+      +'</tr>';
+  });
+  thtml+='</tbody>';
+  var tabelaEl=document.getElementById('proj-tabela-ref');
+  if(tabelaEl) tabelaEl.innerHTML=thtml;
 }
 
 function sair(){localStorage.removeItem('sp_admin_sess');window.location.replace('admin-login.html');}
