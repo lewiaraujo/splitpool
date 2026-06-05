@@ -903,15 +903,17 @@ function renderFinanceiro(){
 
 var _projecaoChart=null;
 var _projFiltro='mensal';
-var _linhasAtivas={mrr_proj:true,lsp_proj:true,rep_proj:true,taxa_proj:true,mrr_real:true,meta:true};
+var _linhasAtivas={mrr_proj:true,lsp_proj:true,rep_proj:true,taxa_proj:true,mrr_real:true,lsp_real:true,pisc_proj:true,meta:true};
 
 var LINHAS_DEF=[
-  {key:'mrr_proj',  label:'MRR projetado',      cor:'#378ADD',dash:[6,4],  fill:false},
-  {key:'lsp_proj',  label:'Lucro SP projetado',  cor:'#00C8D7',dash:[4,3],  fill:false},
-  {key:'rep_proj',  label:'Repasse donos proj.', cor:'#BA7517',dash:[5,3],  fill:false},
-  {key:'taxa_proj', label:'Taxa cartão proj.',   cor:'#E24B4A',dash:[3,3],  fill:false},
-  {key:'mrr_real',  label:'MRR real',            cor:'#1D9E75',dash:null,   fill:true},
-  {key:'meta',      label:'Meta fase',           cor:'#9B59B6',dash:[4,4],  fill:false},
+  {key:'mrr_proj',   label:'MRR projetado',       cor:'#378ADD',dash:[6,4], fill:false, yAxis:'y'},
+  {key:'lsp_proj',   label:'Lucro SP projetado',   cor:'#00C8D7',dash:[4,3], fill:false, yAxis:'y'},
+  {key:'rep_proj',   label:'Repasse donos proj.',  cor:'#BA7517',dash:[5,3], fill:false, yAxis:'y'},
+  {key:'taxa_proj',  label:'Taxa cartão proj.',    cor:'#E24B4A',dash:[3,3], fill:false, yAxis:'y'},
+  {key:'mrr_real',   label:'MRR real',             cor:'#1D9E75',dash:null,  fill:true,  yAxis:'y'},
+  {key:'lsp_real',   label:'Lucro SP real',        cor:'#085041',dash:null,  fill:false, yAxis:'y'},
+  {key:'pisc_proj',  label:'Piscinas necessárias', cor:'#8E44AD',dash:[2,2], fill:false, yAxis:'y2'},
+  {key:'meta',       label:'Meta fase',            cor:'#9B59B6',dash:[4,4], fill:false, yAxis:'y'},
 ];
 
 function setProjFiltro(f,el){
@@ -979,12 +981,17 @@ function renderGraficoProjecaoVsReal(assinaturas){
   var canvas=document.getElementById('chart-projecao-real');
   if(!canvas||typeof Chart==='undefined') return;
 
-  // Dados reais do banco
-  var mrrReal={};
+  // Dados reais do banco — MRR e Lucro SP por mês
+  var mrrReal={},lspReal={};
   (assinaturas||[]).filter(function(a){return a.status==='ativo'&&a.confirmado_em;}).forEach(function(a){
     var dt=new Date(a.confirmado_em);
     var chave=(dt.getMonth()+1).toString().padStart(2,'0')+'/'+dt.getFullYear();
     mrrReal[chave]=(mrrReal[chave]||0)+Number(a.valor||0);
+    // Lucro SP real via LUCRO_SP_MAP
+    var k=(a.plano_nome||a.servico||'').toLowerCase().trim();
+    var lsp=LUCRO_SP_MAP[k]||0;
+    if(!lsp){for(var x in LUCRO_SP_MAP){if(k.indexOf(x)!==-1||x.indexOf(k)!==-1){lsp=LUCRO_SP_MAP[x];break;}}}
+    lspReal[chave]=(lspReal[chave]||0)+lsp;
   });
 
   var hoje=new Date();
@@ -1000,7 +1007,7 @@ function renderGraficoProjecaoVsReal(assinaturas){
   // Arrays para cada linha
   var labels=[],
       arr_mrr_proj=[],arr_lsp_proj=[],arr_rep_proj=[],arr_taxa_proj=[],
-      arr_mrr_real=[],arr_meta=[],
+      arr_mrr_real=[],arr_lsp_real=[],arr_pisc_proj=[],arr_meta=[],
       dadosMeses=[];
 
   for(var i=0;i<nMeses;i++){
@@ -1017,13 +1024,16 @@ function renderGraficoProjecaoVsReal(assinaturas){
     var lspProj=Math.round(mrrLiq*r.rLSP);
     var repProj=Math.round(mrrLiq*r.rRep);
     var mrrRealVal=mrrReal[label]!==undefined?mrrReal[label]:null;
+    var lspRealVal=lspReal[label]!==undefined?lspReal[label]:null;
     arr_mrr_proj.push(mrrBruto);
     arr_lsp_proj.push(lspProj);
     arr_rep_proj.push(repProj);
     arr_taxa_proj.push(taxaM);
     arr_mrr_real.push(mrrRealVal);
+    arr_lsp_real.push(lspRealVal);
+    arr_pisc_proj.push(piscinas);
     arr_meta.push(meta);
-    dadosMeses.push({label,piscinas,mrrBruto,taxaM,mrrLiq,lspProj,repProj,mrrRealVal,meta,fase});
+    dadosMeses.push({label,piscinas,mrrBruto,taxaM,mrrLiq,lspProj,repProj,mrrRealVal,lspRealVal,meta,fase});
   }
 
   // Indicador de meta
@@ -1066,14 +1076,16 @@ function renderGraficoProjecaoVsReal(assinaturas){
   }
 
   // Datasets
-  var allData={mrr_proj:arr_mrr_proj,lsp_proj:arr_lsp_proj,rep_proj:arr_rep_proj,taxa_proj:arr_taxa_proj,mrr_real:arr_mrr_real,meta:arr_meta};
+  var allData={mrr_proj:arr_mrr_proj,lsp_proj:arr_lsp_proj,rep_proj:arr_rep_proj,taxa_proj:arr_taxa_proj,mrr_real:arr_mrr_real,lsp_real:arr_lsp_real,pisc_proj:arr_pisc_proj,meta:arr_meta};
   var datasets=LINHAS_DEF.map(function(l){
+    var isSolid=l.key==='mrr_real'||l.key==='lsp_real';
     var d={label:l.label,data:allData[l.key],hidden:!_linhasAtivas[l.key],
-      borderColor:l.cor,backgroundColor:l.fill?'rgba(29,158,117,0.08)':'transparent',
-      fill:l.fill,tension:0.4,borderWidth:l.key==='mrr_real'?2.5:1.8,
-      pointRadius:l.key==='mrr_real'?4:1.5,
-      pointBackgroundColor:l.key==='mrr_real'?'#1D9E75':l.cor,
-      spanGaps:false};
+      borderColor:l.cor,backgroundColor:l.key==='mrr_real'?'rgba(29,158,117,0.08)':'transparent',
+      fill:l.fill,tension:0.4,borderWidth:isSolid?2.5:1.8,
+      pointRadius:isSolid?4:1.5,
+      pointBackgroundColor:l.cor,
+      spanGaps:false,
+      yAxisID:l.yAxis||'y'};
     if(l.dash) d.borderDash=l.dash;
     return d;
   });
@@ -1091,27 +1103,31 @@ function renderGraficoProjecaoVsReal(assinaturas){
         document.getElementById('proj-painel').style.display='block';
         document.getElementById('proj-painel-titulo').textContent=dm.label+' — '+faseLabel+' — '+dm.piscinas.toLocaleString('pt-BR')+' piscinas';
         var itens=[
-          {lbl:'MRR projetado',proj:dm.mrrBruto,real:dm.mrrRealVal,cor:'#378ADD'},
-          {lbl:'Taxa cartão proj.',proj:dm.taxaM,real:null,cor:'#E24B4A',neg:true},
-          {lbl:'Lucro SP projetado',proj:dm.lspProj,real:null,cor:'#00C8D7'},
-          {lbl:'Repasse donos proj.',proj:dm.repProj,real:null,cor:'#BA7517'},
-          {lbl:'Meta '+faseLabel,proj:dm.meta,real:null,cor:'#9B59B6'},
+          {lbl:'MRR projetado',    proj:dm.mrrBruto,    real:dm.mrrRealVal, cor:'#378ADD'},
+          {lbl:'Taxa cartão proj.',proj:dm.taxaM,        real:null,          cor:'#E24B4A',neg:true},
+          {lbl:'Lucro SP projetado',proj:dm.lspProj,    real:dm.lspRealVal, cor:'#00C8D7', corReal:'#085041'},
+          {lbl:'Repasse donos proj.',proj:dm.repProj,   real:null,          cor:'#BA7517'},
+          {lbl:'Piscinas necessárias',proj:dm.piscinas, real:null,          cor:'#8E44AD',unidade:'pisc.'},
+          {lbl:'Meta '+faseLabel,  proj:dm.meta,        real:null,          cor:'#9B59B6'},
         ];
         if(dm.mrrRealVal!==null){
-          itens.push({lbl:'% da meta',proj:null,real:Math.round(dm.mrrRealVal/dm.meta*100)+'%',cor:dm.mrrRealVal>=dm.meta?'#1D9E75':'#E24B4A'});
+          itens.push({lbl:'% meta (MRR)',proj:null,real:Math.round(dm.mrrRealVal/dm.meta*100)+'%',cor:dm.mrrRealVal>=dm.meta?'#1D9E75':'#E24B4A'});
         }
         document.getElementById('proj-painel-grid').innerHTML=itens.map(function(it){
+          var projTxt=it.proj!==null?(it.unidade?Math.round(it.proj)+' '+it.unidade:(it.neg&&it.proj>0?'-':'')+'R$'+Math.round(it.proj).toLocaleString('pt-BR')):null;
+          var realTxt=it.real!==null?(typeof it.real==='string'?it.real:'R$'+Math.round(it.real).toLocaleString('pt-BR')):null;
           return '<div style="background:#fff;border-radius:8px;padding:8px 12px;border:1px solid rgba(18,85,204,0.08);">'
             +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;font-weight:600;margin-bottom:3px;">'+it.lbl+'</div>'
-            +(it.proj!==null?'<div style="font-size:11px;opacity:.5;margin-bottom:2px;">Proj: <span style="font-weight:700;color:'+it.cor+';">'+(it.neg&&it.proj>0?'-':'')+'R$'+Math.round(it.proj).toLocaleString('pt-BR')+'</span></div>':'')
-            +(it.real!==null?'<div style="font-size:13px;font-weight:900;color:'+(typeof it.real==="string"?it.cor:'#1D9E75')+';font-family:Nunito,sans-serif;">'+(typeof it.real==="string"?it.real:'R$'+Math.round(it.real).toLocaleString('pt-BR'))+'</div>':'')
+            +(projTxt?'<div style="font-size:11px;opacity:.6;margin-bottom:2px;">Proj: <span style="font-weight:700;color:'+it.cor+';">'+projTxt+'</span></div>':'')
+            +(realTxt?'<div style="font-size:13px;font-weight:900;color:'+(it.corReal||it.cor)+';font-family:Nunito,sans-serif;">Real: '+realTxt+'</div>':'')
             +'</div>';
         }).join('');
       },
       plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:function(c){if(c.raw===null)return c.dataset.label+': —';return c.dataset.label+': R$'+Math.round(c.raw).toLocaleString('pt-BR');}}}},
       scales:{
         x:{ticks:{font:{size:10},color:'#888',maxRotation:0,autoSkip:true,maxTicksLimit:12},grid:{display:false}},
-        y:{ticks:{callback:function(v){return v>=1000?'R$'+Math.round(v/1000)+'k':'R$'+v;},font:{size:10},color:'#888'},grid:{color:'rgba(0,0,0,0.03)'}}
+        y:{ticks:{callback:function(v){return v>=1000?'R$'+Math.round(v/1000)+'k':'R$'+v;},font:{size:10},color:'#888'},grid:{color:'rgba(0,0,0,0.03)'}},
+        y2:{position:'right',ticks:{callback:function(v){return Math.round(v)+' pisc.';},font:{size:10},color:'#8E44AD'},grid:{display:false}}
       }
     }
   });
