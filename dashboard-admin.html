@@ -257,18 +257,32 @@ tbody td{padding:12px 16px;font-size:13px;}
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
         <div>
           <div style="font-size:14px;font-weight:700;color:var(--bluedark);">📈 Projeção vs Real</div>
-          <div style="font-size:12px;color:var(--bluedark);opacity:.5;margin-top:2px;">Curva real vs meta da Fase 1</div>
+          <div style="font-size:12px;color:var(--bluedark);opacity:.5;margin-top:2px;">Curva real vs meta por fase — clique num ponto para ver os valores</div>
         </div>
         <div id="meta-indicator" style="text-align:right;"></div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px;font-size:12px;color:var(--bluedark);opacity:.6;">
-        <span style="display:flex;align-items:center;gap:6px;"><span style="width:24px;height:3px;background:#378ADD;border-radius:2px;display:inline-block;"></span>Projeção Fase 1 (MRR)</span>
-        <span style="display:flex;align-items:center;gap:6px;"><span style="width:24px;height:3px;background:#1D9E75;border-radius:2px;display:inline-block;"></span>Real (MRR)</span>
-        <span style="display:flex;align-items:center;gap:6px;"><span style="width:24px;height:3px;background:#00C8D7;border-radius:2px;display:inline-block;"></span>Lucro SP projetado</span>
-        <span style="display:flex;align-items:center;gap:6px;"><span style="width:24px;height:3px;background:#E24B4A;border-radius:2px;display:inline-block;"></span>Meta mensal (R$5.700)</span>
+      <!-- Filtros temporais -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+        <div style="display:flex;gap:6px;">
+          <button onclick="setProjFiltro('mensal',this)" class="proj-filtro-btn act" style="padding:4px 12px;border-radius:7px;font-size:12px;font-weight:600;border:1.5px solid #1255CC;background:#1255CC;color:#fff;cursor:pointer;font-family:inherit;">Mensal</button>
+          <button onclick="setProjFiltro('anual',this)" class="proj-filtro-btn" style="padding:4px 12px;border-radius:7px;font-size:12px;font-weight:600;border:1.5px solid rgba(18,85,204,0.2);background:#fff;color:#1255CC;cursor:pointer;font-family:inherit;">Anual (24m)</button>
+        </div>
+        <div style="font-size:11px;color:var(--bluedark);opacity:.4;margin-left:4px;">Fase 1: M1–6 | Fase 2: M7–18 | Fase 3: M19–24</div>
       </div>
-      <div style="position:relative;width:100%;height:260px;">
-        <canvas id="chart-projecao-real" role="img" aria-label="Gráfico comparando projeção financeira da Fase 1 com os dados reais de MRR mês a mês e a meta mensal de R$5.700">Comparação projeção vs real.</canvas>
+      <!-- Legendas -->
+      <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:11px;color:var(--bluedark);opacity:.7;">
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:3px;background:#378ADD;border-radius:2px;display:inline-block;border-top:1px dashed #378ADD;"></span>MRR projetado</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:3px;background:#00C8D7;border-radius:2px;display:inline-block;border-top:1px dashed #00C8D7;"></span>Lucro SP projetado</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:3px;background:#1D9E75;border-radius:2px;display:inline-block;"></span>MRR real</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:3px;background:#E24B4A;border-radius:2px;display:inline-block;border-top:1px dashed #E24B4A;"></span>Meta fase</span>
+      </div>
+      <div style="position:relative;width:100%;height:360px;">
+        <canvas id="chart-projecao-real" role="img" aria-label="Gráfico projeção vs real Splitpool 24 meses com fases marcadas">Projeção vs real.</canvas>
+      </div>
+      <!-- Painel de valores ao clicar -->
+      <div id="proj-painel" style="display:none;margin-top:16px;background:rgba(18,85,204,0.03);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:.5;letter-spacing:.05em;margin-bottom:10px;" id="proj-painel-titulo">Valores do mês</div>
+        <div id="proj-painel-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;"></div>
       </div>
     </div>
   </div>
@@ -884,100 +898,143 @@ function renderFinanceiro(){
 }
 
 var _projecaoChart=null;
+var _projFiltro='mensal';
+
+function setProjFiltro(f,el){
+  _projFiltro=f;
+  document.querySelectorAll('.proj-filtro-btn').forEach(function(b){
+    b.style.background='#fff';b.style.color='#1255CC';b.style.borderColor='rgba(18,85,204,0.2)';
+  });
+  el.style.background='#1255CC';el.style.color='#fff';el.style.borderColor='#1255CC';
+  renderGraficoProjecaoVsReal(dados.assinaturas||[]);
+}
+
 function renderGraficoProjecaoVsReal(assinaturas){
   var canvas=document.getElementById('chart-projecao-real');
-  if(!canvas) return;
+  if(!canvas||typeof Chart==='undefined') return;
 
-  // Agrupar MRR real por mês (MM/YYYY)
+  // Ratios do simulador validado (Fase 1, 30% família, 20% wellness, com taxa cartão)
+  // MRR projetado → ratio Lucro SP ≈ 26.6%, ratio Repasse ≈ 73.4%
+  var RATIO_LSP=0.266;
+
+  // MRR real por mês do banco
   var mrrReal={};
-  assinaturas.filter(function(a){return a.status==='ativo'&&a.confirmado_em;}).forEach(function(a){
+  (assinaturas||[]).filter(function(a){return a.status==='ativo'&&a.confirmado_em;}).forEach(function(a){
     var dt=new Date(a.confirmado_em);
     var chave=(dt.getMonth()+1).toString().padStart(2,'0')+'/'+dt.getFullYear();
     mrrReal[chave]=(mrrReal[chave]||0)+Number(a.valor||0);
   });
 
-  // Determinar mês de início (mês mais antigo com dados reais ou mês atual)
+  // Mês de início = mês mais antigo com dado real ou 6 meses atrás
   var hoje=new Date();
   var mesesChaves=Object.keys(mrrReal).sort();
-  var mesInicioStr=mesesChaves.length>0?mesesChaves[0]:((hoje.getMonth()+1).toString().padStart(2,'0')+'/'+hoje.getFullYear());
-  var partes=mesInicioStr.split('/');
-  var mesInicio=new Date(parseInt(partes[1]),parseInt(partes[0])-1,1);
+  var mesInicioStr=mesesChaves.length>0?mesesChaves[0]
+    :((new Date(hoje.getFullYear(),hoje.getMonth()-5,1).getMonth()+1).toString().padStart(2,'0')+'/'+(new Date(hoje.getFullYear(),hoje.getMonth()-5,1).getFullYear()));
+  var p=mesInicioStr.split('/');
+  var mesInicio=new Date(parseInt(p[1]),parseInt(p[0])-1,1);
 
-  // Gerar 6 meses de projeção Fase 1 a partir do mês de início
-  var labels=[],projArr=[],lucroSPprojArr=[],realArr=[],metaArr=[];
-  for(var i=0;i<6;i++){
+  var nMeses=_projFiltro==='anual'?24:6;
+  var labels=[],mrrProjArr=[],lspProjArr=[],mrrRealArr=[],metaArr=[];
+
+  for(var i=0;i<nMeses;i++){
     var d=new Date(mesInicio.getFullYear(),mesInicio.getMonth()+i,1);
     var label=(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
     labels.push(label);
-    // Projeção Fase 1: cresce de ~10 piscinas para ~150 em 6 meses, MRR médio R$38/piscina
-    var piscinas=Math.round(10+(140*(i/5)));
-    var mrrProj=piscinas*38;
-    projArr.push(mrrProj);
-    // Lucro SP projetado ≈ 5,4% do MRR (ratio médio dos planos Fase 1)
-    lucroSPprojArr.push(Math.round(mrrProj*0.054));
-    // Real: do banco
-    realArr.push(mrrReal[label]||null);
-    // Meta fixa
-    metaArr.push(5700);
+
+    // Projeção por fase
+    var piscinas,mg,meta;
+    if(i<6){piscinas=Math.round(10+(140*(i/5)));mg=38;meta=5700;}
+    else if(i<18){piscinas=Math.round(150+(1850*((i-6)/11)));mg=40;meta=80000;}
+    else{piscinas=Math.round(2000+(3000*(Math.min((i-18)/5,1))));mg=42;meta=210000;}
+
+    var mrrProj=piscinas*mg;
+    mrrProjArr.push(mrrProj);
+    lspProjArr.push(Math.round(mrrProj*RATIO_LSP));
+    mrrRealArr.push(mrrReal[label]!==undefined?mrrReal[label]:null);
+    metaArr.push(meta);
   }
 
   // Indicador de meta — mês atual
   var mesAtualKey=(hoje.getMonth()+1).toString().padStart(2,'0')+'/'+hoje.getFullYear();
   var mrrAtual=mrrReal[mesAtualKey]||0;
-  var meta=5700;
-  var pct=Math.min(Math.round(mrrAtual/meta*100),100);
+  var metaAtual=5700;
+  var pct=Math.min(Math.round(mrrAtual/metaAtual*100),100);
   var cor=pct>=100?'#1D9E75':pct>=60?'#BA7517':'#E24B4A';
   var metaEl=document.getElementById('meta-indicator');
   if(metaEl){
     metaEl.innerHTML=
-      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:.5;letter-spacing:.05em;margin-bottom:4px;">Meta mensal</div>'
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:.5;letter-spacing:.05em;margin-bottom:4px;">Meta mês atual (Fase 1)</div>'
       +'<div style="font-size:28px;font-weight:900;font-family:Nunito,sans-serif;color:'+cor+';">'+pct+'%</div>'
       +'<div style="font-size:11px;color:var(--bluedark);opacity:.5;">R$'+Math.round(mrrAtual).toLocaleString('pt-BR')+' / R$5.700</div>'
-      +'<div style="width:120px;height:6px;background:rgba(18,85,204,0.1);border-radius:3px;margin-top:6px;">'
+      +'<div style="width:140px;height:6px;background:rgba(18,85,204,0.1);border-radius:3px;margin-top:6px;margin-left:auto;">'
       +'<div style="width:'+pct+'%;height:100%;background:'+cor+';border-radius:3px;transition:.4s;"></div>'
       +'</div>';
   }
 
-  // Renderizar gráfico
+  // Anotações de fase (linhas verticais via plugin annotation ou via afterDraw)
   if(_projecaoChart) _projecaoChart.destroy();
-  if(typeof Chart==='undefined') return;
+
   _projecaoChart=new Chart(canvas,{
     type:'line',
     data:{
       labels:labels,
       datasets:[
-        {label:'Projeção Fase 1 (MRR)',data:projArr,
-         borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.06)',
-         fill:true,tension:0.4,pointRadius:3,borderWidth:2,borderDash:[6,3]},
-        {label:'Lucro SP projetado',data:lucroSPprojArr,
-         borderColor:'#00C8D7',backgroundColor:'rgba(0,200,215,0.06)',
-         fill:false,tension:0.4,pointRadius:3,borderWidth:2,borderDash:[4,2]},
-        {label:'Real (MRR)',data:realArr,
-         borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.1)',
-         fill:true,tension:0.3,pointRadius:5,pointBackgroundColor:'#1D9E75',borderWidth:2.5,
-         spanGaps:false},
-        {label:'Meta (R$5.700)',data:metaArr,
+        {label:'MRR projetado',data:mrrProjArr,
+         borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.04)',
+         fill:true,tension:0.4,pointRadius:2,borderWidth:2,borderDash:[6,4]},
+        {label:'Lucro SP projetado',data:lspProjArr,
+         borderColor:'#00C8D7',backgroundColor:'rgba(0,200,215,0.04)',
+         fill:false,tension:0.4,pointRadius:2,borderWidth:2,borderDash:[4,3]},
+        {label:'MRR real',data:mrrRealArr,
+         borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.10)',
+         fill:true,tension:0.3,pointRadius:5,pointBackgroundColor:'#1D9E75',borderWidth:2.5,spanGaps:false},
+        {label:'Meta fase',data:metaArr,
          borderColor:'#E24B4A',backgroundColor:'transparent',
          fill:false,tension:0,pointRadius:0,borderWidth:1.5,borderDash:[4,4]},
       ]
     },
     options:{
       responsive:true,maintainAspectRatio:false,
+      onClick:function(evt,els){
+        if(!els||!els.length) return;
+        var idx=els[0].index;
+        var mrr=mrrProjArr[idx],lsp=lspProjArr[idx],real=mrrRealArr[idx],meta=metaArr[idx];
+        var fase=idx<6?'Fase 1':idx<18?'Fase 2':'Fase 3';
+        document.getElementById('proj-painel').style.display='block';
+        document.getElementById('proj-painel-titulo').textContent=labels[idx]+' — '+fase;
+        document.getElementById('proj-painel-grid').innerHTML=
+          '<div style="background:#fff;border-radius:8px;padding:8px 12px;">'
+          +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;">MRR projetado</div>'
+          +'<div style="font-size:18px;font-weight:700;color:#378ADD;">R$'+Math.round(mrr).toLocaleString('pt-BR')+'</div></div>'
+          +'<div style="background:#fff;border-radius:8px;padding:8px 12px;">'
+          +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;">Lucro SP projetado</div>'
+          +'<div style="font-size:18px;font-weight:700;color:#00C8D7;">R$'+Math.round(lsp).toLocaleString('pt-BR')+'</div></div>'
+          +'<div style="background:#fff;border-radius:8px;padding:8px 12px;">'
+          +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;">MRR real</div>'
+          +'<div style="font-size:18px;font-weight:700;color:#1D9E75;">'+(real!==null?'R$'+Math.round(real).toLocaleString('pt-BR'):'—')+'</div></div>'
+          +'<div style="background:#fff;border-radius:8px;padding:8px 12px;">'
+          +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;">Meta '+fase+'</div>'
+          +'<div style="font-size:18px;font-weight:700;color:#E24B4A;">R$'+Math.round(meta).toLocaleString('pt-BR')+'</div></div>'
+          +(real!==null?'<div style="background:#fff;border-radius:8px;padding:8px 12px;">'
+          +'<div style="font-size:10px;text-transform:uppercase;opacity:.5;">% da meta</div>'
+          +'<div style="font-size:18px;font-weight:700;color:'+(real>=meta?'#1D9E75':'#E24B4A')+';">'+Math.round(real/meta*100)+'%</div></div>':'');
+      },
       plugins:{
         legend:{display:false},
         tooltip:{
+          mode:'index',intersect:false,
           callbacks:{
             label:function(c){
-              if(c.raw===null) return c.dataset.label+': sem dados';
+              if(c.raw===null) return c.dataset.label+': —';
               return c.dataset.label+': R$'+Math.round(c.raw).toLocaleString('pt-BR');
             }
           }
         }
       },
       scales:{
-        x:{ticks:{font:{size:11},color:'#888'},grid:{display:false}},
-        y:{ticks:{callback:function(v){return 'R$'+Math.round(v/1000)+'k';},font:{size:10},color:'#888'},
-           grid:{color:'rgba(0,0,0,0.04)'}}
+        x:{ticks:{font:{size:10},color:'#888',maxRotation:0,autoSkip:true,maxTicksLimit:12},grid:{display:false}},
+        y:{ticks:{callback:function(v){return v>=1000?'R$'+Math.round(v/1000)+'k':'R$'+v;},font:{size:10},color:'#888'},
+           grid:{color:'rgba(0,0,0,0.03)'}}
       }
     }
   });
