@@ -1053,7 +1053,7 @@ function renderGraficoProjecaoVsReal(assinaturas){
   if(filtrosEl){
     filtrosEl.innerHTML=LINHAS_DEF.map(function(l){
       var ativo=_linhasAtivas[l.key];
-      return '<button data-proj-linha="'+l.key+'" onclick="toggleProjLinha(''+l.key+'')" style="'
+      return '<button data-proj-linha="'+l.key+'" onclick="toggleProjLinha(\''+l.key+'\')" style="'
         +'display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;'
         +'border:1.5px solid '+l.cor+';'
         +'background:'+(ativo?l.cor:'#fff')+';'
