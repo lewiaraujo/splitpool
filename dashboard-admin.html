@@ -1058,14 +1058,7 @@ function renderGraficoProjecaoVsReal(assinaturas){
 }
 
 function abrirSimulador(){
-  var modal=document.getElementById('modal-simulador');
-  var iframe=document.getElementById('iframe-simulador');
-  // Carrega o simulador salvo no repositório
-  if(!iframe.src||iframe.src==='about:blank'||iframe.src===''){
-    iframe.src='https://lewiaraujo.github.io/splitpool/splitpool_margin_simulator_v5.html';
-  }
-  modal.style.display='flex';
-  document.body.style.overflow='hidden';
+  window.open('https://lewiaraujo.github.io/splitpool/splitpool_margin_simulator_v5.html','_blank');
 }
 function fecharSimulador(){
   document.getElementById('modal-simulador').style.display='none';
