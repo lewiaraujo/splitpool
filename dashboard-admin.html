@@ -878,7 +878,7 @@ function renderFinanceiro(){
       +'<div class="chart-bar-lbl">'+s+'</div>'
       +'<div style="display:flex;flex-direction:column;flex:1;gap:3px;">'
       +'<div style="display:flex;align-items:center;gap:3px;">'
-      +'<div style="height:10px;background:#1D9E75;border-radius:2px;width:'+pctLSP+'%;min-width:2px;" title="Lucro SP"></div>'
+      +'<div style="height:10px;background:#378ADD;border-radius:2px;width:'+pctLSP+'%;min-width:2px;" title="Lucro SP"></div>'
       +'<div style="height:10px;background:#E24B4A;border-radius:2px;width:'+pctTaxa+'%;min-width:2px;" title="Taxa cartao"></div>'
       +'<div style="height:10px;background:#0F6E56;border-radius:2px;width:'+pctLDono+'%;min-width:2px;" title="Lucro dono"></div>'
       +'</div></div>'
@@ -891,7 +891,7 @@ function renderFinanceiro(){
   }).join('');
   document.getElementById('chart-servicos').innerHTML=
     '<div style="display:flex;gap:16px;margin-bottom:10px;font-size:11px;flex-wrap:wrap;">'
-    +'<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#1D9E75;border-radius:2px;display:inline-block;"></span>Lucro SP liquido</span>'
+    +'<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#378ADD;border-radius:2px;display:inline-block;"></span>Lucro SP liquido</span>'
     +'<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#E24B4A;border-radius:2px;display:inline-block;"></span>Taxa cartao</span>'
     +'<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#0F6E56;border-radius:2px;display:inline-block;"></span>Lucro dono liquido</span>'
     +'</div>'
@@ -907,13 +907,13 @@ var _linhasAtivas={mrr_proj:true,lsp_proj:true,rep_proj:true,taxa_proj:true,mrr_
 
 var LINHAS_DEF=[
   {key:'mrr_proj',   label:'MRR projetado',       cor:'#378ADD',dash:[6,4], fill:false, yAxis:'y'},
-  {key:'lsp_proj',   label:'Lucro SP projetado',   cor:'#00C8D7',dash:[4,3], fill:false, yAxis:'y'},
+  {key:'mrr_real',   label:'MRR real',             cor:'#378ADD',dash:null,  fill:true,  yAxis:'y'},
+  {key:'lsp_proj',   label:'Lucro SP projetado',   cor:'#1D9E75',dash:[4,3], fill:false, yAxis:'y'},
+  {key:'lsp_real',   label:'Lucro SP real',        cor:'#1D9E75',dash:null,  fill:false, yAxis:'y'},
   {key:'rep_proj',   label:'Repasse donos proj.',  cor:'#BA7517',dash:[5,3], fill:false, yAxis:'y'},
   {key:'taxa_proj',  label:'Taxa cartão proj.',    cor:'#E24B4A',dash:[3,3], fill:false, yAxis:'y'},
-  {key:'mrr_real',   label:'MRR real',             cor:'#1D9E75',dash:null,  fill:true,  yAxis:'y'},
-  {key:'lsp_real',   label:'Lucro SP real',        cor:'#085041',dash:null,  fill:false, yAxis:'y'},
+  {key:'meta',       label:'Meta fase',            cor:'#888888',dash:[4,4], fill:false, yAxis:'y'},
   {key:'pisc_proj',  label:'Piscinas necessárias', cor:'#8E44AD',dash:[2,2], fill:false, yAxis:'y2'},
-  {key:'meta',       label:'Meta fase',            cor:'#9B59B6',dash:[4,4], fill:false, yAxis:'y'},
 ];
 
 function setProjFiltro(f,el){
