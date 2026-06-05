@@ -816,7 +816,7 @@ function renderFinanceiro(){
   });
 
   var tituloMap={diario:'Estratificacao Diaria',mensal:'Estratificacao Mensal',anual:'Estratificacao Anual'};
-  document.getElementById('fin-tabela-titulo').textContent=(tituloMap[filtroFin]||'Estratificacao')+' — destino de cada R$1,00';
+  document.getElementById('fin-tabela-titulo').textContent=(tituloMap[filtroFin]||'Estratificacao')+' — receita, custos e lucros por período';
 
   var th='<th style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.5;padding:8px 10px;border-bottom:1px solid rgba(18,85,204,0.1);white-space:nowrap;">';
   var chaves=Object.keys(grupos).sort(function(a,b){return b>a?1:-1;});
