@@ -162,6 +162,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .repasse-mes{font-size:13px;font-weight:700;color:var(--bluedark);}
 .repasse-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;}
 .repasse-status.pendente{background:#fff8e0;color:#8a5c00;}
+.repasse-status.retido{background:#f0e6ff;color:#6b21a8;}
 .repasse-status.aprovado{background:#e6fff8;color:#00522a;}
 .repasse-status.pago{background:#e6fff8;color:#00875A;}
 .repasse-row{display:flex;justify-content:space-between;font-size:12px;color:var(--bluedark);margin-bottom:3px;}
@@ -182,6 +183,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .pool-repasse-val.blue{color:var(--blue);}
 .pool-repasse-status{font-size:10px;padding:2px 8px;border-radius:5px;font-weight:700;margin-left:8px;}
 .pool-repasse-status.pendente{background:#fff8e0;color:#8a5c00;}
+.pool-repasse-status.retido{background:#f0e6ff;color:#6b21a8;}
 .pool-repasse-status.aprovado{background:#e0f0ff;color:#0A3080;}
 .pool-repasse-status.pago{background:#e6fff8;color:#00522a;}
 
@@ -1187,10 +1189,17 @@ async function gerarRepassePiscina(piscinaId, e){
   }
 
   var valLucroDono=assins.filter(function(a){return a.status==='ativo';}).reduce(function(s,a){return s+getLucroDono(pool.servico,a.plano_nome);},0);
+  // Regra 1º mês: se piscina foi criada neste mesmo mês, status = retido
+  var statusRepasse='pendente';
+  if(pool.created_at){
+    var criado=new Date(pool.created_at);
+    var criado_mes=(criado.getMonth()+1).toString().padStart(2,'0')+'/'+criado.getFullYear();
+    if(criado_mes===mesRef) statusRepasse='retido';
+  }
   var inserts=[];
   if(valRepasse>0) inserts.push({
     dono_id:userId,piscina_id:piscinaId,tipo:'repasse',valor:valRepasse,
-    mes_referencia:mesRef,status:'pendente',
+    mes_referencia:mesRef,status:statusRepasse,
     observacao:pool.servico+' · '+assins.length+' membro(s) · Lucro dono R$ '+valLucroDono.toFixed(2).replace('.',',')+obsData
   });
 
@@ -1226,7 +1235,13 @@ async function gerarRepasses(){
     var valLucroSP=calcLucroSPPiscina(pool,assins);
     var inserts=[];
     var valLucroDono2=assins.filter(function(a){return a.status==='ativo';}).reduce(function(s,a){return s+getLucroDono(pool.servico,a.plano_nome);},0);
-    if(valRepasse>0) inserts.push({dono_id:userId,piscina_id:pool.id,tipo:'repasse',valor:valRepasse,mes_referencia:mesRef,status:'pendente',observacao:pool.servico+' · '+assins.length+' membro(s) · Lucro dono R$ '+valLucroDono2.toFixed(2).replace('.',',')});
+    var statusRepasse2='pendente';
+    if(pool.created_at){
+      var criado2=new Date(pool.created_at);
+      var criado_mes2=(criado2.getMonth()+1).toString().padStart(2,'0')+'/'+criado2.getFullYear();
+      if(criado_mes2===mesRef) statusRepasse2='retido';
+    }
+    if(valRepasse>0) inserts.push({dono_id:userId,piscina_id:pool.id,tipo:'repasse',valor:valRepasse,mes_referencia:mesRef,status:statusRepasse2,observacao:pool.servico+' · '+assins.length+' membro(s) · Lucro dono R$ '+valLucroDono2.toFixed(2).replace('.',',')});
     if(inserts.length){await sb.from('repasses').insert(inserts);inseridos+=inserts.length;}
   }
   if(btn){btn.disabled=false;btn.textContent='⚡ Gerar todos os repasses';}
@@ -1252,7 +1267,7 @@ async function carregarMiniExtrato(piscinaId){
   Object.keys(porMes).sort().reverse().forEach(function(mes){
     var items=porMes[mes];
     var total=items.reduce(function(s,r){return s+Number(r.valor||0);},0);
-    var statusGeral=items.every(function(r){return r.status==='pago';})?'pago':items.some(function(r){return r.status==='aprovado';})?'aprovado':'pendente';
+    var statusGeral=items.every(function(r){return r.status==='pago';})?'pago':items.some(function(r){return r.status==='aprovado';})?'aprovado':items.some(function(r){return r.status==='retido';})?'retido':'pendente';
     html+='<div class="pool-repasse-item">';
     html+='<div><div style="font-size:12px;font-weight:700;color:var(--bluedark);">'+formatarMes(mes)+'</div>';
     html+='<div style="display:flex;gap:4px;margin-top:3px;">';
@@ -1343,10 +1358,11 @@ function renderExtratoLucro(){
     var items=porMes[mes];
     var totalLucro=items.reduce(function(s,r){return s+extrairLucroDono(r.observacao,r.valor);},0);
     var statusGeral=items.every(function(r){return r.status==='pago';})?'pago'
-      :items.some(function(r){return r.status==='aprovado';})?'aprovado':'pendente';
+      :items.some(function(r){return r.status==='aprovado';})?'aprovado'
+      :items.some(function(r){return r.status==='retido';})?'retido':'pendente';
     html+='<div class="repasse-card">';
     html+='<div class="repasse-header"><div class="repasse-mes">'+formatarMes(mes)+'</div>';
-    html+='<span class="repasse-status '+statusGeral+'">'+(statusGeral==='pago'?'Sacado':statusGeral==='aprovado'?'Aprovado':'Pendente')+'</span></div>';
+    html+='<span class="repasse-status '+statusGeral+'">'+(statusGeral==='pago'?'Sacado':statusGeral==='aprovado'?'Aprovado':statusGeral==='retido'?'Retido (1º mês)':'Pendente')+'</span></div>';
     items.forEach(function(r){
       var pisc=piscMap[r.piscina_id]||{};
       var lucro=extrairLucroDono(r.observacao,r.valor);
@@ -1400,8 +1416,9 @@ function renderExtrato(){
     var items=porMes[mes];
     var totalMes=items.reduce(function(s,r){return s+Number(r.valor||0);},0);
     var statusGeral=items.every(function(r){return r.status==='pago';})?'pago'
-      :items.some(function(r){return r.status==='aprovado';})?'aprovado':'pendente';
-    var statusLabel={pendente:'Pendente',aprovado:'Aprovado',pago:'Pago'}[statusGeral];
+      :items.some(function(r){return r.status==='aprovado';})?'aprovado'
+      :items.some(function(r){return r.status==='retido';})?'retido':'pendente';
+    var statusLabel={pendente:'Pendente',aprovado:'Aprovado',pago:'Pago',retido:'Retido (1º mês)'}[statusGeral];
 
     html+='<div class="repasse-card">';
     html+='<div class="repasse-header">';
