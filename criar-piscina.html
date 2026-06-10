@@ -495,22 +495,22 @@ const SVCS_FAMILIA=[
     nome:'Microsoft 365',sub:'Family · até 6 pessoas',img:BASE+'microsoft_icon.png',
     precoVenda:25.50,repasse:8.44,
     planos:[
-      {nome:'Family Mensal',custo:60.00,vagas:5,desc:'Word, Excel, PowerPoint, Teams, OneDrive 1TB/pessoa'},
-      {nome:'Family Anual',custo:49.92,vagas:5,desc:'Mesmo conteúdo com desconto anual (R$599/ano)'},
+      {nome:'Family Mensal',custo:0,vagas:5,desc:'Word, Excel, PowerPoint, Teams, OneDrive 1TB/pessoa'},
+      {nome:'Family Anual',custo:0,vagas:5,desc:'Mesmo conteúdo com desconto anual (R$599/ano)'},
     ]
   },
   {
     nome:'Duolingo Super',sub:'Família · até 6 pessoas',img:BASE+'duolingo_icon.png',
     precoVenda:19.90,repasse:4.10,
     planos:[
-      {nome:'Super Família Anual',custo:54.16,vagas:5,desc:'Sem anúncios, vidas ilimitadas, modo offline (R$649,90/ano)'},
+      {nome:'Super Família Anual',custo:0,vagas:5,desc:'Sem anúncios, vidas ilimitadas, modo offline (R$649,90/ano)'},
     ]
   },
   {
     nome:'Canva Teams',sub:'Teams · até 4 pessoas',img:BASE+'Logo-Canva.png',
     precoVenda:15.90,repasse:2.70,
     planos:[
-      {nome:'Teams Anual',custo:39.17,vagas:4,desc:'Pro completo + Brand Kit + colaboração em equipe (R$470/ano)'},
+      {nome:'Teams Anual',custo:0,vagas:4,desc:'Pro completo + Brand Kit + colaboração em equipe (R$470/ano)'},
     ]
   },
   {
@@ -779,7 +779,7 @@ function recalcularCalc(){
   const lucroFull=tipoSelecionado==='corporativo'?svc.repasse*vagas:(svc.repasse*vagas)-custo
   if(document.getElementById('calc-repasse-vaga')){
     document.getElementById('calc-repasse-vaga').textContent=`R$${svc.repasse.toFixed(2).replace('.',',')}/vaga`
-    document.getElementById('row-custo').style.display=tipoSelecionado==='corporativo'?'none':'flex'
+    document.getElementById('row-custo').style.display=(tipoSelecionado==='corporativo'||custo===0)?'none':'flex'
     document.getElementById('calc-custo').textContent=`- R$${custo.toFixed(2).replace('.',',')}`
     document.getElementById('calc-label-resultado').textContent=simVagas===vagas?'Piscina cheia — seu recebimento':`Com ${simVagas} de ${vagas} vagas`
     const res=document.getElementById('calc-resultado')
