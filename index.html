@@ -373,11 +373,7 @@ footer{padding:2.5rem 5%;border-top:1px solid rgba(255,255,255,.4);background:rg
     <button class="mcls" onclick="closeM('owner')">✕</button>
     <div style="font-size:2rem;margin-bottom:.4rem;">🤿</div>
     <h2>Criar uma piscina</h2>
-    <p class="msub">Qual é o seu perfil de dono?</p>
-    <div class="rpick">
-      <div class="rc act" onclick="pRole(this)"><div class="rico">👤</div><div class="rn">Pessoa física</div><div class="rd">Tenho um plano família sobrando</div></div>
-      <div class="rc" onclick="pRole(this)"><div class="rico">🏢</div><div class="rn">Empresa / Club</div><div class="rd">Ofereço benefício corporativo</div></div>
-    </div>
+    <p class="msub">Crie sua conta e comece a vender vagas em minutos.</p>
     <input type="email" placeholder="seu@email.com">
     <button class="btn-p" style="width:100%;padding:13px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;" onclick="window.location.href='cadastro.html?next=criar-piscina'">Criar piscina →</button>
     <div class="mdiv">ou</div>
@@ -458,7 +454,6 @@ function openM(id){
   document.getElementById('m-'+id).classList.add('open');
 }
 function closeM(id){document.getElementById('m-'+id).classList.remove('open');}
-function pRole(el){el.closest('.rpick').querySelectorAll('.rc').forEach(c=>c.classList.remove('act'));el.classList.add('act');}
 document.querySelectorAll('.mov').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 renderSvcs('all');
 </script>
