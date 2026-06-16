@@ -265,7 +265,7 @@ input::placeholder{color:#8BAAC8;}
         if (error.message.includes('Invalid login credentials')) showMsg('E-mail ou senha incorretos.', 'error')
         else showMsg(error.message, 'error')
       }
-      else window.location.href = '/splitpool/explorar.html'
+      else window.location.href = getNextUrl()
     } else {
       // Verificar se email já existe tentando login com senha errada
       const { data: existing } = await sb.from('profiles').select('id').eq('email', email).limit(1)
@@ -290,13 +290,19 @@ input::placeholder{color:#8BAAC8;}
   async function handleGoogle() {
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/splitpool/explorar.html' }
+      options: { redirectTo: window.location.origin + '/splitpool/' + (new URLSearchParams(window.location.search).get('next')==='criar-piscina' ? 'criar-piscina.html' : 'explorar.html') }
     })
     if (error) showMsg(error.message, 'error')
   }
 
+  function getNextUrl() {
+    var next = new URLSearchParams(window.location.search).get('next')
+    if (next === 'criar-piscina') return '/splitpool/criar-piscina.html'
+    return '/splitpool/explorar.html'
+  }
+
   sb.auth.getSession().then(({ data }) => {
-    if (data.session) window.location.href = '/splitpool/explorar.html'
+    if (data.session) window.location.href = getNextUrl()
   })
 
   // Detectar link de reset de senha
@@ -315,7 +321,7 @@ input::placeholder{color:#8BAAC8;}
         if (error) showMsg(error.message, 'error')
         else {
           showMsg('✅ Senha atualizada! Redirecionando...', 'success')
-          setTimeout(() => window.location.href = '/splitpool/explorar.html', 2000)
+          setTimeout(() => window.location.href = getNextUrl(), 2000)
         }
       }
       document.getElementById('forgot-row').style.display = 'none'
