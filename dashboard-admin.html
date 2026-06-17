@@ -221,7 +221,7 @@ tbody td{padding:12px 16px;font-size:13px;}
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Nome</th><th>Email</th><th>Piscinas criadas</th><th>Assinaturas</th><th>Tipo</th><th>Cadastro</th></tr></thead>
+        <thead><tr><th>Nome</th><th>Email</th><th>Piscinas criadas</th><th>Assinaturas</th><th>Tipo</th><th>Nível</th></tr></thead>
         <tbody id="tbody-usuarios"><tr><td colspan="6"><div class="empty">Carregando...</div></td></tr></tbody>
       </table>
     </div>
@@ -733,7 +733,7 @@ function renderUsuarios(){
       '<td data-label="Piscinas">'+u._nPisc+'</td>'+
       '<td data-label="Assinaturas">'+u._nAssins+'</td>'+
       '<td data-label="Tipo"><span class="pill '+pillClass+'">'+tipo+'</span></td>'+
-      '<td data-label="Cadastro" style="font-size:12px;opacity:.6;">'+fmtData(u.created_at)+'</td>'+
+      '<td data-label="Nível" style="font-size:12px;opacity:.6;">'+(u.nivel||'—')+'</td>'+
       '</tr>';
   }).join('');
   document.getElementById('tbody-usuarios').innerHTML=html;
