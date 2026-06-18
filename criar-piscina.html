@@ -438,6 +438,13 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         </select>
       </div>
 
+      <!-- DATA DE COMPRA DO PLANO -->
+      <div class="field" style="margin-bottom:1.5rem;">
+        <label>📅 Quando você comprou esse plano?</label>
+        <div class="field-hint" style="margin-bottom:10px;">Usamos essa data para calcular quanto tempo de plano ainda resta, especialmente importante em planos anuais.</div>
+        <input type="date" id="data-compra-plano" style="max-width:200px;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;">
+      </div>
+
       <!-- O QUE ACONTECE APÓS PUBLICAR -->
       <div style="background:rgba(0,200,100,0.08);border:1.5px solid rgba(0,200,100,0.2);border-radius:12px;padding:1.25rem;margin-bottom:1rem;">
         <div style="font-size:14px;font-weight:800;color:#00875A;margin-bottom:8px;">✅ O que acontece após publicar</div>
@@ -889,6 +896,8 @@ async function publicarPiscina(){
   if(!comprovanteFile){showMsg('Envie o comprovante do plano ativo antes de publicar.','error');return}
   const dia=document.getElementById('cartao-dia').value
   if(!dia){showMsg('Informe o dia de vencimento do seu cartão.','error');return}
+  const dataCompra=document.getElementById('data-compra-plano').value
+  if(!dataCompra){showMsg('Informe quando você comprou esse plano.','error');return}
 
   const btn=document.getElementById('btn-publicar')
   btn.disabled=true;btn.textContent='Enviando...'
@@ -923,6 +932,7 @@ async function publicarPiscina(){
     status:'pendente',
     icone_url:null,
     cartao_vencimento:dia,
+    data_compra_ciclo:dataCompra,
     comprovante_url:comprovanteUrl,
     link_convite:linkConvite
   })
