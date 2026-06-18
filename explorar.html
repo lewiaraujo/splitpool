@@ -524,6 +524,19 @@ async function renderizar() {
     const pct = Math.round((p.vagas_ocupadas / p.vagas_total) * 100)
     const esgotado = disponiveis <= 0
     const codigo = poolCode(p.id)
+    // Badge de prazo restante (planos anuais com data_compra_ciclo preenchida)
+    var badgePrazo = ''
+    if (p.data_compra_ciclo) {
+      var compra = new Date(p.data_compra_ciclo)
+      var hoje = new Date()
+      var mesesPassados = (hoje.getFullYear() - compra.getFullYear()) * 12 + (hoje.getMonth() - compra.getMonth())
+      var mesesRestantes = 12 - (mesesPassados % 12)
+      if (mesesRestantes < 12) {
+        var cor = mesesRestantes <= 2 ? '#E24B4A' : mesesRestantes <= 4 ? '#BA7517' : '#0F6E56'
+        var bgCor = mesesRestantes <= 2 ? 'rgba(226,75,74,0.08)' : mesesRestantes <= 4 ? 'rgba(186,117,23,0.08)' : 'rgba(15,110,86,0.08)'
+        badgePrazo = `<div style="display:inline-flex;align-items:center;gap:4px;background:${bgCor};border:1px solid ${cor}33;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:${cor};margin-top:4px;">⏱ ${mesesRestantes} ${mesesRestantes===1?'mês restante':'meses restantes'}</div>`
+      }
+    }
     return `
     <div class="card" onclick="abrirModal(${p.id})">
       <div class="card-top">
@@ -536,6 +549,7 @@ async function renderizar() {
             ${p.dono_nome ? `<span style="font-size:10px;font-weight:600;color:var(--bluedark);opacity:.5;">${p.dono_nome.split(' ')[0]}</span>` : ''}
           </div>
           <span class="card-badge ${esgotado ? 'badge-fechada' : 'badge-aberta'}">${esgotado ? 'Sem vagas' : `${disponiveis} vaga${disponiveis > 1 ? 's' : ''} livre${disponiveis > 1 ? 's' : ''}`}</span>
+          ${badgePrazo}
         </div>
         <div class="card-preco">
           <div class="preco-val${isWellness(p.servico)?' small':''}">${isWellness(p.servico) ? 'A partir de<br>R$' + getWellnessMin(p.servico) : 'R$' + Number(p.preco_por_vaga).toFixed(2).replace('.',',')}</div>
