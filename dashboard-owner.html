@@ -784,20 +784,16 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
 
     // BODY
     +'<div class="pool-body"><div class="pool-body-inner">'
-    +'<div class="tabs">'
-    +'<button class="tab-btn active" onclick="switchTab(this,\'tm-'+pool.id+'\')">👥 Membros ('+todosAssins.length+')</button>'
-    +'<button class="tab-btn" onclick="switchTab(this,\'tv-'+pool.id+'\')">🔐 Credenciais</button>'
-    +'</div>'
 
-    // Tab membros
+    // Membros e Credenciais (aba única)
     +'<div id="tm-'+pool.id+'" class="tab-pane active">'
     +'<table class="members-table">'
-    +'<thead><tr><th>Membro</th><th>Email no serviço</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead>'
+    +'<thead><tr><th>Membro</th><th>Email no serviço / Acesso</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead>'
     +'<tbody>'+membrosHTML+'</tbody>'
     +'</table></div>'
 
-    // Tab vault — por membro
-    +'<div id="tv-'+pool.id+'" class="tab-pane">'
+    // Vault oculto (dados usados internamente)
+    +'<div id="tv-'+pool.id+'" style="display:none;">'
     +'<div class="vault-form">'
     +'<div class="vault-notice"><span>🔒</span>Credenciais criptografadas (AES-256). Cada membro vê apenas o acesso destinado a ele em Meus Planos.</div>'
     +(function(){
