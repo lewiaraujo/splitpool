@@ -582,6 +582,34 @@ async function saveVault(piscinaId){
   setTimeout(()=>carregarDashboard(),900);
 }
 
+/* ── SALVAR E ENVIAR ACESSO (inline na tab membros) ── */
+async function salvarEEnviarAcesso(piscinaId,membroId,assinaturaId,btn){
+  var chave=piscinaId+'_'+membroId;
+  var link=document.getElementById('ml-'+chave)?.value.trim()||'';
+  var email=document.getElementById('me-'+chave)?.value.trim()||'';
+  var senha=document.getElementById('ms-'+chave)?.value||'';
+  if(!link&&!email){showToast('Preencha pelo menos o link de convite ou o e-mail.','error');return;}
+  btn.disabled=true;btn.textContent='Salvando...';
+  // Salvar credenciais no vault
+  var dadosObj={email:email,senha:senha,link_convite:link};
+  var dados_enc=CryptoJS.AES.encrypt(JSON.stringify(dadosObj),deriveKey(userId)).toString();
+  var {error:eVault}=await sb.from('credenciais')
+    .upsert({piscina_id:piscinaId,membro_id:membroId,dono_id:userId,dados_enc,updated_at:new Date().toISOString()},{onConflict:'piscina_id,membro_id'});
+  if(eVault){showToast('Erro ao salvar: '+eVault.message,'error');btn.disabled=false;btn.textContent='💾 Salvar e enviar acesso';return;}
+  // Marcar acesso como enviado
+  var {error:eAss}=await sb.from('assinaturas').update({acesso_enviado_em:new Date().toISOString()}).eq('id',assinaturaId);
+  if(eAss){showToast('Credenciais salvas, mas erro ao marcar envio: '+eAss.message,'error');return;}
+  showToast('Acesso salvo e enviado ao membro! 🎉','success');
+  setTimeout(function(){carregarDashboard();},900);
+}
+
+async function reabrirEnvioAcesso(assinaturaId,btn){
+  btn.disabled=true;
+  var {error}=await sb.from('assinaturas').update({acesso_enviado_em:null}).eq('id',assinaturaId);
+  if(error){showToast('Erro: '+error.message,'error');btn.disabled=false;return;}
+  setTimeout(function(){carregarDashboard();},900);
+}
+
 /* ── SAVE VAULT POR MEMBRO ── */
 async function saveVaultMembro(piscinaId,membroId){
   var chave=piscinaId+'_'+membroId;
@@ -661,13 +689,34 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
       var servicoKey=Object.keys(instrucoes).find(function(k){return pool.servico.toLowerCase().includes(k);})||'';
       var instrucaoTxt=instrucoes[servicoKey]||'Acesse o painel do serviço e adicione o email do membro.';
 
+      var chaveVault=pool.id+'_'+a.membro_id;
+      var vMembro=(vaultByMembro||{})[chaveVault]||null;
+      var linkAtualM=vMembro&&vMembro.link_convite||pool.link_convite||'';
+      var emailAtualM=vMembro&&vMembro.email||'';
+      var senhaAtualM=vMembro&&vMembro.senha||'';
+
       if(a.status==='aguardando_acesso'&&!a.acesso_enviado_em){
-        acessoBtn='<div style="background:#f0f9ff;border:1px solid rgba(0,180,210,0.2);border-radius:8px;padding:8px 10px;margin-top:6px;font-size:11px;color:var(--bluedark);line-height:1.5;">'
-          +'<strong>📋 O que fazer:</strong> '+instrucaoTxt
+        acessoBtn='<div style="background:#f0f9ff;border:1px solid rgba(0,180,210,0.2);border-radius:10px;padding:12px 14px;margin-top:8px;">'
+          +'<div style="font-size:11px;font-weight:700;color:#009eb0;margin-bottom:8px;">🔑 Envie o acesso para este membro</div>'
+          +'<div style="font-size:11px;color:var(--bluedark);opacity:.7;margin-bottom:8px;line-height:1.5;">📋 '+instrucaoTxt+'</div>'
+          +'<div style="margin-bottom:6px;">'
+          +'<label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.5;display:block;margin-bottom:3px;">Link de convite individual</label>'
+          +'<input type="text" id="ml-'+chaveVault+'" value="'+linkAtualM+'" placeholder="Cole aqui o link de convite gerado para este membro" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid rgba(0,180,210,0.3);font-size:11px;font-family:inherit;box-sizing:border-box;">'
           +'</div>'
-          +'<button class="btn-sm primary" style="padding:5px 10px;font-size:11px;margin-top:6px;" onclick="marcarAcessoEnviado('+a.id+',this)">✓ Marcar acesso enviado</button>';
+          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">'
+          +'<div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.5;display:block;margin-bottom:3px;">E-mail / Login (opcional)</label>'
+          +'<input type="email" id="me-'+chaveVault+'" value="'+emailAtualM+'" placeholder="email@exemplo.com" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid rgba(0,180,210,0.3);font-size:11px;font-family:inherit;box-sizing:border-box;"></div>'
+          +'<div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.5;display:block;margin-bottom:3px;">Senha (opcional)</label>'
+          +'<input type="password" id="ms-'+chaveVault+'" value="'+senhaAtualM+'" placeholder="••••••••" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid rgba(0,180,210,0.3);font-size:11px;font-family:inherit;box-sizing:border-box;"></div>'
+          +'</div>'
+          +'<button class="btn-sm primary" style="font-size:12px;" onclick="salvarEEnviarAcesso('+pool.id+',\''+a.membro_id+'\','+a.id+',this)">💾 Salvar e enviar acesso</button>'
+          +'</div>';
       } else if(a.acesso_enviado_em){
-        acessoBtn='<span style="font-size:11px;color:var(--green);font-weight:700;">✓ Acesso enviado</span>';
+        var credLabel=vMembro&&vMembro.link_convite?'✓ Acesso enviado · link salvo':'✓ Acesso enviado';
+        acessoBtn='<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">'
+          +'<span style="font-size:11px;color:var(--green);font-weight:700;">'+credLabel+'</span>'
+          +'<button class="btn-sm ghost" style="padding:3px 8px;font-size:10px;" onclick="reabrirEnvioAcesso('+a.id+',this)">✏️ Editar</button>'
+          +'</div>';
       }
       membrosHTML+='<tr>'
         +'<td data-label="Membro"><div class="member-nome">'+(a.profiles&&a.profiles.nome?a.profiles.nome:'—')+'</div>'
@@ -993,7 +1042,7 @@ async function carregarDashboard(){
       +'<div class="fin-card-total blue">'+fmt(repasseTotal)+'</div>'
       +'<span class="fin-card-chevron">▼</span>'
       +'</div></div>'
-      +'<div class="fin-card-body" id="fin-body-1">'+rows1+'</div>'
+      +'<div class="fin-card-body hidden" id="fin-body-1">'+rows1+'</div>'
       +'</div>';
   }
 
@@ -1026,7 +1075,7 @@ async function carregarDashboard(){
       +'<div class="fin-card-total green">'+fmt(lucroTotal)+'</div>'
       +'<span class="fin-card-chevron">▼</span>'
       +'</div></div>'
-      +'<div class="fin-card-body" id="fin-body-2">'+rows2+'</div>'
+      +'<div class="fin-card-body hidden" id="fin-body-2">'+rows2+'</div>'
       +'</div>';
   }
 
