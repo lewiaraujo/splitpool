@@ -582,6 +582,25 @@ async function saveVault(piscinaId){
   setTimeout(()=>carregarDashboard(),900);
 }
 
+/* ── SAVE VAULT POR MEMBRO ── */
+async function saveVaultMembro(piscinaId,membroId){
+  var chave=piscinaId+'_'+membroId;
+  var linkEl=document.getElementById('vl-'+chave);
+  var emailEl=document.getElementById('ve-'+chave);
+  var senhaEl=document.getElementById('vs-'+chave);
+  var link=linkEl?linkEl.value.trim():'';
+  var email=emailEl?emailEl.value.trim():'';
+  var senha=senhaEl?senhaEl.value:'';
+  if(!link&&!email&&!senha){showToast('Preencha pelo menos o link ou e-mail.','error');return;}
+  var dadosObj={email:email,senha:senha,link_convite:link};
+  var dados_enc=CryptoJS.AES.encrypt(JSON.stringify(dadosObj),deriveKey(userId)).toString();
+  var {error}=await sb.from('credenciais')
+    .upsert({piscina_id:piscinaId,membro_id:membroId,dono_id:userId,dados_enc,updated_at:new Date().toISOString()},{onConflict:'piscina_id,membro_id'});
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Acesso salvo para o membro! 🔒','success');
+  setTimeout(function(){carregarDashboard();},900);
+}
+
 /* ── TOGGLE STATUS ── */
 function toggleStatus(piscinaId,novoStatus,nome){
   const verbo=novoStatus==='pausada'?'pausar':'reativar';
@@ -612,7 +631,7 @@ function switchTab(btn,paneId){
 }
 
 /* ── RENDER POOL CARD ── */
-function renderPool(pool,assins,vault){
+function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
   var ativos=assins.filter(function(a){return a.status==='ativo';});
   var aguardando=assins.filter(function(a){return a.status==='aguardando_acesso';});
   var receitaMes=ativos.reduce(function(s,a){return s+Number(a.valor||0);},0);
@@ -728,33 +747,39 @@ function renderPool(pool,assins,vault){
     +'<tbody>'+membrosHTML+'</tbody>'
     +'</table></div>'
 
-    // Tab vault
+    // Tab vault — por membro
     +'<div id="tv-'+pool.id+'" class="tab-pane">'
     +'<div class="vault-form">'
-    +'<div class="vault-notice"><span>🔒</span>Credenciais criptografadas (AES-256). Membros ativos veem em Meus Planos.</div>'
-    +linkConviteHTML
-    +(vault&&vault.email
-      ? '<div class="vault-saved">'
-        +'<span style="font-size:1.3rem;">🔐</span>'
-        +'<div style="flex:1;"><div class="vault-saved-txt">Login: '+vault.email+'</div>'
-        +'<div class="vault-saved-sub">Senha salva · criptografada AES-256</div></div>'
-        +'<button class="btn-sm ghost" style="flex-shrink:0;" onclick="toggleEditarVault('+pool.id+')">✏️ Editar</button>'
-        +'</div>'
-        +'<div id="vault-edit-'+pool.id+'" style="display:none;margin-top:12px;">'
-        +'<div class="form-row">'
-        +'<div class="form-group"><label>E-mail</label><input type="email" id="ve-'+pool.id+'" value="'+vault.email+'"></div>'
-        +'<div class="form-group"><label>Senha</label><input type="password" id="vs-'+pool.id+'" value="'+vault.senha+'"></div>'
-        +'</div>'
-        +'<div style="display:flex;gap:8px;">'
-        +'<button class="btn-sm primary" onclick="saveVault('+pool.id+')">💾 Salvar</button>'
-        +'<button class="btn-sm ghost" onclick="toggleEditarVault('+pool.id+')">Cancelar</button>'
-        +'</div></div>'
-      : '<div class="form-row">'
-        +'<div class="form-group"><label>E-mail / Login</label><input type="email" id="ve-'+pool.id+'" placeholder="email@exemplo.com"></div>'
-        +'<div class="form-group"><label>Senha</label><input type="password" id="vs-'+pool.id+'" placeholder="••••••••"></div>'
-        +'</div>'
-        +'<button class="btn-sm primary" onclick="saveVault('+pool.id+')">💾 Salvar credenciais</button>'
-    )
+    +'<div class="vault-notice"><span>🔒</span>Credenciais criptografadas (AES-256). Cada membro vê apenas o acesso destinado a ele em Meus Planos.</div>'
+    +(function(){
+      var membrosAtivosEAguardando=todosAssins.filter(function(a){return a.status==='ativo'||a.status==='aguardando_acesso';});
+      if(!membrosAtivosEAguardando.length) return '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">Nenhum membro ativo ainda. As credenciais aparecerão aqui quando houver membros.</div>';
+      return membrosAtivosEAguardando.map(function(a){
+        var nome=(a.profiles&&a.profiles.nome)||a.profiles&&a.profiles.email||'Membro';
+        var vMembro=(vaultByMembro||{})[pool.id+'_'+a.membro_id]||null;
+        var vGeral=vault||null;
+        var linkAtual=vMembro&&vMembro.link_convite||pool.link_convite||'';
+        var emailAtual=vMembro&&vMembro.email||vGeral&&vGeral.email||'';
+        var senhaAtual=vMembro&&vMembro.senha||vGeral&&vGeral.senha||'';
+        var chave=pool.id+'_'+a.membro_id;
+        return '<div style="border:1px solid rgba(0,180,210,0.18);border-radius:12px;padding:14px 16px;margin-bottom:12px;">'
+          +'<div style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:10px;">👤 '+nome+'</div>'
+          +'<div style="margin-bottom:8px;">'
+          +'<label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.5;display:block;margin-bottom:4px;">Link de convite</label>'
+          +'<div style="display:flex;gap:8px;align-items:center;">'
+          +'<input type="text" id="vl-'+chave+'" value="'+linkAtual+'" placeholder="https://..." style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid rgba(0,180,210,0.3);font-size:12px;font-family:inherit;">'
+          +(linkAtual?'<a href="'+linkAtual+'" target="_blank" style="padding:6px 10px;background:var(--blue);color:#fff;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">Abrir →</a>':'')
+          +'</div></div>'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">'
+          +'<div><label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.5;display:block;margin-bottom:4px;">E-mail / Login</label>'
+          +'<input type="email" id="ve-'+chave+'" value="'+emailAtual+'" placeholder="email@exemplo.com" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(0,180,210,0.3);font-size:12px;font-family:inherit;box-sizing:border-box;"></div>'
+          +'<div><label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.5;display:block;margin-bottom:4px;">Senha</label>'
+          +'<input type="password" id="vs-'+chave+'" value="'+senhaAtual+'" placeholder="••••••••" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(0,180,210,0.3);font-size:12px;font-family:inherit;box-sizing:border-box;"></div>'
+          +'</div>'
+          +'<button class="btn-sm primary" onclick="saveVaultMembro('+pool.id+',\'' +a.membro_id+ '\')">💾 Salvar acesso</button>'
+          +'</div>';
+      }).join('');
+    })()
     +'</div></div>'
 
     // Actions
@@ -877,9 +902,13 @@ async function carregarDashboard(){
   });
 
   var vaultByPool={};
+  var vaultByMembro={};
   (creds||[]).forEach(function(c){
     var dec=decryptVault(userId,c.dados_enc);
-    if(dec) vaultByPool[c.piscina_id]=dec;
+    if(dec){
+      vaultByPool[c.piscina_id]=dec;
+      if(c.membro_id) vaultByMembro[c.piscina_id+'_'+c.membro_id]=dec;
+    }
   });
 
   // Resumo
@@ -1021,7 +1050,7 @@ async function carregarDashboard(){
     +'<div class="resumo-item"><div class="resumo-val">'+vagasOcup+'/'+vagasTotal+'</div><div class="resumo-lbl">Vagas ocupadas</div></div>';
 
   document.getElementById('pools-list').innerHTML=
-    piscinas.map(function(p){return renderPool(p,assinsByPool[p.id]||[],vaultByPool[p.id]);}).join('');
+    piscinas.map(function(p){return renderPool(p,assinsByPool[p.id]||[],vaultByPool[p.id],vaultByMembro,p.id);}).join('');
 
   document.getElementById('loading-state').style.display='none';
   document.getElementById('dash-content').style.display='flex';

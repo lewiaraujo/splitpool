@@ -411,24 +411,38 @@ function renderPlano(a){
       confirmarBtn=`<button class="btn-confirmar" style="margin-top:10px;" onclick="abrirConf(${a.id})">✓ Confirmar que recebi o acesso</button>`;
     }
   } else if(a.status==='ativo'){
-    // Credenciais para ativo (manter compatibilidade com vault existente)
+    // Credenciais para ativo — mostra link de convite, email e senha conforme disponível
     const cred=credenciaisMap[a.piscina_id];
-    if(cred&&cred.email){
-      acessoHTML=`<div class="cred-box">
-        <div class="cred-ico">🔑</div>
-        <div class="cred-content">
-          <div class="cred-title">Credenciais de acesso</div>
-          <div class="cred-row">
+    if(cred&&(cred.link_convite||cred.email)){
+      const linkRow=cred.link_convite?`<div class="cred-row" style="align-items:flex-start;">
+            <span class="cred-label">Link</span>
+            <span class="cred-val" id="cl-${a.id}" style="word-break:break-all;font-size:11px;">${cred.link_convite}</span>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <button class="cred-copy" onclick="copiarCred('cl-${a.id}','Link')">Copiar</button>
+              <a href="${cred.link_convite}" target="_blank" style="padding:3px 8px;background:var(--blue);color:#fff;border-radius:5px;font-size:10px;font-weight:700;text-decoration:none;text-align:center;">Abrir</a>
+            </div>
+          </div>`:'';
+      const emailRow=cred.email?`<div class="cred-row">
             <span class="cred-label">Login</span>
             <span class="cred-val" id="ce-${a.id}">${cred.email}</span>
             <button class="cred-copy" onclick="copiarCred('ce-${a.id}','Login')">Copiar</button>
-          </div>
-          <div class="cred-row">
+          </div>`:'';
+      const senhaRow=cred.senha?`<div class="cred-row">
             <span class="cred-label">Senha</span>
             <span class="cred-val" id="cs-${a.id}">${cred.senha}</span>
             <button class="cred-copy" onclick="copiarCred('cs-${a.id}','Senha')">Copiar</button>
-          </div>
+          </div>`:'';
+      acessoHTML=`<div class="cred-box">
+        <div class="cred-ico">🔑</div>
+        <div class="cred-content">
+          <div class="cred-title">Seu acesso</div>
+          ${linkRow}${emailRow}${senhaRow}
         </div>
+      </div>`;
+    } else if(cred===undefined||!cred){
+      acessoHTML=`<div style="background:#fff8e0;border:1px solid rgba(180,120,0,0.2);border-radius:10px;padding:14px 16px;margin-top:12px;">
+        <div style="font-size:13px;font-weight:700;color:#8a5c00;margin-bottom:4px;">⏳ Aguardando envio do acesso</div>
+        <div style="font-size:12px;color:#8a5c00;opacity:.8;">O dono ainda não enviou suas credenciais de acesso. Você será notificado quando estiverem disponíveis.</div>
       </div>`;
     }
   }
@@ -492,16 +506,26 @@ async function carregarPlanos(){
     return;
   }
 
-  // Buscar credenciais das piscinas onde é membro ativo
+  // Buscar credenciais do membro — prioriza credencial individual (membro_id), fallback para credencial geral da piscina
   const ativoIds=data.filter(a=>a.status==='ativo').map(a=>a.piscina_id);
   credenciaisMap={};
   if(ativoIds.length>0){
+    // Buscar credenciais individuais (por membro_id) e gerais (sem membro_id) juntas
     const {data:creds}=await sb.from('credenciais')
       .select('*')
       .in('piscina_id',ativoIds);
-    (creds||[]).forEach(c=>{
+    // Primeiro passa: credenciais gerais (sem membro_id) como fallback
+    (creds||[]).filter(c=>!c.membro_id).forEach(c=>{
       try{
-        // Descriptografar usando a chave do dono (dono_id)
+        const chave=c.dono_id.substring(0,32);
+        const bytes=CryptoJS.AES.decrypt(c.dados_enc,chave);
+        const dec=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        if(dec) credenciaisMap[c.piscina_id]=dec;
+      }catch(e){}
+    });
+    // Segundo passa: credenciais individuais sobrescrevem (prioridade)
+    (creds||[]).filter(c=>c.membro_id===userId).forEach(c=>{
+      try{
         const chave=c.dono_id.substring(0,32);
         const bytes=CryptoJS.AES.decrypt(c.dados_enc,chave);
         const dec=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
@@ -509,14 +533,14 @@ async function carregarPlanos(){
       }catch(e){}
     });
 
-    // Buscar link_convite das piscinas ativas
+    // Buscar link_convite das piscinas ativas como fallback se não tiver no vault
     const {data:piscs}=await sb.from('piscinas')
       .select('id,link_convite')
       .in('id',ativoIds);
     (piscs||[]).forEach(p=>{
       if(p.link_convite){
         if(!credenciaisMap[p.id]) credenciaisMap[p.id]={};
-        credenciaisMap[p.id].link_convite=p.link_convite;
+        if(!credenciaisMap[p.id].link_convite) credenciaisMap[p.id].link_convite=p.link_convite;
       }
     });
   }
