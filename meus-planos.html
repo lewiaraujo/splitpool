@@ -433,7 +433,7 @@ function renderPlano(a){
           <div class="cred-ico">🔑</div>
           <div class="cred-content">
             ${linkRowEnv}${emailRowEnv}${senhaRowEnv}
-            ${!linkEnv&&!emailEnv?'<div style="font-size:12px;color:#166534;opacity:.7;">Verifique seu email <strong>${a.email_servico||""}</strong> para o convite de acesso ao '+a.servico+'.</div>':''}
+            ${!linkEnv&&!emailEnv?('<div style="font-size:12px;color:#166534;opacity:.7;">Acesso enviado. Verifique o email cadastrado para o convite do '+a.servico+'.</div>'):''}
           </div>
         </div>
         <div style="font-size:11px;color:#92400e;background:#fff8e0;border-radius:8px;padding:8px 10px;">⚠️ Confirme em até 72h. Caso não confirme, sua vaga pode ser cancelada sem reembolso.</div>
@@ -536,8 +536,8 @@ async function carregarPlanos(){
     return;
   }
 
-  // Buscar credenciais do membro — prioriza credencial individual (membro_id), fallback para credencial geral da piscina
-  const ativoIds=data.filter(a=>a.status==='ativo').map(a=>a.piscina_id);
+  // Buscar credenciais do membro — inclui ativo e aguardando_acesso (para mostrar credenciais antes de confirmar)
+  const ativoIds=data.filter(a=>a.status==='ativo'||a.status==='aguardando_acesso').map(a=>a.piscina_id);
   credenciaisMap={};
   if(ativoIds.length>0){
     // Buscar credenciais individuais (por membro_id) e gerais (sem membro_id) juntas
