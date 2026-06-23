@@ -403,12 +403,42 @@ function renderPlano(a){
         <div style="font-size:12px;color:#8a5c00;opacity:.8;line-height:1.6;">O dono vai adicionar o email <strong>${a.email_servico||'seu email'}</strong> no ${a.servico}. Você receberá um convite em breve.</div>
       </div>`;
     } else {
-      // Dono enviou — mostrar aviso urgente para confirmar
-      acessoHTML=`<div style="background:#fff3cd;border:2px solid #f59e0b;border-radius:10px;padding:14px 16px;margin-top:12px;">
-        <div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:6px;">🔔 O dono enviou seu acesso — confirme agora!</div>
-        <div style="font-size:12px;color:#92400e;line-height:1.7;margin-bottom:10px;">Verifique seu email <strong>${a.email_servico||''}</strong> e acesse o ${a.servico}.<br><strong>⚠️ Se você não confirmar em 72h, o dono pode cancelar sua vaga e ela será liberada para outra pessoa — sem reembolso.</strong></div>
+      // Dono enviou — mostrar credenciais + orientação + botão confirmar
+      const credEnv=credenciaisMap[a.piscina_id];
+      const linkEnv=credEnv&&credEnv.link_convite||'';
+      const emailEnv=credEnv&&credEnv.email||'';
+      const senhaEnv=credEnv&&credEnv.senha||'';
+      const linkRowEnv=linkEnv?`<div class="cred-row" style="align-items:flex-start;">
+            <span class="cred-label">Link</span>
+            <span class="cred-val" id="cl-env-${a.id}" style="word-break:break-all;font-size:11px;">${linkEnv}</span>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <button class="cred-copy" onclick="copiarCred('cl-env-${a.id}','Link')">Copiar</button>
+              <a href="${linkEnv}" target="_blank" style="padding:3px 8px;background:var(--blue);color:#fff;border-radius:5px;font-size:10px;font-weight:700;text-decoration:none;text-align:center;">Abrir</a>
+            </div>
+          </div>`:'';
+      const emailRowEnv=emailEnv?`<div class="cred-row">
+            <span class="cred-label">Login</span>
+            <span class="cred-val" id="ce-env-${a.id}">${emailEnv}</span>
+            <button class="cred-copy" onclick="copiarCred('ce-env-${a.id}','Login')">Copiar</button>
+          </div>`:'';
+      const senhaRowEnv=senhaEnv?`<div class="cred-row">
+            <span class="cred-label">Senha</span>
+            <span class="cred-val" id="cs-env-${a.id}">${senhaEnv}</span>
+            <button class="cred-copy" onclick="copiarCred('cs-env-${a.id}','Senha')">Copiar</button>
+          </div>`:'';
+      acessoHTML=`<div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;padding:16px;margin-top:12px;">
+        <div style="font-size:13px;font-weight:800;color:#15803d;margin-bottom:4px;">🔑 Suas credenciais de acesso chegaram!</div>
+        <div style="font-size:12px;color:#166534;line-height:1.6;margin-bottom:12px;">Use as informações abaixo para acessar o ${a.servico}. Após confirmar que está funcionando, clique no botão de confirmação.</div>
+        <div class="cred-box" style="margin-bottom:12px;background:rgba(255,255,255,0.7);">
+          <div class="cred-ico">🔑</div>
+          <div class="cred-content">
+            ${linkRowEnv}${emailRowEnv}${senhaRowEnv}
+            ${!linkEnv&&!emailEnv?'<div style="font-size:12px;color:#166534;opacity:.7;">Verifique seu email <strong>${a.email_servico||""}</strong> para o convite de acesso ao '+a.servico+'.</div>':''}
+          </div>
+        </div>
+        <div style="font-size:11px;color:#92400e;background:#fff8e0;border-radius:8px;padding:8px 10px;">⚠️ Confirme em até 72h. Caso não confirme, sua vaga pode ser cancelada sem reembolso.</div>
       </div>`;
-      confirmarBtn=`<button class="btn-confirmar" style="margin-top:10px;" onclick="abrirConf(${a.id})">✓ Confirmar que recebi o acesso</button>`;
+      confirmarBtn=`<button class="btn-confirmar" style="margin-top:12px;" onclick="abrirConf(${a.id})">✓ Confirmar que recebi o acesso</button>`;
     }
   } else if(a.status==='ativo'){
     // Credenciais para ativo — mostra link de convite, email e senha conforme disponível
