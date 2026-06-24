@@ -691,9 +691,9 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
 
       var chaveVault=pool.id+'_'+a.membro_id;
       var vMembro=(vaultByMembro||{})[chaveVault]||null;
-      var linkAtualM=vMembro&&vMembro.link_convite||pool.link_convite||'';
-      var emailAtualM=vMembro&&vMembro.email||'';
-      var senhaAtualM=vMembro&&vMembro.senha||'';
+      var linkAtualM='';
+      var emailAtualM='';
+      var senhaAtualM='';
 
       if(a.status==='aguardando_acesso'&&!a.acesso_enviado_em){
         acessoBtn='<div style="background:#f0f9ff;border:1px solid rgba(0,180,210,0.2);border-radius:10px;padding:12px 14px;margin-top:8px;">'
@@ -803,9 +803,9 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
         var nome=(a.profiles&&a.profiles.nome)||a.profiles&&a.profiles.email||'Membro';
         var vMembro=(vaultByMembro||{})[pool.id+'_'+a.membro_id]||null;
         var vGeral=vault||null;
-        var linkAtual=vMembro&&vMembro.link_convite||pool.link_convite||'';
-        var emailAtual=vMembro&&vMembro.email||vGeral&&vGeral.email||'';
-        var senhaAtual=vMembro&&vMembro.senha||vGeral&&vGeral.senha||'';
+        var linkAtual='';
+        var emailAtual='';
+        var senhaAtual='';
         var chave=pool.id+'_'+a.membro_id;
         return '<div style="border:1px solid rgba(0,180,210,0.18);border-radius:12px;padding:14px 16px;margin-bottom:12px;">'
           +'<div style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:10px;">👤 '+nome+'</div>'
