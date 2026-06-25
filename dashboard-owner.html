@@ -603,11 +603,38 @@ async function salvarEEnviarAcesso(piscinaId,membroId,assinaturaId,btn){
   setTimeout(function(){carregarDashboard();},900);
 }
 
-async function reabrirEnvioAcesso(assinaturaId,btn){
+async function reabrirEnvioAcesso(assinaturaId,piscinaId,membroId,btn){
+  // Buscar credencial salva para pré-preencher os campos
   btn.disabled=true;
+  var {data:creds}=await sb.from('credenciais')
+    .select('dados_enc,dono_id')
+    .eq('piscina_id',piscinaId)
+    .eq('membro_id',membroId)
+    .limit(1);
+  var link='',email='',senha='';
+  if(creds&&creds.length){
+    try{
+      var chave=creds[0].dono_id.substring(0,32);
+      var bytes=CryptoJS.AES.decrypt(creds[0].dados_enc,chave);
+      var dec=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+      link=dec.link_convite||'';email=dec.email||'';senha=dec.senha||'';
+    }catch(e){}
+  }
+  // Zerar acesso_enviado_em para revelar os campos
   var {error}=await sb.from('assinaturas').update({acesso_enviado_em:null}).eq('id',assinaturaId);
   if(error){showToast('Erro: '+error.message,'error');btn.disabled=false;return;}
-  setTimeout(function(){carregarDashboard();},900);
+  // Recarregar e preencher campos após render
+  setTimeout(function(){
+    carregarDashboard().then(function(){
+      var chaveVault=piscinaId+'_'+membroId;
+      var ml=document.getElementById('ml-'+chaveVault);
+      var me=document.getElementById('me-'+chaveVault);
+      var ms=document.getElementById('ms-'+chaveVault);
+      if(ml) ml.value=link;
+      if(me) me.value=email;
+      if(ms&&senha) ms.value=senha;
+    });
+  },900);
 }
 
 /* ── SAVE VAULT POR MEMBRO ── */
@@ -718,7 +745,7 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
         var credLabel=vMembro&&vMembro.link_convite?'✓ Acesso enviado · link salvo':'✓ Acesso enviado';
         acessoBtn='<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">'
           +'<span style="font-size:11px;color:var(--green);font-weight:700;">'+credLabel+'</span>'
-          +'<button class="btn-sm ghost" style="padding:3px 8px;font-size:10px;" onclick="reabrirEnvioAcesso('+a.id+',this)">✏️ Editar</button>'
+          +'<button class="btn-sm ghost" style="padding:3px 8px;font-size:10px;" onclick="reabrirEnvioAcesso('+a.id+','+pool.id+',\''+a.membro_id+'\',this)">✏️ Editar</button>'
           +'</div>';
       }
       membrosHTML+='<tr>'

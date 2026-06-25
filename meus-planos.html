@@ -563,16 +563,8 @@ async function carregarPlanos(){
       }catch(e){}
     });
 
-    // Buscar link_convite das piscinas ativas como fallback se não tiver no vault
-    const {data:piscs}=await sb.from('piscinas')
-      .select('id,link_convite')
-      .in('id',ativoIds);
-    (piscs||[]).forEach(p=>{
-      if(p.link_convite){
-        if(!credenciaisMap[p.id]) credenciaisMap[p.id]={};
-        if(!credenciaisMap[p.id].link_convite) credenciaisMap[p.id].link_convite=p.link_convite;
-      }
-    });
+    // link_convite vem exclusivamente do vault por membro (salvo pelo dono via salvarEEnviarAcesso)
+    // Não usar link_convite da tabela piscinas como fallback — é o link geral de criação, não o individual
   }
 
   document.getElementById('planos-state').style.display='flex';
