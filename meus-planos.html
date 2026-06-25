@@ -554,12 +554,16 @@ async function carregarPlanos(){
       }catch(e){}
     });
     // Segundo passa: credenciais individuais sobrescrevem (prioridade)
-    (creds||[]).filter(c=>c.membro_id===userId).forEach(c=>{
+    console.log('[cred-debug] userId='+userId+' total creds='+( creds||[]).length);
+    (creds||[]).forEach(c=>{
+      console.log('[cred-debug] cred membro_id='+c.membro_id+' piscina_id='+c.piscina_id+' match='+(String(c.membro_id)===String(userId)));
+    });
+    (creds||[]).filter(c=>String(c.membro_id)===String(userId)).forEach(c=>{
       try{
         const chave=c.dono_id.substring(0,32);
         const bytes=CryptoJS.AES.decrypt(c.dados_enc,chave);
         const dec=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-        console.log('[cred-debug] piscina_id='+c.piscina_id+' membro_id='+c.membro_id+' dec=',dec);
+        console.log('[cred-debug] dec=',dec);
         if(dec) credenciaisMap[c.piscina_id]=dec;
       }catch(e){console.log('[cred-debug] ERRO decrypt:',e);}
     });
