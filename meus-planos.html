@@ -559,9 +559,11 @@ async function carregarPlanos(){
         const chave=c.dono_id.substring(0,32);
         const bytes=CryptoJS.AES.decrypt(c.dados_enc,chave);
         const dec=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        console.log('[cred-debug] piscina_id='+c.piscina_id+' membro_id='+c.membro_id+' dec=',dec);
         if(dec) credenciaisMap[c.piscina_id]=dec;
-      }catch(e){}
+      }catch(e){console.log('[cred-debug] ERRO decrypt:',e);}
     });
+    console.log('[cred-debug] credenciaisMap final=',credenciaisMap);
 
     // link_convite vem exclusivamente do vault por membro (salvo pelo dono via salvarEEnviarAcesso)
     // Não usar link_convite da tabela piscinas como fallback — é o link geral de criação, não o individual
