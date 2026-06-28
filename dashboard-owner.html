@@ -627,15 +627,17 @@ async function reabrirEnvioAcesso(assinaturaId,piscinaId,membroId,btn){
   var chaveVault=piscinaId+'_'+membroId;
   var containerEl=btn.closest('div[data-cred-container]');
   if(containerEl){
-    containerEl.outerHTML=gerarFormEnvioAcesso(chaveVault,piscinaId,membroId,link,email,senha);
+    containerEl.outerHTML=gerarFormEnvioAcesso(chaveVault,piscinaId,membroId,link,email,senha,assinaturaId);
   } else {
     // fallback: recarregar só o card se não achar o container
     carregarDashboard();
   }
 }
 
-function gerarFormEnvioAcesso(chaveVault,piscinaId,membroId,link,email,senha){
-  return '<div data-cred-container style="background:#f0f9ff;border:1px solid rgba(0,180,210,0.2);border-radius:10px;padding:12px 14px;margin-top:8px;">'
+function gerarFormEnvioAcesso(chaveVault,piscinaId,membroId,link,email,senha,assinaturaId){
+  // Guarda dados originais no dataset para o cancelar restaurar
+  var dadosOriginais=JSON.stringify({link:link,email:email});
+  return '<div data-cred-container data-piscina="'+piscinaId+'" data-membro="'+membroId+'" data-ass="'+assinaturaId+'" data-orig=\''+dadosOriginais.replace(/'/g,'&apos;')+'\'  style="background:#f0f9ff;border:1px solid rgba(0,180,210,0.2);border-radius:10px;padding:12px 14px;margin-top:8px;">'
     +'<div style="font-size:11px;font-weight:700;color:#009eb0;margin-bottom:8px;">🔑 Editar acesso</div>'
     +'<div style="margin-bottom:6px;">'
     +'<label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.5;display:block;margin-bottom:3px;">Link de convite individual</label>'
@@ -647,8 +649,45 @@ function gerarFormEnvioAcesso(chaveVault,piscinaId,membroId,link,email,senha){
     +'<div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.5;display:block;margin-bottom:3px;">Senha (opcional)</label>'
     +'<input type="password" id="ms-'+chaveVault+'" value="'+senha+'" autocomplete="new-password" placeholder="Somente se necessário" style="width:100%;padding:7px 10px;border-radius:7px;border:1px solid rgba(0,180,210,0.3);font-size:11px;font-family:inherit;box-sizing:border-box;"></div>'
     +'</div>'
-    +'<button class="btn-sm primary" style="font-size:12px;" onclick="salvarEEnviarAcesso('+piscinaId+',\''+membroId+'\',null,this)">💾 Salvar e enviar acesso</button>'
+    +'<div style="display:flex;gap:8px;">'
+    +'<button class="btn-sm primary" style="font-size:12px;" onclick="salvarEEnviarAcesso('+piscinaId+',\''+membroId+'\','+assinaturaId+',this)">💾 Salvar e enviar acesso</button>'
+    +'<button class="btn-sm ghost" style="font-size:12px;" onclick="cancelarEdicaoAcesso(this)">✕ Cancelar</button>'
+    +'</div>'
     +'</div>';
+}
+
+/* ── CANCELAR EDIÇÃO DE ACESSO ── */
+function cancelarEdicaoAcesso(btn){
+  var containerEl=btn.closest('div[data-cred-container]');
+  if(!containerEl) return;
+  var piscinaId=containerEl.dataset.piscina;
+  var membroId=containerEl.dataset.membro;
+  var assinaturaId=containerEl.dataset.ass;
+  var orig={link:'',email:''};
+  try{ orig=JSON.parse(containerEl.dataset.orig.replace(/&apos;/g,"'")); }catch(e){}
+  // Restaurar modo leitura sem tocar no banco
+  var credId='cred-read-'+piscinaId+'-'+membroId.substring(0,8);
+  var linkSalvo=orig.link||'';
+  var emailSalvo=orig.email||'';
+  var readHTML='<div data-cred-container data-piscina="'+piscinaId+'" data-membro="'+membroId+'" data-ass="'+assinaturaId+'" style="background:#f0fdf4;border:1px solid rgba(22,163,74,0.25);border-radius:10px;padding:12px 14px;margin-top:8px;">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+    +'<span style="font-size:12px;font-weight:700;color:#15803d;">✓ Acesso enviado</span>'
+    +'<button class="btn-sm ghost" style="padding:3px 8px;font-size:10px;" onclick="reabrirEnvioAcesso('+assinaturaId+','+piscinaId+',\''+membroId+'\',this)">✏️ Editar</button>'
+    +'</div>';
+  if(linkSalvo){
+    readHTML+='<div style="margin-bottom:6px;">'
+      +'<label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.5;display:block;margin-bottom:3px;">Link de convite</label>'
+      +'<div style="display:flex;gap:6px;align-items:center;">'
+      +'<span id="'+credId+'-link" style="font-size:11px;color:var(--bluedark);word-break:break-all;flex:1;letter-spacing:2px;">••••••••••••••••••••</span>'
+      +'<button onclick="toggleCredVis(\''+credId+'-link\',\''+linkSalvo+'\',this)" style="background:none;border:none;cursor:pointer;font-size:14px;padding:2px 4px;">👁</button>'
+      +'<a href="'+linkSalvo+'" target="_blank" style="padding:3px 8px;background:var(--blue);color:#fff;border-radius:5px;font-size:10px;font-weight:700;text-decoration:none;white-space:nowrap;">Abrir</a>'
+      +'</div></div>';
+  }
+  if(!linkSalvo&&!emailSalvo){
+    readHTML+='<span style="font-size:11px;color:#15803d;opacity:.7;">Acesso enviado ao membro.</span>';
+  }
+  readHTML+='</div>';
+  containerEl.outerHTML=readHTML;
 }
 
 /* ── TOGGLE VISIBILIDADE CREDENCIAL ── */
