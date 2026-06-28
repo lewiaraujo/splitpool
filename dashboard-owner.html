@@ -576,7 +576,7 @@ async function saveVault(piscinaId){
   if(!email||!senha){showToast('Preencha e-mail e senha.','error');return;}
   const dados_enc=encryptVault(userId,email,senha);
   const {error}=await sb.from('credenciais')
-    .upsert({piscina_id:piscinaId,dono_id:userId,dados_enc,updated_at:new Date().toISOString()},{onConflict:'piscina_id'});
+    .upsert({piscina_id:piscinaId,membro_id:null,dono_id:userId,dados_enc,updated_at:new Date().toISOString()},{onConflict:'piscina_id,membro_id'});
   if(error){showToast('Erro: '+error.message,'error');return;}
   showToast('Credenciais salvas com segurança! 🔒','success');
   setTimeout(()=>carregarDashboard(),900);
