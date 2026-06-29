@@ -756,6 +756,47 @@ function switchTab(btn,paneId){
   document.getElementById(paneId).classList.add('active');
 }
 
+/* ── BARRA META ZERO A ZERO ── */
+function gerarBarraMeta(pool,ativos,aguardando){
+  var receitaMes=ativos.reduce(function(s,a){return s+Number(a.valor||0);},0);
+  var receitaTotal=(receitaMes+aguardando.reduce(function(s,a){return s+Number(a.valor||0);},0));
+  var wellness=isWellness(pool.servico);
+
+  if(wellness){
+    // Wellness: custo zero, barra mostra % de vagas ocupadas
+    var ocp=Number(pool.vagas_ocupadas||0);
+    var tot=Number(pool.vagas_total||1);
+    var pct=Math.round((ocp/tot)*100);
+    var cor=pct===0?'#E24B4A':pct<50?'#BA7517':'#00875A';
+    var msg=pct===0?'Nenhuma vaga ocupada — lucro zero':(pct===100?'Piscina cheia!':ocp+'/'+tot+' vagas — lucro puro');
+    return '<div style="margin-top:8px;">'
+      +'<div style="background:rgba(0,0,0,0.06);border-radius:100px;height:6px;overflow:hidden;">'
+      +'<div style="background:'+cor+';border-radius:100px;height:100%;width:'+pct+'%;transition:width .3s;"></div>'
+      +'</div>'
+      +'<div style="font-size:10px;color:#555;margin-top:3px;">'+msg+'</div>'
+      +'</div>';
+  }
+
+  // Família: custo = REPASSE_MAP[plano] por vaga × vagas_total
+  var primeiroPlano=ativos.length?ativos[0].plano_nome:(aguardando.length?aguardando[0].plano_nome:'');
+  var repassePorVaga=getRepasse(pool.servico,primeiroPlano);
+  var custoPlano=repassePorVaga*Number(pool.vagas_total||1);
+  if(custoPlano<=0) return '';
+
+  var pctMeta=custoPlano>0?Math.min(100,Math.round((receitaTotal/custoPlano)*100)):0;
+  var cor='#E24B4A';
+  var label='Abaixo do zero a zero';
+  if(pctMeta>=100){cor='#00875A';label='No lucro';}
+  else if(pctMeta>=50){cor='#BA7517';label='Caminhando para o zero a zero';}
+
+  return '<div style="margin-top:8px;">'
+    +'<div style="position:relative;background:rgba(0,0,0,0.06);border-radius:100px;height:6px;overflow:hidden;">'
+    +'<div style="background:'+cor+';border-radius:100px;height:100%;width:'+pctMeta+'%;transition:width .3s;"></div>'
+    +'</div>'
+    +'<div style="font-size:10px;color:#555;margin-top:3px;">'+label+' — '+fmt(receitaTotal)+' de '+fmt(custoPlano)+'/mês</div>'
+    +'</div>';
+}
+
 /* ── RENDER POOL CARD ── */
 function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
   var ativos=assins.filter(function(a){return a.status==='ativo';});
@@ -899,6 +940,7 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
     +'<div class="pool-info">'
     +'<div class="pool-nome">'+pool.servico+'</div>'
     +'<div class="pool-meta-row">'+getBadge(pool.status)+vagasBar(pool.vagas_ocupadas,pool.vagas_total)+'</div>'
+    +gerarBarraMeta(pool,ativos,aguardando)
     +'</div>'
     +'<div class="pool-right">'
     +'<div>'
@@ -1212,15 +1254,12 @@ async function carregarDashboard(){
     if(poolsList&&poolsList.parentNode) poolsList.parentNode.insertBefore(wrap,poolsList);
   }
   var w=document.getElementById('provisionado-card-wrap');
-  if(w) w.innerHTML=card1HTML+card2HTML;
+  if(w) w.innerHTML='';
 
   document.getElementById('resumo-bar').innerHTML=
     '<div class="resumo-item"><div class="resumo-val green">'+fmt(totalReceita)+'</div><div class="resumo-lbl">Receita do mês</div></div>'
-    +'<div class="resumo-item"><div class="resumo-val blue">'+fmt(totalAReceber)+'</div><div class="resumo-lbl">A receber</div></div>'
-    +'<div class="resumo-item"><div class="resumo-val green" id="resumo-recebido">R$0,00</div><div class="resumo-lbl">Recebido</div></div>'
-    +'<div class="resumo-item"><div class="resumo-val teal" id="resumo-lucro-acum">R$0,00</div><div class="resumo-lbl">Lucro acumulado</div></div>'
-    +'<div class="resumo-item"><div class="resumo-val teal">'+piscinasAtivas+'</div><div class="resumo-lbl">Piscinas ativas</div></div>'
-    +'<div class="resumo-item"><div class="resumo-val">'+vagasOcup+'/'+vagasTotal+'</div><div class="resumo-lbl">Vagas ocupadas</div></div>';
+    +'<div class="resumo-item"><div class="resumo-val green" id="resumo-recebido">R$0,00</div><div class="resumo-lbl">Já recebido</div></div>'
+    +'<div class="resumo-item"><div class="resumo-val blue" id="resumo-lucro-acum">R$0,00</div><div class="resumo-lbl">A receber</div></div>';
 
   document.getElementById('pools-list').innerHTML=
     piscinas.map(function(p){return renderPool(p,assinsByPool[p.id]||[],vaultByPool[p.id],vaultByMembro,p.id);}).join('');
