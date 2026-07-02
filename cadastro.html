@@ -148,8 +148,8 @@ input::placeholder{color:#8BAAC8;}
     <div class="msg" id="msg"></div>
 
     <form class="form" id="form" onsubmit="handleAuth(event)">
-      <input type="email" id="email" placeholder="seu@email.com" required>
-      <input type="password" id="password" placeholder="Senha (mínimo 6 caracteres)" required minlength="6">
+      <input type="email" id="email" placeholder="seu@email.com" required autocomplete="off">
+      <input type="password" id="password" placeholder="Senha (mínimo 6 caracteres)" required minlength="6" autocomplete="new-password">
       <button type="submit" class="btn-primary" id="btn-submit">Criar conta</button>
     </form>
 
@@ -194,7 +194,7 @@ input::placeholder{color:#8BAAC8;}
   </div>
 
   <div class="back">
-    <a href="/">← Voltar para o início</a>
+    <a href="index.html">← Voltar para o início</a>
   </div>
 </div>
 

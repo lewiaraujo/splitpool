@@ -446,12 +446,14 @@ function isLogado(){
 }
 function openM(id){
   if(isLogado()){
-    // Usuário logado — ir direto para a página
+    // Usuário logado — ir direto para a página final
     if(id==='signup') window.location.href='explorar.html';
     else if(id==='owner') window.location.href='criar-piscina.html';
     return;
   }
-  document.getElementById('m-'+id).classList.add('open');
+  // Não logado — ir direto para o cadastro com o destino correto (sem modal intermediário)
+  if(id==='signup') window.location.href='cadastro.html?next=explorar';
+  else if(id==='owner') window.location.href='cadastro.html?next=criar-piscina';
 }
 function closeM(id){document.getElementById('m-'+id).classList.remove('open');}
 document.querySelectorAll('.mov').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
