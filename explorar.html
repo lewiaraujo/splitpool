@@ -68,11 +68,19 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 .card-servico{font-size:17px;font-weight:800;color:var(--bluedark);line-height:1.2;}
 .card-dono{font-size:12px;color:var(--bluedark);opacity:.45;margin-top:3px;font-weight:500;}
 .card-code{display:inline-flex;align-items:center;gap:4px;background:#f0f6ff;border:1px solid rgba(18,85,204,0.18);border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--blue);margin-top:4px;}
-/* Bloco do dono no card (avatar de inicial + nome em destaque) */
-.card-owner{display:inline-flex;align-items:center;gap:7px;background:#f5f9ff;border:1px solid rgba(18,85,204,0.12);border-radius:20px;padding:3px 10px 3px 3px;margin-top:6px;}
-.card-owner-av{width:24px;height:24px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0;}
-.card-owner-av img{width:24px;height:24px;object-fit:cover;display:block;}
-.card-owner-name{font-size:12px;font-weight:800;color:var(--bluedark);line-height:1;}
+/* Linha do dono no card (rótulo + pílula avatar+nome) — layout mockup */
+.card-owner-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,180,210,0.12);}
+.card-owner-label{font-size:14px;font-weight:800;color:var(--blue);line-height:1.2;flex-shrink:0;}
+.card-owner{display:inline-flex;align-items:center;gap:8px;background:#f5f9ff;border:1px solid rgba(18,85,204,0.14);border-radius:22px;padding:4px 14px 4px 4px;min-width:0;}
+.card-owner-av{width:28px;height:28px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;flex-shrink:0;}
+.card-owner-av img{width:28px;height:28px;object-fit:cover;display:block;}
+.card-owner-name{font-size:13px;font-weight:800;color:var(--bluedark);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Dois blocos grandes lado a lado: vagas livres + meses restantes */
+.card-stats{display:flex;gap:8px;margin-top:12px;}
+.card-stat{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;border-radius:12px;padding:12px 8px;font-size:13px;font-weight:800;line-height:1.25;}
+.card-stat.vagas{background:rgba(0,200,100,0.10);color:#00875A;border:1px solid rgba(0,200,100,0.22);}
+.card-stat.vagas.esgotado{background:rgba(200,0,0,0.07);color:#991B1B;border:1px solid rgba(200,0,0,0.18);}
+.card-stat.prazo{background:rgba(0,20,80,0.05);color:var(--bluedark);border:1px solid rgba(0,20,80,0.10);}
 .card-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:6px;}
 .badge-aberta{background:rgba(0,200,100,0.12);color:#00875A;border:1px solid rgba(0,200,100,0.25);}
 .badge-fechada{background:rgba(200,0,0,0.08);color:#991B1B;border:1px solid rgba(200,0,0,0.15);}
@@ -539,19 +547,18 @@ async function renderizar() {
     const pct = Math.round((p.vagas_ocupadas / p.vagas_total) * 100)
     const esgotado = disponiveis <= 0
     const codigo = poolCode(p.id)
-    const donoNome = (p.dono_info && p.dono_info.nome) ? p.dono_info.nome : ''
+    // Nome do dono com fallback robusto (nunca deixa a linha quebrada)
+    const donoNome = (p.dono_info && p.dono_info.nome) ? p.dono_info.nome : 'Dono verificado'
     const donoAvatar = (p.dono_info && p.dono_info.avatar) ? p.dono_info.avatar : ''
-    // Badge de prazo restante (planos anuais com data_compra_ciclo preenchida)
-    var badgePrazo = ''
+    // Texto de prazo restante (planos anuais com data_compra_ciclo preenchida)
+    var prazoTexto = ''
     if (p.data_compra_ciclo) {
       var compra = new Date(p.data_compra_ciclo)
       var hoje = new Date()
       var mesesPassados = (hoje.getFullYear() - compra.getFullYear()) * 12 + (hoje.getMonth() - compra.getMonth())
       var mesesRestantes = 12 - (mesesPassados % 12)
       if (mesesRestantes < 12) {
-        var cor = mesesRestantes <= 2 ? '#E24B4A' : mesesRestantes <= 4 ? '#BA7517' : '#0F6E56'
-        var bgCor = mesesRestantes <= 2 ? 'rgba(226,75,74,0.08)' : mesesRestantes <= 4 ? 'rgba(186,117,23,0.08)' : 'rgba(15,110,86,0.08)'
-        badgePrazo = `<div style="display:inline-flex;align-items:center;gap:4px;background:${bgCor};border:1px solid ${cor}33;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:${cor};margin-top:4px;">⏱ ${mesesRestantes} ${mesesRestantes===1?'mês restante':'meses restantes'}</div>`
+        prazoTexto = mesesRestantes + ' ' + (mesesRestantes===1 ? 'mês restante' : 'meses restantes')
       }
     }
     return `
@@ -564,16 +571,21 @@ async function renderizar() {
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;">
             <div class="card-code">${codigo}</div>
           </div>
-          ${donoNome ? `<div class="card-owner"><div class="card-owner-av">${getOwnerAvatar(donoNome, donoAvatar)}</div><span class="card-owner-name">${donoNome}</span></div>` : ''}
-          <span class="card-badge ${esgotado ? 'badge-fechada' : 'badge-aberta'}">${esgotado ? 'Sem vagas' : `${disponiveis} vaga${disponiveis > 1 ? 's' : ''} livre${disponiveis > 1 ? 's' : ''}`}</span>
-          ${badgePrazo}
         </div>
         <div class="card-preco">
           <div class="preco-val${isWellness(p.servico)?' small':''}">${isWellness(p.servico) ? 'A partir de<br>R$' + getWellnessMin(p.servico) : 'R$' + Number(p.preco_por_vaga).toFixed(2).replace('.',',')}</div>
           <div class="preco-label">/mês</div>
         </div>
       </div>
-      <div>
+      <div class="card-owner-row">
+        <span class="card-owner-label">Dono(a) da piscina:</span>
+        <div class="card-owner"><div class="card-owner-av">${getOwnerAvatar(donoNome, donoAvatar)}</div><span class="card-owner-name">${donoNome}</span></div>
+      </div>
+      <div class="card-stats">
+        <div class="card-stat vagas${esgotado ? ' esgotado' : ''}">${esgotado ? 'Sem vagas' : `${disponiveis} vaga${disponiveis > 1 ? 's' : ''} livre${disponiveis > 1 ? 's' : ''}`}</div>
+        ${prazoTexto ? `<div class="card-stat prazo">⏱ ${prazoTexto}</div>` : ''}
+      </div>
+      <div style="margin-top:12px;">
         <div class="card-vagas">${p.vagas_ocupadas}/${p.vagas_total} vagas ocupadas</div>
         <div class="vagas-bar"><div class="vagas-fill" style="width:${pct}%"></div></div>
       </div>
