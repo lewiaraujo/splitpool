@@ -68,6 +68,11 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 .card-servico{font-size:17px;font-weight:800;color:var(--bluedark);line-height:1.2;}
 .card-dono{font-size:12px;color:var(--bluedark);opacity:.45;margin-top:3px;font-weight:500;}
 .card-code{display:inline-flex;align-items:center;gap:4px;background:#f0f6ff;border:1px solid rgba(18,85,204,0.18);border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--blue);margin-top:4px;}
+/* Bloco do dono no card (avatar de inicial + nome em destaque) */
+.card-owner{display:inline-flex;align-items:center;gap:7px;background:#f5f9ff;border:1px solid rgba(18,85,204,0.12);border-radius:20px;padding:3px 10px 3px 3px;margin-top:6px;}
+.card-owner-av{width:24px;height:24px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0;}
+.card-owner-av img{width:24px;height:24px;object-fit:cover;display:block;}
+.card-owner-name{font-size:12px;font-weight:800;color:var(--bluedark);line-height:1;}
 .card-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:6px;}
 .badge-aberta{background:rgba(0,200,100,0.12);color:#00875A;border:1px solid rgba(0,200,100,0.25);}
 .badge-fechada{background:rgba(200,0,0,0.08);color:#991B1B;border:1px solid rgba(200,0,0,0.15);}
@@ -142,7 +147,8 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 .m-wh-access{font-size:9px;font-weight:700;color:var(--green);margin-top:3px;}
 /* descrição */
 .m-owner{display:flex;align-items:center;gap:10px;background:#f5f9ff;border-radius:10px;padding:9px 12px;}
-.m-owner-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;}
+.m-owner-av{width:32px;height:32px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;}
+.m-owner-av img{width:32px;height:32px;object-fit:cover;display:block;}
 .m-owner-name{font-size:13px;font-weight:800;color:var(--bluedark);}
 .m-owner-lv{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:2px;}
 .m-owner-lv.iniciante{background:rgba(18,85,204,0.07);color:var(--blue);}
@@ -472,6 +478,15 @@ function getIcone(servico, icone_url) {
   return servico[0]
 }
 
+// Avatar do dono para o card: usa foto (avatar_url) se existir, senão inicial do nome
+function getOwnerAvatar(nome, avatar) {
+  const inicial = (nome && nome[0] ? nome[0] : '?').toUpperCase()
+  if (avatar) {
+    return `<img src="${avatar}" alt="${nome||''}" onerror="this.parentElement.textContent='${inicial}'"/>`
+  }
+  return inicial
+}
+
 function getCategoria(servico) {
   for (const [k, v] of Object.entries(CATEGORIAS)) {
     if (servico.toLowerCase().includes(k.toLowerCase())) return v
@@ -501,9 +516,9 @@ async function renderizar() {
     return matchBusca && matchCat && !bloqueado
   })
 
-  // Buscar nomes dos donos em paralelo
+  // Buscar dados dos donos (nome + avatar) em paralelo
   await Promise.all(lista.map(async p => {
-    if(!p.dono_nome) p.dono_nome = await buscarNomeDono(p.dono_id)
+    if(p.dono_info === undefined) p.dono_info = await buscarDono(p.dono_id)
   }))
 
   document.getElementById('total-badge').textContent = `${lista.length} piscina${lista.length !== 1 ? 's' : ''} encontrada${lista.length !== 1 ? 's' : ''}`
@@ -524,6 +539,8 @@ async function renderizar() {
     const pct = Math.round((p.vagas_ocupadas / p.vagas_total) * 100)
     const esgotado = disponiveis <= 0
     const codigo = poolCode(p.id)
+    const donoNome = (p.dono_info && p.dono_info.nome) ? p.dono_info.nome : ''
+    const donoAvatar = (p.dono_info && p.dono_info.avatar) ? p.dono_info.avatar : ''
     // Badge de prazo restante (planos anuais com data_compra_ciclo preenchida)
     var badgePrazo = ''
     if (p.data_compra_ciclo) {
@@ -546,8 +563,8 @@ async function renderizar() {
           <div class="card-dono">Piscina verificada</div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;">
             <div class="card-code">${codigo}</div>
-            ${p.dono_nome ? `<span style="font-size:10px;font-weight:600;color:var(--bluedark);opacity:.5;">${p.dono_nome.split(' ')[0]}</span>` : ''}
           </div>
+          ${donoNome ? `<div class="card-owner"><div class="card-owner-av">${getOwnerAvatar(donoNome, donoAvatar)}</div><span class="card-owner-name">${donoNome}</span></div>` : ''}
           <span class="card-badge ${esgotado ? 'badge-fechada' : 'badge-aberta'}">${esgotado ? 'Sem vagas' : `${disponiveis} vaga${disponiveis > 1 ? 's' : ''} livre${disponiveis > 1 ? 's' : ''}`}</span>
           ${badgePrazo}
         </div>
@@ -618,25 +635,24 @@ function getWellnessMin(servico){
   return '—'
 }
 let donosCache={}
-async function buscarNomeDono(donoId){
+async function buscarDono(donoId){
   if(donosCache[donoId] !== undefined) return donosCache[donoId]
   try{
-    // Tenta tabela profiles primeiro
+    // Tenta tabela profiles primeiro (nome + email). avatar_url é opcional: se a coluna existir, o Supabase retorna; senão, campo fica undefined.
     const r=await fetch(SUPABASE_URL+'/rest/v1/profiles?id=eq.'+donoId+'&select=nome,email',
       {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}})
     const d=await r.json()
     if(d&&d.length&&(d[0].nome||d[0].email)){
       const raw=d[0].nome||d[0].email||''
-      donosCache[donoId]=raw.split(' ')[0].split('@')[0]
+      const nomeCurto=raw.split(' ')[0].split('@')[0]
+      donosCache[donoId]={nome:nomeCurto, avatar:(d[0].avatar_url||'')}
       return donosCache[donoId]
     }
-    // Fallback: buscar via view users (requer service key, não disponível)
-    // Usa parte inicial do UUID como identificador amigável
-    donosCache[donoId]=''
-    return ''
+    donosCache[donoId]={nome:'', avatar:''}
+    return donosCache[donoId]
   }catch(e){
-    donosCache[donoId]=''
-    return ''
+    donosCache[donoId]={nome:'', avatar:''}
+    return donosCache[donoId]
   }
 }
 
@@ -732,8 +748,16 @@ function abrirModal(id) {
     }
   }
 
-  document.getElementById('m-owner-av').textContent = p.servico[0].toUpperCase()
-  document.getElementById('m-owner-name').textContent = 'Dono verificado'
+  // Dono no modal: avatar (foto se houver, senão inicial do nome) + nome real
+  const dono = piscinaAtual.dono_info || {nome:'', avatar:''}
+  const donoNomeModal = dono.nome || 'Dono verificado'
+  const avEl = document.getElementById('m-owner-av')
+  if(dono.avatar){
+    avEl.innerHTML = `<img src="${dono.avatar}" alt="${donoNomeModal}" onerror="this.parentElement.textContent='${(donoNomeModal[0]||'?').toUpperCase()}'"/>`
+  } else {
+    avEl.textContent = (donoNomeModal[0] || '?').toUpperCase()
+  }
+  document.getElementById('m-owner-name').textContent = donoNomeModal
   document.getElementById('m-owner-lv').className = 'm-owner-lv iniciante'
   document.getElementById('m-owner-lv').textContent = 'Iniciante'
 
