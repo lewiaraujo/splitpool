@@ -572,8 +572,6 @@ async function confirmarPagamento(){
       email_servico:emailServico,
       proximo_pagamento:proxPag.toISOString()
     })
-    // Incrementar vagas_ocupadas de forma atômica no banco
-    await sb.rpc('incrementar_vagas', {piscina_id_param: piscinaData.id})
     // Notificar dono que um membro entrou
     const {data:perfilMembro}=await sb.from('profiles').select('nome').eq('id',sess.session.user.id).single()
     const nomeMembroNot=perfilMembro?.nome||emailServico||'Um membro'
