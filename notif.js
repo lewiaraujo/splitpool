@@ -11,6 +11,7 @@
     'membro_entrou':'dashboard-owner.html',
     'acesso_confirmado':'dashboard-owner.html',
     'acesso_enviado':'meus-planos.html',
+    'credenciais_atualizadas':'meus-planos.html',
     'repasse_aprovado':'dashboard-owner.html',
     'repasse_pago':'dashboard-owner.html',
     'piscina_cheia':'dashboard-owner.html'
@@ -20,6 +21,7 @@
     'membro_entrou':'🏊',
     'acesso_confirmado':'✅',
     'acesso_enviado':'🔑',
+    'credenciais_atualizadas':'🔐',
     'repasse_aprovado':'💵',
     'repasse_pago':'💵',
     'piscina_cheia':'🎉'

@@ -597,8 +597,16 @@ async function salvarEEnviarAcesso(piscinaId,membroId,assinaturaId,btn){
     .upsert({piscina_id:piscinaId,membro_id:membroId,dono_id:userId,dados_enc,updated_at:new Date().toISOString()},{onConflict:'piscina_id,membro_id'});
   if(eVault){showToast('Erro ao salvar: '+eVault.message,'error');btn.disabled=false;btn.textContent='💾 Salvar e enviar acesso';return;}
   // Marcar acesso como enviado
-  var {error:eAss}=await sb.from('assinaturas').update({acesso_enviado_em:new Date().toISOString()}).eq('id',assinaturaId);
+  var {data:assEnv,error:eAss}=await sb.from('assinaturas').update({acesso_enviado_em:new Date().toISOString()}).eq('id',assinaturaId).select('membro_id,servico').single();
   if(eAss){showToast('Credenciais salvas, mas erro ao marcar envio: '+eAss.message,'error');return;}
+  // Notificar o membro
+  if(assEnv&&assEnv.membro_id){
+    await sb.from('notificacoes').insert({
+      user_id:assEnv.membro_id,tipo:'acesso_enviado',
+      mensagem:'Seu acesso ao '+assEnv.servico+' foi enviado! Confirme em Meus Planos.',
+      link:'meus-planos.html'
+    });
+  }
   showToast('Acesso salvo e enviado ao membro! 🎉','success');
   setTimeout(function(){carregarDashboard();},900);
 }
@@ -723,6 +731,13 @@ async function saveVaultMembro(piscinaId,membroId){
   var {error}=await sb.from('credenciais')
     .upsert({piscina_id:piscinaId,membro_id:membroId,dono_id:userId,dados_enc,updated_at:new Date().toISOString()},{onConflict:'piscina_id,membro_id'});
   if(error){showToast('Erro: '+error.message,'error');return;}
+  // Notificar o membro sobre a atualização
+  var {data:piscNot}=await sb.from('piscinas').select('servico').eq('id',piscinaId).single();
+  await sb.from('notificacoes').insert({
+    user_id:membroId,tipo:'credenciais_atualizadas',
+    mensagem:'O dono atualizou as credenciais do seu acesso ao '+(piscNot?.servico||'seu plano')+'. Confira em Meus Planos.',
+    link:'meus-planos.html'
+  });
   showToast('Acesso salvo para o membro! 🔒','success');
   setTimeout(function(){carregarDashboard();},900);
 }
