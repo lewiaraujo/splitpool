@@ -581,6 +581,16 @@ async function confirmarPagamento(){
       mensagem:nomeMembroNot+' entrou na sua piscina de '+piscinaData.servico+'.',
       link:'dashboard-owner.html'
     })
+    // Piscina cheia? Notificar o dono (trigger já sincronizou vagas_ocupadas)
+    const {data:piscAtual}=await sb.from('piscinas').select('vagas_ocupadas,vagas_total').eq('id',piscinaData.id).single()
+    if(piscAtual&&piscAtual.vagas_ocupadas>=piscAtual.vagas_total){
+      await sb.from('notificacoes').insert({
+        user_id:piscinaData.dono_id,
+        tipo:'piscina_cheia',
+        mensagem:'Sua piscina de '+piscinaData.servico+' está cheia! Todas as vagas foram preenchidas.',
+        link:'dashboard-owner.html'
+      })
+    }
   }
 
   mostrarSucesso()

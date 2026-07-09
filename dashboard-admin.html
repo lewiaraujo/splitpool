@@ -484,12 +484,18 @@ function renderRepasses(){
 }
 
 async function aprovar(id){
-  await sb.from('repasses').update({status:'aprovado'}).eq('id',id);
+  var {data:rep}=await sb.from('repasses').update({status:'aprovado'}).eq('id',id).select('dono_id,mes_referencia').single();
+  if(rep&&rep.dono_id){
+    await sb.rpc('notificar_usuario',{p_user_id:rep.dono_id,p_tipo:'repasse_aprovado',p_mensagem:'Seu repasse'+(rep.mes_referencia?' de '+rep.mes_referencia:'')+' foi aprovado e será pago em breve.',p_link:'dashboard-owner.html'});
+  }
   showToast('Repasse aprovado!','success');
   await carregarRepasses();
 }
 async function marcarPago(id){
-  await sb.from('repasses').update({status:'pago',pago_em:new Date().toISOString()}).eq('id',id);
+  var {data:rep}=await sb.from('repasses').update({status:'pago',pago_em:new Date().toISOString()}).eq('id',id).select('dono_id,mes_referencia').single();
+  if(rep&&rep.dono_id){
+    await sb.rpc('notificar_usuario',{p_user_id:rep.dono_id,p_tipo:'repasse_pago',p_mensagem:'Seu repasse'+(rep.mes_referencia?' de '+rep.mes_referencia:'')+' foi pago! Confira no extrato.',p_link:'dashboard-owner.html'});
+  }
   showToast('Repasse marcado como pago!','success');
   await carregarRepasses();
 }
@@ -502,12 +508,18 @@ function toggleDonoGroup(bodyId,headerEl){
 }
 
 async function aprovarTodosDono(donoId){
-  await sb.from('repasses').update({status:'aprovado'}).eq('dono_id',donoId).eq('status','pendente');
+  var {data:reps}=await sb.from('repasses').update({status:'aprovado'}).eq('dono_id',donoId).eq('status','pendente').select('id');
+  if(reps&&reps.length){
+    await sb.rpc('notificar_usuario',{p_user_id:donoId,p_tipo:'repasse_aprovado',p_mensagem:'Seus repasses pendentes foram aprovados e serão pagos em breve.',p_link:'dashboard-owner.html'});
+  }
   showToast('Todos os repasses aprovados!','success');
   await carregarRepasses();
 }
 async function pagarTodosDono(donoId){
-  await sb.from('repasses').update({status:'pago',pago_em:new Date().toISOString()}).eq('dono_id',donoId).eq('status','aprovado');
+  var {data:reps}=await sb.from('repasses').update({status:'pago',pago_em:new Date().toISOString()}).eq('dono_id',donoId).eq('status','aprovado').select('id');
+  if(reps&&reps.length){
+    await sb.rpc('notificar_usuario',{p_user_id:donoId,p_tipo:'repasse_pago',p_mensagem:'Seus repasses foram pagos! Confira no extrato.',p_link:'dashboard-owner.html'});
+  }
   showToast('Todos marcados como pagos!','success');
   await carregarRepasses();
 }

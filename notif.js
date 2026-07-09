@@ -331,8 +331,20 @@
     '.notif-toast-x{background:transparent;border:none;font-size:17px;color:#0A3080;opacity:.4;',
     'cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;font-family:inherit;}',
     '.notif-toast-x:hover{opacity:.9;}',
-    '@media (max-width:680px){#notif-panel{top:64px;right:12px;left:12px;width:auto;}',
-    '#notif-toast{left:12px;right:12px;bottom:16px;max-width:none;}}'
+    '@media (max-width:680px){',
+    '#notif-panel{top:60px;right:10px;left:10px;width:auto;max-height:68vh;border-radius:16px;}',
+    '#notif-panel-head{padding:15px 16px;}',
+    '#notif-panel-head span{font-size:16px;}',
+    '#notif-mark-all{font-size:13px;padding:6px;}',
+    '.notif-item{padding:15px 16px;gap:13px;}',
+    '.notif-msg{font-size:14px;}',
+    '.notif-tempo{font-size:12px;}',
+    '.notif-ico{font-size:20px;}',
+    '#notif-toast{left:10px;right:10px;bottom:calc(14px + env(safe-area-inset-bottom,0px));',
+    'max-width:none;border-radius:14px;padding:15px 16px;}',
+    '.notif-toast-msg{font-size:14px;}',
+    '.notif-toast-x{font-size:20px;padding:2px 6px;}',
+    '}'
   ].join('');
   document.head.appendChild(style);
 
