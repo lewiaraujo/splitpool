@@ -27,6 +27,8 @@
 
   var cacheNotifs=[];
   var painelAberto=false;
+  var idsConhecidos={};
+  var primeiroPoll=true;
 
   function getSession(){
     try{
@@ -67,8 +69,10 @@
 
   /* ── INJETAR SINO (desktop) E ITEM MOBILE ── */
   function injetarUI(){
-    var navRight=document.querySelector('.nav-right');
-    if(navRight&&!document.getElementById('notif-bell')){
+    if(!getSession()) return;
+    var alvo=document.querySelector('.nav-right')||document.querySelector('.nav-in');
+    if(alvo&&!document.getElementById('notif-bell')){
+      var navRight=alvo;
       var bell=document.createElement('button');
       bell.id='notif-bell';
       bell.setAttribute('aria-label','Notificações');
@@ -162,6 +166,31 @@
     });
   }
 
+  function mostrarToast(n){
+    var antigo=document.getElementById('notif-toast');
+    if(antigo) antigo.remove();
+    var t=document.createElement('div');
+    t.id='notif-toast';
+    var icone=ICONE_TIPO[n.tipo]||'\ud83d\udd14';
+    t.innerHTML='<div class="notif-toast-ico">'+icone+'</div><div class="notif-toast-msg"></div><button class="notif-toast-x" aria-label="Fechar">\u00d7</button>';
+    t.querySelector('.notif-toast-msg').textContent=n.mensagem||'Nova notifica\u00e7\u00e3o';
+    t.querySelector('.notif-toast-x').addEventListener('click',function(ev){
+      ev.stopPropagation();
+      t.remove();
+    });
+    t.addEventListener('click',async function(){
+      var sess=getSession();
+      if(sess&&!n.lida){ await marcarLidas([n.id],sess.token); n.lida=true; }
+      if(n.link){ window.location.href=n.link; }
+      else { t.remove(); poll(); }
+    });
+    document.body.appendChild(t);
+    setTimeout(function(){ t.classList.add('show'); },30);
+    setTimeout(function(){
+      if(t.parentNode){ t.classList.remove('show'); setTimeout(function(){ t.remove(); },350); }
+    },7000);
+  }
+
   async function poll(){
     var sess=getSession();
     if(!sess) return;
@@ -186,6 +215,8 @@
     }
     var mobCnt=document.getElementById('mob-notif-count');
     if(mobCnt) mobCnt.style.display=tem?'inline-block':'none';
+
+    if(!document.getElementById('notif-bell')) injetarUI();
 
     if(painelAberto) renderPainel();
 
@@ -235,17 +266,17 @@
       }
     }
 
-    /* Marcar como lidas ao visitar a página destino — original preservado */
-    var tiposDestaPagina=Object.keys(NOTIF_PAGE).filter(function(t){
-      return NOTIF_PAGE[t]===PAGE;
-    });
-    if(tiposDestaPagina.length&&notifs.length){
-      var ids=notifs
-        .filter(function(n){return tiposDestaPagina.indexOf(n.tipo)!==-1;})
-        .map(function(n){return n.id;});
-      if(ids.length){
-        marcarLidas(ids,token);
-      }
+    /* Toast para notificações novas chegando durante a sessão */
+    if(primeiroPoll){
+      notifs.forEach(function(n){ idsConhecidos[n.id]=true; });
+      primeiroPoll=false;
+    } else {
+      notifs.forEach(function(n){
+        if(!idsConhecidos[n.id]){
+          idsConhecidos[n.id]=true;
+          mostrarToast(n);
+        }
+      });
     }
   }
 
@@ -287,7 +318,19 @@
     '.notif-tempo{font-size:11px;color:#0A3080;opacity:.5;margin-top:3px;font-weight:600;}',
     '.notif-dot-item{width:8px;height:8px;border-radius:50%;background:#00C8D7;flex-shrink:0;margin-top:5px;}',
     '.notif-vazio{padding:32px 16px;text-align:center;font-size:13px;color:#0A3080;opacity:.5;font-weight:600;}',
-    '@media (max-width:680px){#notif-panel{top:64px;right:12px;left:12px;width:auto;}}'
+    '#notif-toast{position:fixed;bottom:24px;right:24px;max-width:380px;background:#fff;',
+    'border:1px solid rgba(0,160,200,0.3);border-left:4px solid #00C8D7;border-radius:12px;',
+    'box-shadow:0 10px 32px rgba(10,48,128,0.22);padding:14px 16px;display:flex;gap:11px;',
+    'align-items:flex-start;cursor:pointer;z-index:6000;opacity:0;transform:translateY(16px);',
+    'transition:opacity .3s,transform .3s;}',
+    '#notif-toast.show{opacity:1;transform:translateY(0);}',
+    '.notif-toast-ico{font-size:19px;line-height:1.3;flex-shrink:0;}',
+    '.notif-toast-msg{font-size:13px;color:#0C2461;font-weight:600;line-height:1.45;flex:1;}',
+    '.notif-toast-x{background:transparent;border:none;font-size:17px;color:#0A3080;opacity:.4;',
+    'cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;font-family:inherit;}',
+    '.notif-toast-x:hover{opacity:.9;}',
+    '@media (max-width:680px){#notif-panel{top:64px;right:12px;left:12px;width:auto;}',
+    '#notif-toast{left:12px;right:12px;bottom:16px;max-width:none;}}'
   ].join('');
   document.head.appendChild(style);
 
