@@ -910,7 +910,7 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
         +acessoBtn+'</td>'
         +'<td data-label="Plano">'+(a.plano_nome||pool.servico)+'</td>'
         +'<td data-label="Valor">'+fmt(a.valor)+'/mês</td>'
-        +'<td data-label="Status">'+getMemberBadge(a.status)+'</td>'
+        +'<td data-label="Status">'+getMemberBadge(a.status)+(a.cancela_em?'<div style="margin-top:5px;"><span class="status-badge" style="background:#fff8e0;color:#8a5c00;"><span class="status-dot" style="background:#d97706;"></span>Encerra em '+new Date(a.cancela_em).toLocaleDateString('pt-BR')+'</span></div>':'')+'</td>'
         +'</tr>';
     });
   }
@@ -1108,7 +1108,8 @@ async function carregarDashboard(){
 
   var {data:assins,error:eassins}=await sb.from('assinaturas')
     .select('*')
-    .in('piscina_id',ids);
+    .in('piscina_id',ids)
+    .neq('status','cancelado');
 
   if(eassins) console.error('Erro assinaturas:', eassins.message);
 
