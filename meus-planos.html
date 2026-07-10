@@ -384,6 +384,7 @@ async function confirmarAcesso(){
 
 /* ── CANCELAMENTO ── */
 let planosCache=[];
+let ocorrenciasCancel={};
 let assinaturaParaCancelar=null;
 
 function fecharCancel(){
@@ -421,6 +422,11 @@ function abrirCancel(id){
     body.innerHTML=`
       <div class="conf-title">Cancelar ${a.servico}?</div>
       <div class="conf-text">O cancelamento é imediato: seu acesso termina agora e a vaga é liberada.${calc.valor>0?` Pelos <strong>${calc.dias} dia${calc.dias===1?'':'s'}</strong> não utilizados do ciclo, você recebe um reembolso proporcional de <strong>${fmt(calc.valor)}</strong> via PIX em até 5 dias úteis.`:' Não há dias restantes no ciclo, portanto não há reembolso.'}</div>
+      ${calc.valor>0?`<div style="margin:14px 0 4px;">
+        <label style="font-size:12px;font-weight:700;color:#0A3080;display:block;margin-bottom:6px;">Chave PIX para o reembolso</label>
+        <input id="cancel-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:10px 12px;border:1px solid rgba(0,160,200,0.3);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+        <div id="cancel-pix-erro" style="display:none;font-size:11px;color:#dc2626;font-weight:700;margin-top:4px;">Informe a chave PIX para receber o reembolso.</div>
+      </div>`:''}
       <div class="conf-actions">
         <button class="conf-btn-nao" onclick="fecharCancel()">Voltar</button>
         <button class="conf-btn-sim" style="background:#dc2626;" onclick="confirmarCancelamento()">Confirmar cancelamento</button>
@@ -436,7 +442,21 @@ async function confirmarCancelamento(){
   const btn=document.querySelector('#cancel-modal-body .conf-btn-sim');
   if(btn){btn.disabled=true;btn.textContent='Cancelando...';}
   const wellness=ehWellness(a.servico);
-  let erro=null, descr='', reembolso=null;
+  let erro=null, descr='', reembolso=null, pixChave=null;
+
+  if(!wellness){
+    const calcPre=calcReembolso(a);
+    if(calcPre.valor>0){
+      const pixEl=document.getElementById('cancel-pix');
+      pixChave=pixEl?pixEl.value.trim():'';
+      if(!pixChave){
+        const erroEl=document.getElementById('cancel-pix-erro');
+        if(erroEl) erroEl.style.display='block';
+        if(btn){btn.disabled=false;btn.textContent='Confirmar cancelamento';}
+        return;
+      }
+    }
+  }
 
   if(wellness){
     const fim=a.proximo_pagamento||new Date().toISOString();
@@ -461,7 +481,8 @@ async function confirmarCancelamento(){
     aberto_por:userId,
     status:reembolso?'aberta':'concluida',
     descricao:descr,
-    valor_reembolso:reembolso
+    valor_reembolso:reembolso,
+    pix_chave:pixChave
   });
 
   // Notificar dono
@@ -676,17 +697,37 @@ async function carregarSugestoes(){
 }
 
 async function carregarPlanos(){
-  const {data,error}=await sb.from('assinaturas')
+  const {data:dataAll,error}=await sb.from('assinaturas')
     .select('*,acesso_enviado_em,email_servico')
     .eq('membro_id',userId)
-    .neq('status','cancelado')
     .order('created_at',{ascending:false});
 
-  planosCache=data||[];
+  // Separar ativos de cancelados (cancelados recentes/pendentes continuam visíveis)
+  const dataArr=dataAll||[];
+  const data=dataArr.filter(a=>a.status!=='cancelado');
+  const canceladosBrutos=dataArr.filter(a=>a.status==='cancelado');
+  ocorrenciasCancel={};
+  let cancelados=[];
+  if(canceladosBrutos.length){
+    const {data:ocs}=await sb.from('ocorrencias')
+      .select('assinatura_id,status,valor_reembolso,resolvida_em,pix_chave')
+      .eq('tipo','cancelamento_membro')
+      .in('assinatura_id',canceladosBrutos.map(a=>a.id));
+    (ocs||[]).forEach(o=>{ocorrenciasCancel[o.assinatura_id]=o;});
+    const SETE_DIAS=7*86400000;
+    cancelados=canceladosBrutos.filter(a=>{
+      const oc=ocorrenciasCancel[a.id];
+      if(oc&&oc.status==='aberta') return true; // reembolso pendente: sempre visível
+      const ref=oc&&oc.resolvida_em?new Date(oc.resolvida_em):(a.cancela_em?new Date(a.cancela_em):null);
+      return ref?(Date.now()-ref.getTime())<SETE_DIAS:false;
+    });
+  }
+
+  planosCache=data;
 
   document.getElementById('loading-state').style.display='none';
 
-  if(!data||!data.length||error){
+  if((!data||!data.length)&&!cancelados.length||error){
     document.getElementById('empty-state').style.display='flex';
     carregarSugestoes();
     return;
@@ -741,7 +782,48 @@ async function carregarPlanos(){
     <div class="resumo-item"><div class="resumo-val" style="color:var(--green);">${ativos}</div><div class="resumo-lbl">Confirmados</div></div>
     <div class="resumo-item"><div class="resumo-val" style="color:#b07000;">${aguardando}</div><div class="resumo-lbl">Aguardando</div></div>`;
 
-  document.getElementById('planos-list').innerHTML=data.map(renderPlano).join('');
+  document.getElementById('planos-list').innerHTML=
+    data.map(renderPlano).join('')+cancelados.map(renderPlanoCancelado).join('');
+}
+
+function renderPlanoCancelado(a){
+  const oc=ocorrenciasCancel[a.id];
+  const nomeExibir=a.plano_nome?`${a.servico} — ${a.plano_nome}`:a.servico;
+  let reembolsoHTML='';
+  if(oc&&oc.valor_reembolso){
+    if(oc.status==='aberta'){
+      reembolsoHTML=`<div style="background:#eff6ff;border:1px solid rgba(30,90,200,0.2);border-radius:10px;padding:12px 14px;margin-top:12px;">
+        <div style="font-size:13px;font-weight:700;color:#1e40af;">💸 Reembolso em processamento</div>
+        <div style="font-size:12px;color:#1e40af;opacity:.85;line-height:1.6;margin-top:2px;">Você receberá <strong>${fmt(oc.valor_reembolso)}</strong> via PIX na chave <strong>${oc.pix_chave||'informada'}</strong> em até 5 dias úteis.</div>
+      </div>`;
+    } else {
+      const dataPag=oc.resolvida_em?new Date(oc.resolvida_em).toLocaleDateString('pt-BR'):'';
+      reembolsoHTML=`<div style="background:#f0fdf4;border:1px solid rgba(22,163,74,0.25);border-radius:10px;padding:12px 14px;margin-top:12px;">
+        <div style="font-size:13px;font-weight:700;color:#15803d;">✅ Reembolso pago${dataPag?' em '+dataPag:''}</div>
+        <div style="font-size:12px;color:#166534;opacity:.85;line-height:1.6;margin-top:2px;"><strong>${fmt(oc.valor_reembolso)}</strong> enviado via PIX para <strong>${oc.pix_chave||'sua chave'}</strong>.</div>
+      </div>`;
+    }
+  } else {
+    reembolsoHTML=`<div style="font-size:12px;color:#0A3080;opacity:.55;margin-top:12px;font-weight:600;">Sem reembolso — o ciclo pago já havia sido utilizado.</div>`;
+  }
+  return`<div class="card plano-card" style="opacity:.85;" id="plano-${a.id}">
+    <div class="plano-header">
+      ${getIco(a.servico)}
+      <div style="flex:1;min-width:0;">
+        <div class="plano-nome" style="opacity:.7;">${nomeExibir}</div>
+        <div class="plano-cod">${poolCode(a.piscina_id)}</div>
+        <div style="margin-top:8px;">
+          <span class="status-badge" style="background:#fee2e2;color:#991b1b;">
+            <span class="status-dot" style="background:#dc2626;"></span>Cancelado
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="plano-body">
+      ${reembolsoHTML}
+      <div style="font-size:12px;color:#0A3080;opacity:.6;margin-top:10px;line-height:1.6;">Sua vaga foi liberada. Quer voltar? <a href="explorar.html" style="color:var(--blue);font-weight:700;">Encontre uma vaga aberta</a> e assine novamente.</div>
+    </div>
+  </div>`;
 }
 
 function copiarCred(elId, label){
