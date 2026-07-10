@@ -100,6 +100,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .confirmar-overlay{position:fixed;inset:0;background:rgba(5,20,70,0.55);backdrop-filter:blur(8px);z-index:400;display:none;align-items:center;justify-content:center;padding:1rem;}
 .confirmar-overlay.open{display:flex;}
 .confirmar-modal{background:#fff;border-radius:20px;padding:28px;max-width:420px;width:100%;box-shadow:0 8px 32px rgba(0,20,80,.2);animation:fadeIn .2s ease;}
+.btn-cancelar-plano{background:transparent;border:none;color:#b91c1c;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:12px;padding:6px 0;opacity:.75;transition:.2s;text-decoration:underline;}
+.btn-cancelar-plano:hover{opacity:1;}
+.btn-desfazer-cancel{background:#fff;border:1px solid rgba(180,120,0,0.35);color:#8a5c00;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px;padding:7px 14px;border-radius:8px;transition:.2s;}
+.btn-desfazer-cancel:hover{background:#fff3d6;}
 @keyframes fadeIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 .conf-title{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;color:var(--bluedark);margin-bottom:8px;}
 .conf-sub{font-size:13px;color:var(--bluedark);opacity:.6;line-height:1.7;font-weight:500;margin-bottom:20px;}
@@ -267,6 +271,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 </div>
 
 <!-- MODAL CONFIRMAR ACESSO -->
+<div class="confirmar-overlay" id="cancel-overlay">
+  <div class="confirmar-modal" id="cancel-modal-body"></div>
+</div>
+
 <div class="confirmar-overlay" id="conf-overlay">
   <div class="confirmar-modal">
     <div class="conf-title">Confirmar acesso recebido?</div>
@@ -374,6 +382,135 @@ async function confirmarAcesso(){
   setTimeout(()=>carregarPlanos(),1200);
 }
 
+/* ── CANCELAMENTO ── */
+let planosCache=[];
+let assinaturaParaCancelar=null;
+
+function fecharCancel(){
+  document.getElementById('cancel-overlay').classList.remove('open');
+  assinaturaParaCancelar=null;
+}
+
+function ehWellness(servico){return /wellhub|totalpass/i.test(servico||'');}
+
+function calcReembolso(a){
+  if(!a.proximo_pagamento) return {dias:0,valor:0};
+  const dias=Math.max(0,Math.min(30,Math.ceil((new Date(a.proximo_pagamento).getTime()-Date.now())/86400000)));
+  const valor=Math.round((Number(a.valor)*dias/30)*100)/100;
+  return {dias,valor};
+}
+
+function abrirCancel(id){
+  const a=planosCache.find(p=>p.id===id);
+  if(!a) return;
+  assinaturaParaCancelar=id;
+  const body=document.getElementById('cancel-modal-body');
+  if(ehWellness(a.servico)){
+    const fim=a.proximo_pagamento?new Date(a.proximo_pagamento):null;
+    const fimStr=fim?fim.toLocaleDateString('pt-BR'):'o fim do ciclo pago';
+    const dias=fim?Math.max(0,Math.ceil((fim.getTime()-Date.now())/86400000)):0;
+    body.innerHTML=`
+      <div class="conf-title">Cancelar ${a.servico}?</div>
+      <div class="conf-text">Planos wellness seguem o ciclo do serviço: você continua com acesso até <strong>${fimStr}</strong>${fim?` (${dias} dia${dias===1?'':'s'} restante${dias===1?'':'s'})`:''} e não há reembolso. Depois disso sua vaga é liberada e a cobrança para.</div>
+      <div class="conf-actions">
+        <button class="conf-btn-nao" onclick="fecharCancel()">Voltar</button>
+        <button class="conf-btn-sim" style="background:#dc2626;" onclick="confirmarCancelamento()">Confirmar cancelamento</button>
+      </div>`;
+  } else {
+    const calc=calcReembolso(a);
+    body.innerHTML=`
+      <div class="conf-title">Cancelar ${a.servico}?</div>
+      <div class="conf-text">O cancelamento é imediato: seu acesso termina agora e a vaga é liberada.${calc.valor>0?` Pelos <strong>${calc.dias} dia${calc.dias===1?'':'s'}</strong> não utilizados do ciclo, você recebe um reembolso proporcional de <strong>${fmt(calc.valor)}</strong> via PIX em até 5 dias úteis.`:' Não há dias restantes no ciclo, portanto não há reembolso.'}</div>
+      <div class="conf-actions">
+        <button class="conf-btn-nao" onclick="fecharCancel()">Voltar</button>
+        <button class="conf-btn-sim" style="background:#dc2626;" onclick="confirmarCancelamento()">Confirmar cancelamento</button>
+      </div>`;
+  }
+  document.getElementById('cancel-overlay').classList.add('open');
+}
+
+async function confirmarCancelamento(){
+  if(!assinaturaParaCancelar) return;
+  const a=planosCache.find(p=>p.id===assinaturaParaCancelar);
+  if(!a) return;
+  const btn=document.querySelector('#cancel-modal-body .conf-btn-sim');
+  if(btn){btn.disabled=true;btn.textContent='Cancelando...';}
+  const wellness=ehWellness(a.servico);
+  let erro=null, descr='', reembolso=null;
+
+  if(wellness){
+    const fim=a.proximo_pagamento||new Date().toISOString();
+    const {error}=await sb.from('assinaturas').update({cancela_em:fim}).eq('id',a.id).eq('membro_id',userId);
+    erro=error;
+    descr='Cancelamento agendado (wellness) — acesso até '+new Date(fim).toLocaleDateString('pt-BR')+'.';
+  } else {
+    const calc=calcReembolso(a);
+    reembolso=calc.valor>0?calc.valor:null;
+    const {error}=await sb.from('assinaturas').update({status:'cancelado',cancela_em:new Date().toISOString()}).eq('id',a.id).eq('membro_id',userId);
+    erro=error;
+    descr='Cancelamento imediato (família). '+(reembolso?('Reembolso proporcional de '+fmt(reembolso)+' referente a '+calc.dias+' dia(s) não utilizados.'):'Sem reembolso (ciclo esgotado).');
+  }
+
+  if(erro){fecharCancel();showToast('Erro ao cancelar: '+erro.message);return;}
+
+  // Registrar ocorrência (reembolso pendente = 'aberta' para o admin agir)
+  await sb.from('ocorrencias').insert({
+    tipo:'cancelamento_membro',
+    piscina_id:a.piscina_id,
+    assinatura_id:a.id,
+    aberto_por:userId,
+    status:reembolso?'aberta':'concluida',
+    descricao:descr,
+    valor_reembolso:reembolso
+  });
+
+  // Notificar dono
+  const {data:pisc}=await sb.from('piscinas').select('dono_id').eq('id',a.piscina_id).single();
+  if(pisc&&pisc.dono_id){
+    const {data:perfil}=await sb.from('profiles').select('nome').eq('id',userId).single();
+    const nome=perfil?.nome||'Um membro';
+    await sb.from('notificacoes').insert({
+      user_id:pisc.dono_id,
+      tipo:'membro_cancelou',
+      mensagem:wellness
+        ?(nome+' cancelou a assinatura de '+a.servico+'. O acesso vale até '+new Date(a.proximo_pagamento||Date.now()).toLocaleDateString('pt-BR')+', depois a vaga é liberada.')
+        :(nome+' cancelou a assinatura de '+a.servico+'. A vaga foi liberada.'),
+      link:'dashboard-owner.html'
+    });
+  }
+
+  fecharCancel();
+  showToast(wellness?'Cancelamento agendado.':'Assinatura cancelada.','success');
+  setTimeout(()=>carregarPlanos(),1000);
+}
+
+async function desfazerCancelamento(id){
+  const a=planosCache.find(p=>p.id===id);
+  if(!a) return;
+  const {error}=await sb.from('assinaturas').update({cancela_em:null}).eq('id',id).eq('membro_id',userId);
+  if(error){showToast('Erro: '+error.message);return;}
+  await sb.from('ocorrencias').insert({
+    tipo:'cancelamento_desfeito',
+    piscina_id:a.piscina_id,
+    assinatura_id:a.id,
+    aberto_por:userId,
+    status:'concluida',
+    descricao:'Membro desfez o cancelamento agendado.'
+  });
+  const {data:pisc}=await sb.from('piscinas').select('dono_id').eq('id',a.piscina_id).single();
+  if(pisc&&pisc.dono_id){
+    const {data:perfil}=await sb.from('profiles').select('nome').eq('id',userId).single();
+    await sb.from('notificacoes').insert({
+      user_id:pisc.dono_id,
+      tipo:'membro_cancelou',
+      mensagem:(perfil?.nome||'Um membro')+' desfez o cancelamento em '+a.servico+'. A vaga segue ocupada.',
+      link:'dashboard-owner.html'
+    });
+  }
+  showToast('Cancelamento desfeito! 🎉','success');
+  setTimeout(()=>carregarPlanos(),900);
+}
+
 function sair(){
   sb.auth.signOut().then(()=>window.location.href='index.html');
 }
@@ -390,6 +527,20 @@ function renderPlano(a){
     ?new Date(a.proximo_pagamento).toLocaleDateString('pt-BR')
     :'—';
   const nomeExibir=a.plano_nome?`${a.servico} — ${a.plano_nome}`:a.servico;
+
+  // Cancelamento: badge de agendado + botão discreto
+  let cancelBadge='';
+  if(a.cancela_em){
+    const fimC=new Date(a.cancela_em);
+    const diasC=Math.max(0,Math.ceil((fimC.getTime()-Date.now())/86400000));
+    cancelBadge=`<div style="background:#fff8e0;border:1px solid rgba(180,120,0,0.25);border-radius:10px;padding:12px 14px;margin-top:12px;">
+      <div style="font-size:13px;font-weight:700;color:#8a5c00;">📅 Cancelamento agendado</div>
+      <div style="font-size:12px;color:#8a5c00;opacity:.85;line-height:1.6;margin-top:2px;">Seu acesso vale até <strong>${fimC.toLocaleDateString('pt-BR')}</strong> — ${diasC} dia${diasC===1?'':'s'} restante${diasC===1?'':'s'}. Depois disso a vaga é liberada e a cobrança para.</div>
+      <button class="btn-desfazer-cancel" onclick="desfazerCancelamento(${a.id})">Desfazer cancelamento</button>
+    </div>`;
+  }
+  const podeCancelar=!a.cancela_em&&(a.status==='ativo'||a.status==='aguardando_acesso');
+  const cancelarLink=podeCancelar?`<button class="btn-cancelar-plano" onclick="abrirCancel(${a.id})">Cancelar assinatura</button>`:'';
 
   // Bloco de acesso baseado no estado
   let acessoHTML='';
@@ -502,6 +653,8 @@ function renderPlano(a){
       ${confirmarBtn}
     </div>
     ${acessoHTML}
+    ${cancelBadge}
+    ${cancelarLink}
   </div>`;
 }
 
@@ -526,7 +679,10 @@ async function carregarPlanos(){
   const {data,error}=await sb.from('assinaturas')
     .select('*,acesso_enviado_em,email_servico')
     .eq('membro_id',userId)
+    .neq('status','cancelado')
     .order('created_at',{ascending:false});
+
+  planosCache=data||[];
 
   document.getElementById('loading-state').style.display='none';
 
@@ -608,6 +764,9 @@ async function init(){
 
 document.getElementById('conf-overlay').addEventListener('click',function(e){
   if(e.target===this) fecharConf();
+});
+document.getElementById('cancel-overlay').addEventListener('click',function(e){
+  if(e.target===this) fecharCancel();
 });
 
 init();

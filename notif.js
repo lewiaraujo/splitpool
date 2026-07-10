@@ -14,7 +14,9 @@
     'credenciais_atualizadas':'meus-planos.html',
     'repasse_aprovado':'dashboard-owner.html',
     'repasse_pago':'dashboard-owner.html',
-    'piscina_cheia':'dashboard-owner.html'
+    'piscina_cheia':'dashboard-owner.html',
+    'membro_cancelou':'dashboard-owner.html',
+    'ocorrencia_resolvida':'meus-planos.html'
   };
 
   var ICONE_TIPO={
@@ -24,7 +26,9 @@
     'credenciais_atualizadas':'🔐',
     'repasse_aprovado':'💵',
     'repasse_pago':'💵',
-    'piscina_cheia':'🎉'
+    'piscina_cheia':'🎉',
+    'membro_cancelou':'🚪',
+    'ocorrencia_resolvida':'📋'
   };
 
   var cacheNotifs=[];
