@@ -488,7 +488,7 @@ function renderOcorrencias(){
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">'
       +'<div style="flex:1;min-width:200px;">'
       +'<div style="font-size:14px;font-weight:800;color:#0A3080;">'+labelTipoOcorr(o.tipo)+'</div>'
-      +'<div style="font-size:12px;color:#777;margin-top:3px;">'+(o.servico||'')+' · '+(o.aberto_por_nome||o.aberto_por_email||'—')+' · '+dt+'</div>'
+      +'<div style="font-size:12px;color:#777;margin-top:3px;">'+(o.servico||'')+' · <strong>'+(o.aberto_por_nome||'—')+'</strong>'+(o.aberto_por_email?' · <span style="user-select:all;">'+o.aberto_por_email+'</span>':'')+' · '+dt+'</div>'
       +'</div>'
       +badgeStatusOcorr(o.status)
       +'</div>'
