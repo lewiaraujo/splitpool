@@ -153,6 +153,7 @@ tbody td{padding:12px 16px;font-size:13px;}
       <button class="nav-link act" data-sec="repasses" onclick="irPara('repasses',this)">💸 Repasses</button>
       <button class="nav-link" data-sec="piscinas" onclick="irPara('piscinas',this)">🏊 Piscinas</button>
       <button class="nav-link" data-sec="usuarios" onclick="irPara('usuarios',this)">👥 Usuários</button>
+      <button class="nav-link" data-sec="ocorrencias" onclick="irPara('ocorrencias',this)">⚖️ Ocorrências</button>
       <button class="nav-link" data-sec="financeiro" onclick="irPara('financeiro',this)">📊 Financeiro</button>
     </div>
     <div class="nav-right">
@@ -168,6 +169,7 @@ tbody td{padding:12px 16px;font-size:13px;}
   <button class="nav-link act" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('repasses',this);toggleMobNav()">💸 Repasses</button>
   <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('piscinas',this);toggleMobNav()">🏊 Piscinas</button>
   <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('usuarios',this);toggleMobNav()">👥 Usuários</button>
+  <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('ocorrencias',this);toggleMobNav()">⚖️ Ocorrências</button>
   <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('financeiro',this);toggleMobNav()">📊 Financeiro</button>
 </div>
 
@@ -225,6 +227,19 @@ tbody td{padding:12px 16px;font-size:13px;}
         <tbody id="tbody-usuarios"><tr><td colspan="6"><div class="empty">Carregando...</div></td></tr></tbody>
       </table>
     </div>
+  </div>
+
+  <!-- ── OCORRÊNCIAS ── -->
+  <div class="section" id="sec-ocorrencias">
+    <div class="resumo" id="resumo-ocorrencias"></div>
+    <div class="sec-header">
+      <div><div class="sec-title">⚖️ Ocorrências</div><div class="sec-sub">Cancelamentos, reembolsos e disputas</div></div>
+    </div>
+    <div class="filters">
+      <div class="fbtn act" id="focorr-abertas" onclick="filtrarOcorr('abertas',this)">Abertas</div>
+      <div class="fbtn" id="focorr-todas" onclick="filtrarOcorr('todas',this)">Todas</div>
+    </div>
+    <div id="lista-ocorrencias"><div class="empty">Carregando...</div></div>
   </div>
 
   <!-- ── FINANCEIRO ── -->
@@ -357,6 +372,9 @@ async function irPara(sec,el){
     if(!dados.usuarios.length) await carregarUsuarios();
     else renderUsuarios();
   }
+  if(sec==='ocorrencias'){
+    await carregarOcorrencias();
+  }
   if(sec==='financeiro'){
     if(!dados.piscinas.length) await carregarPiscinas();
     if(!dados.usuarios.length) await carregarUsuarios();
@@ -390,6 +408,117 @@ async function init(){
 }
 
 // ── REPASSES ──
+/* ── OCORRÊNCIAS ── */
+var ocorrenciasData=[];
+var filtroOcorr='abertas';
+
+async function carregarOcorrencias(){
+  var {data,error}=await sb.rpc('buscar_ocorrencias_admin');
+  if(error){
+    document.getElementById('lista-ocorrencias').innerHTML='<div class="empty">Erro: '+error.message+'</div>';
+    return;
+  }
+  ocorrenciasData=data||[];
+  renderOcorrencias();
+}
+
+function filtrarOcorr(f,el){
+  filtroOcorr=f;
+  document.getElementById('focorr-abertas').classList.remove('act');
+  document.getElementById('focorr-todas').classList.remove('act');
+  if(el) el.classList.add('act');
+  renderOcorrencias();
+}
+
+function labelTipoOcorr(t){
+  return({
+    'cancelamento_membro':'🚪 Cancelamento de membro',
+    'cancelamento_desfeito':'↩️ Cancelamento desfeito',
+    'fechamento_piscina':'🔒 Fechamento de piscina',
+    'perda_plano':'⚠️ Perda de plano',
+    'disputa_acesso_parou':'⚖️ Disputa — acesso parou',
+    'disputa_sem_acesso':'⚖️ Disputa — sem acesso',
+    'disputa_diferente_anunciado':'⚖️ Disputa — diferente do anunciado'
+  })[t]||t;
+}
+
+function badgeStatusOcorr(s){
+  var m={
+    'aberta':['#8A5C00','#FFF8E0','Aberta'],
+    'resolvida_reembolso':['#0A5C36','#D4EDDA','Reembolso pago'],
+    'concluida':['#555','#eee','Concluída'],
+    'improcedente':['#0A3080','#E6F1FB','Improcedente']
+  }[s]||['#555','#eee',s];
+  return'<span class="status-badge" style="color:'+m[0]+';background:'+m[1]+';"><span class="status-dot" style="background:'+m[0]+';"></span>'+m[2]+'</span>';
+}
+
+function renderOcorrencias(){
+  var lista=filtroOcorr==='abertas'?ocorrenciasData.filter(function(o){return o.status==='aberta';}):ocorrenciasData;
+
+  var abertas=ocorrenciasData.filter(function(o){return o.status==='aberta';});
+  var pendReemb=abertas.reduce(function(s,o){return s+(Number(o.valor_reembolso)||0);},0);
+  document.getElementById('resumo-ocorrencias').innerHTML=
+    '<div class="rcard"><div class="rcard-val amber">'+abertas.length+'</div><div class="rcard-lbl">Abertas</div></div>'+
+    '<div class="rcard"><div class="rcard-val red">'+fmt(pendReemb)+'</div><div class="rcard-lbl">Reembolsos pendentes</div></div>'+
+    '<div class="rcard"><div class="rcard-val green">'+(ocorrenciasData.length-abertas.length)+'</div><div class="rcard-lbl">Resolvidas</div></div>';
+
+  if(!lista.length){
+    document.getElementById('lista-ocorrencias').innerHTML='<div class="empty">'+(filtroOcorr==='abertas'?'Nenhuma ocorrência aberta. 🎉':'Nenhuma ocorrência registrada.')+'</div>';
+    return;
+  }
+
+  document.getElementById('lista-ocorrencias').innerHTML=lista.map(function(o){
+    var dt=o.created_at?new Date(o.created_at).toLocaleDateString('pt-BR')+' '+new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+    var reembHTML='';
+    if(o.valor_reembolso){
+      reembHTML='<div style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px;">'
+        +'<strong>Reembolso: '+fmt(o.valor_reembolso)+'</strong>'
+        +(o.pix_chave?'<div style="margin-top:4px;color:#555;">Chave PIX: <strong style="user-select:all;">'+o.pix_chave+'</strong></div>':'<div style="margin-top:4px;color:#b91c1c;">⚠️ Sem chave PIX registrada — contatar membro</div>')
+        +'</div>';
+    }
+    var acoes='';
+    if(o.status==='aberta'){
+      if(o.valor_reembolso){
+        acoes='<button class="btn-act btn-aprovar" onclick="resolverReembolso('+o.id+')">✓ Marcar reembolso pago</button>';
+      } else {
+        acoes='<button class="btn-act btn-aprovar" onclick="concluirOcorr('+o.id+')">✓ Concluir</button>';
+      }
+    }
+    return'<div style="background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:16px 18px;margin-bottom:12px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">'
+      +'<div style="flex:1;min-width:200px;">'
+      +'<div style="font-size:14px;font-weight:800;color:#0A3080;">'+labelTipoOcorr(o.tipo)+'</div>'
+      +'<div style="font-size:12px;color:#777;margin-top:3px;">'+(o.servico||'')+' · '+(o.aberto_por_nome||o.aberto_por_email||'—')+' · '+dt+'</div>'
+      +'</div>'
+      +badgeStatusOcorr(o.status)
+      +'</div>'
+      +(o.descricao?'<div style="font-size:13px;color:#444;margin-top:10px;line-height:1.55;">'+o.descricao+'</div>':'')
+      +reembHTML
+      +(o.decisao_admin?'<div style="font-size:12px;color:#777;margin-top:8px;">Decisão: '+o.decisao_admin+(o.resolvida_em?' ('+new Date(o.resolvida_em).toLocaleDateString('pt-BR')+')':'')+'</div>':'')
+      +(acoes?'<div style="margin-top:12px;">'+acoes+'</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+async function resolverReembolso(id){
+  var o=ocorrenciasData.find(function(x){return x.id===id;});
+  if(!o) return;
+  if(!confirm('Confirmar que o reembolso de '+fmt(o.valor_reembolso)+' foi pago via PIX'+(o.pix_chave?' na chave '+o.pix_chave:'')+'?')) return;
+  var msg='Seu reembolso de '+fmt(o.valor_reembolso)+' foi pago via PIX'+(o.pix_chave?' na chave '+o.pix_chave:'')+'. Obrigado por usar a Splitpool!';
+  var {error}=await sb.rpc('resolver_ocorrencia',{p_id:id,p_status:'resolvida_reembolso',p_decisao:'Reembolso pago via PIX',p_mensagem_notif:msg});
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Reembolso marcado como pago!','success');
+  await carregarOcorrencias();
+}
+
+async function concluirOcorr(id){
+  if(!confirm('Concluir esta ocorrência?')) return;
+  var {error}=await sb.rpc('resolver_ocorrencia',{p_id:id,p_status:'concluida',p_decisao:'Concluída pelo admin',p_mensagem_notif:null});
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Ocorrência concluída!','success');
+  await carregarOcorrencias();
+}
+
 async function carregarRepasses(){
   var {data:r}=await sb.from('repasses').select('*').order('mes_referencia',{ascending:false}).order('created_at',{ascending:false});
   dados.repasses=r||[];
