@@ -467,6 +467,16 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         <div class="av-item">Os valores são liberados via PIX ao fim de cada mês, após a confirmação de acesso pelos membros. O primeiro mês fica retido como garantia.</div>
       </div>
 
+      <!-- DADOS DE RECEBIMENTO -->
+      <div style="background:#f0f9ff;border:1.5px solid rgba(0,180,210,0.3);border-radius:12px;padding:16px;margin-bottom:1.25rem;">
+        <div style="font-size:14px;font-weight:800;color:var(--bluedark);margin-bottom:4px;">📲 Seus dados para receber</div>
+        <div style="font-size:12px;color:var(--bluedark);opacity:.6;margin-bottom:12px;line-height:1.5;">Usamos o WhatsApp para avisos importantes sobre sua piscina e a chave PIX para enviar seus repasses.</div>
+        <label style="font-size:12px;font-weight:700;color:var(--bluedark);display:block;margin-bottom:5px;">WhatsApp (com DDD)</label>
+        <input type="tel" id="dono-telefone" placeholder="(85) 99999-9999" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid rgba(0,180,210,0.3);font-family:inherit;font-size:14px;color:var(--bluedark);background:#fff;outline:none;margin-bottom:12px;box-sizing:border-box;">
+        <label style="font-size:12px;font-weight:700;color:var(--bluedark);display:block;margin-bottom:5px;">Chave PIX para os repasses</label>
+        <input type="text" id="dono-pix" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid rgba(0,180,210,0.3);font-family:inherit;font-size:14px;color:var(--bluedark);background:#fff;outline:none;box-sizing:border-box;">
+      </div>
+
       <!-- AVISO TERMOS -->
       <div style="background:rgba(255,170,0,0.08);border:1.5px solid rgba(255,170,0,0.2);border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:13px;color:var(--bluedark);opacity:.8;line-height:1.7;font-weight:500;">
         ⚠️ Ao publicar, você se compromete a manter o serviço ativo. Encerramento sem aviso de 7 dias gera reembolso proporcional aos membros e suspensão temporária do selo verificado.
@@ -574,6 +584,13 @@ sb.auth.getSession().then(({data})=>{
   nomeUsuario=email.split('@')[0].charAt(0).toUpperCase()+email.split('@')[0].slice(1)
   document.getElementById('nav-user').textContent=email.split('@')[0]
   var mn=document.getElementById('mob-name');if(mn)mn.textContent=email.split('@')[0];
+  // Pré-preencher dados de recebimento se já cadastrados
+  sb.from('profiles').select('telefone,pix_chave').eq('id',userId).single().then(({data:pf})=>{
+    if(pf){
+      if(pf.telefone) document.getElementById('dono-telefone').value=pf.telefone
+      if(pf.pix_chave) document.getElementById('dono-pix').value=pf.pix_chave
+    }
+  })
   // Renderiza grid vazio logo (sem bloqueios ainda)
   renderSvcs()
   // Carrega piscinas existentes para bloquear duplicatas
@@ -899,6 +916,11 @@ async function publicarPiscina(){
   const dataCompra=document.getElementById('data-compra-plano').value
   if(!dataCompra){showMsg('Informe quando você comprou esse plano.','error');return}
 
+  const telDono=document.getElementById('dono-telefone').value.trim()
+  const pixDono=document.getElementById('dono-pix').value.trim()
+  if(!telDono){showMsg('Informe seu WhatsApp para contato.','error');return}
+  if(!pixDono){showMsg('Informe sua chave PIX para receber os repasses.','error');return}
+
   const btn=document.getElementById('btn-publicar')
   btn.disabled=true;btn.textContent='Enviando...'
   hideMsg()
@@ -920,6 +942,9 @@ async function publicarPiscina(){
 
   // Capturar link de convite (planos família)
   const linkConvite=document.getElementById('link-convite-input')?.value?.trim()||null
+
+  // Salvar dados de recebimento no perfil
+  await sb.from('profiles').update({telefone:telDono,pix_chave:pixDono}).eq('id',userId)
 
   // Salva piscina com status pendente e dados do cartão
   const {error}=await sb.from('piscinas').insert({

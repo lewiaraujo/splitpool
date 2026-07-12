@@ -524,7 +524,7 @@ async function carregarRepasses(){
   dados.repasses=r||[];
   var donoIds=[...new Set(dados.repasses.map(function(x){return x.dono_id;}))];
   if(donoIds.length){
-    var {data:p}=await sb.from('profiles').select('id,nome,email').in('id',donoIds);
+    var {data:p}=await sb.from('profiles').select('id,nome,email,telefone,pix_chave').in('id',donoIds);
     (p||[]).forEach(function(x){dados.perfisMap[x.id]=x;});
   }
   var pIds=[...new Set(dados.repasses.map(function(x){return x.piscina_id;}))];
@@ -573,7 +573,10 @@ function renderRepasses(){
     var bodyId='body-'+donoId.replace(/-/g,'');
     html+='<div class="dono-group">';
     html+='<div class="dono-header" onclick="toggleDonoGroup(\''+bodyId+'\',this)">';
-    html+='<div><div class="dono-nome">👤 '+nome+' <span class="dono-chevron" style="font-size:11px;">▼</span></div><div class="dono-email">'+email+'</div></div>';
+    html+='<div><div class="dono-nome">👤 '+nome+' <span class="dono-chevron" style="font-size:11px;">▼</span></div><div class="dono-email">'+email+'</div>'
+      +(perfil.pix_chave?'<div class="dono-email" style="margin-top:2px;">💳 PIX: <strong style="user-select:all;">'+perfil.pix_chave+'</strong></div>':'<div class="dono-email" style="margin-top:2px;color:#ffb4b4;">⚠️ Sem chave PIX cadastrada</div>')
+      +(perfil.telefone?'<div class="dono-email" style="margin-top:2px;">📱 '+perfil.telefone+'</div>':'')
+      +'</div>';
     html+='<div class="dono-actions" onclick="event.stopPropagation()">';
     if(temPendente) html+='<button class="btn-aprovar-todos" onclick="aprovarTodosDono(\''+donoId+'\')">✓ Aprovar todos</button>';
     if(temAprovado) html+='<button class="btn-aprovar-todos" onclick="pagarTodosDono(\''+donoId+'\')">💸 Todos pagos</button>';

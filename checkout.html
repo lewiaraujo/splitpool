@@ -331,6 +331,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
         <div style="font-size:11px;color:#b07000;font-weight:600;margin-top:6px;">⚠️ Use o email da sua conta no serviço, não necessariamente o email do Splitpool.</div>
       </div>
 
+      <!-- TELEFONE -->
+      <div id="telefone-box" style="display:none;background:#f0f9ff;border:1.5px solid rgba(0,180,210,0.3);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:4px;">📱 Seu WhatsApp</div>
+        <div style="font-size:12px;color:var(--bluedark);opacity:.6;margin-bottom:10px;line-height:1.5;">Para avisos importantes sobre sua assinatura (envio de acesso, cobranças e suporte).</div>
+        <input type="tel" id="telefone-input" placeholder="(85) 99999-9999" style="width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid rgba(0,180,210,0.3);font-family:inherit;font-size:14px;color:var(--bluedark);background:#fff;outline:none;">
+      </div>
+
       <!-- TRUST -->
       <div class="trust-row" style="margin-bottom:16px;">
         <div class="trust-item">
@@ -446,9 +453,13 @@ async function load(){
   if(!sess.session){window.location.href='cadastro.html';return}
 
   // Pré-preencher email do serviço com email do perfil
-  const {data:profile}=await sb.from('profiles').select('email').eq('id',sess.session.user.id).single()
+  const {data:profile}=await sb.from('profiles').select('email,telefone').eq('id',sess.session.user.id).single()
   if(profile&&profile.email){
     document.getElementById('email-servico-input').value=profile.email
+  }
+  // Telefone: pedir apenas se ainda não cadastrado
+  if(!profile||!profile.telefone){
+    document.getElementById('telefone-box').style.display='block'
   }
 
   try{
@@ -529,6 +540,16 @@ async function confirmarPagamento(){
     return
   }
 
+  // Telefone obrigatório se o campo está visível (perfil ainda sem telefone)
+  const telBox=document.getElementById('telefone-box')
+  const telVal=document.getElementById('telefone-input').value.trim()
+  if(telBox&&telBox.style.display!=='none'&&!telVal){
+    btn.disabled=false
+    btn.textContent='Confirmar pagamento via PIX'
+    alert('Informe seu WhatsApp para receber avisos sobre sua assinatura.')
+    return
+  }
+
   // Verificar sessão e validações
   const {data:sess}=await sb.auth.getSession()
   if(sess.session && piscinaData){
@@ -558,6 +579,9 @@ async function confirmarPagamento(){
 
   // Salvar assinatura no Supabase
   if(sess.session && piscinaData){
+    if(telVal){
+      await sb.from('profiles').update({telefone:telVal}).eq('id',sess.session.user.id)
+    }
     const ps=new URLSearchParams(window.location.search)
     const planoNome=ps.get('plano')||null
     const proxPag=new Date()
