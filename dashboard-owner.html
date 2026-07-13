@@ -1462,7 +1462,7 @@ async function gerarRepassePiscina(piscinaId, e){
 
   if(inserts.length){
     var {error}=await sb.from('repasses').insert(inserts);
-    if(error){showToast('Erro: '+error.message,'error');if(btn){btn.disabled=false;btn.textContent='⚡ Gerar repasse';}return;}
+    if(error){var msgErr=/row-level security/i.test(error.message)?'Não foi possível gerar o repasse: permissão negada pelo sistema. Nossa equipe já foi avisada — tente novamente mais tarde.':'Erro: '+error.message;showToast(msgErr,'error');if(btn){btn.disabled=false;btn.textContent='⚡ Gerar repasse';}return;}
     showToast('✅ Repasse de '+pool.servico+' gerado para '+formatarMes(mesRef)+'!','success');
     carregarExtrato();
     carregarMiniExtrato(piscinaId);

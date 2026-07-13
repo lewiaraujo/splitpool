@@ -16,7 +16,8 @@
     'repasse_pago':'dashboard-owner.html',
     'piscina_cheia':'dashboard-owner.html',
     'membro_cancelou':'dashboard-owner.html',
-    'ocorrencia_resolvida':'meus-planos.html'
+    'ocorrencia_resolvida':'meus-planos.html',
+    'piscina_aprovada':'dashboard-owner.html'
   };
 
   var ICONE_TIPO={
@@ -28,7 +29,8 @@
     'repasse_pago':'💵',
     'piscina_cheia':'🎉',
     'membro_cancelou':'🚪',
-    'ocorrencia_resolvida':'📋'
+    'ocorrencia_resolvida':'📋',
+    'piscina_aprovada':'🚀'
   };
 
   var cacheNotifs=[];
