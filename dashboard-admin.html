@@ -637,7 +637,7 @@ document.addEventListener('click',function(ev){
 });
 
 async function carregarRepasses(){
-  var {data:r}=await sb.from('repasses').select('*').order('mes_referencia',{ascending:false}).order('created_at',{ascending:false});
+  var {data:r}=await sb.rpc('admin_listar_repasses');
   dados.repasses=r||[];
   var donoIds=[...new Set(dados.repasses.map(function(x){return x.dono_id;}))];
   if(donoIds.length){
@@ -733,20 +733,24 @@ function renderRepasses(){
 }
 
 async function aprovar(id){
-  var {data:rep}=await sb.from('repasses').update({status:'aprovado'}).eq('id',id).select('dono_id,mes_referencia').single();
+  var {data:repArr}=await sb.rpc('admin_atualizar_repasse',{p_id:id,p_status:'aprovado'});
+  var rep=repArr&&repArr[0];
   if(rep&&rep.dono_id){
     await sb.rpc('notificar_usuario',{p_user_id:rep.dono_id,p_tipo:'repasse_aprovado',p_mensagem:'Seu repasse'+(rep.mes_referencia?' de '+rep.mes_referencia:'')+' foi aprovado e será pago em breve.',p_link:'dashboard-owner.html'});
   }
   showToast('Repasse aprovado!','success');
   await carregarRepasses();
+  atualizarBadgesAdmin();
 }
 async function marcarPago(id){
-  var {data:rep}=await sb.from('repasses').update({status:'pago',pago_em:new Date().toISOString()}).eq('id',id).select('dono_id,mes_referencia').single();
+  var {data:repArr}=await sb.rpc('admin_atualizar_repasse',{p_id:id,p_status:'pago'});
+  var rep=repArr&&repArr[0];
   if(rep&&rep.dono_id){
     await sb.rpc('notificar_usuario',{p_user_id:rep.dono_id,p_tipo:'repasse_pago',p_mensagem:'Seu repasse'+(rep.mes_referencia?' de '+rep.mes_referencia:'')+' foi pago! Confira no extrato.',p_link:'dashboard-owner.html'});
   }
   showToast('Repasse marcado como pago!','success');
   await carregarRepasses();
+  atualizarBadgesAdmin();
 }
 function toggleDonoGroup(bodyId,headerEl){
   var body=document.getElementById(bodyId);
@@ -757,20 +761,22 @@ function toggleDonoGroup(bodyId,headerEl){
 }
 
 async function aprovarTodosDono(donoId){
-  var {data:reps}=await sb.from('repasses').update({status:'aprovado'}).eq('dono_id',donoId).eq('status','pendente').select('id');
-  if(reps&&reps.length){
+  var {data:nAtu}=await sb.rpc('admin_atualizar_repasses_dono',{p_dono:donoId,p_de:'pendente',p_para:'aprovado'});
+  if(nAtu>0){
     await sb.rpc('notificar_usuario',{p_user_id:donoId,p_tipo:'repasse_aprovado',p_mensagem:'Seus repasses pendentes foram aprovados e serão pagos em breve.',p_link:'dashboard-owner.html'});
   }
   showToast('Todos os repasses aprovados!','success');
   await carregarRepasses();
+  atualizarBadgesAdmin();
 }
 async function pagarTodosDono(donoId){
-  var {data:reps}=await sb.from('repasses').update({status:'pago',pago_em:new Date().toISOString()}).eq('dono_id',donoId).eq('status','aprovado').select('id');
-  if(reps&&reps.length){
+  var {data:nAtu}=await sb.rpc('admin_atualizar_repasses_dono',{p_dono:donoId,p_de:'aprovado',p_para:'pago'});
+  if(nAtu>0){
     await sb.rpc('notificar_usuario',{p_user_id:donoId,p_tipo:'repasse_pago',p_mensagem:'Seus repasses foram pagos! Confira no extrato.',p_link:'dashboard-owner.html'});
   }
   showToast('Todos marcados como pagos!','success');
   await carregarRepasses();
+  atualizarBadgesAdmin();
 }
 
 function exportarCSV(){
