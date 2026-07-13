@@ -70,6 +70,8 @@ tbody td{padding:12px 16px;font-size:13px;}
 .pill.pago{background:#e6fff8;color:#00522a;}
 .pill.aberta{background:#e6fff8;color:#00522a;}
 .pill.pausada{background:#fff0f0;color:#a32d2d;}
+.pill.recusado{background:#fee2e2;color:#991b1b;}
+.pill.recusada{background:#fee2e2;color:#991b1b;}
 .pill.pendente-aprov{background:#fff8e0;color:#8a5c00;}
 .pill.repasse{background:#e6f0ff;color:#1255CC;}
 .pill.ativo{background:#e6fff8;color:#00522a;}
@@ -593,13 +595,6 @@ async function atualizarBadgesAdmin(){
     setBadgeAdmin('piscinas',cont.piscinas);
     setBadgeAdmin('repasses',cont.repasses);
     setBadgeAdmin('ocorrencias',cont.ocorrencias);
-    // Contador do sino admin
-    var total=pendenciasAdmin.length;
-    var cnt=document.getElementById('adm-bell-count');
-    if(cnt){
-      if(total>0){cnt.textContent=total>9?'9+':String(total);cnt.style.display='inline-flex';}
-      else cnt.style.display='none';
-    }
     renderPainelPendencias();
   }catch(e){}
 }
@@ -607,19 +602,84 @@ async function atualizarBadgesAdmin(){
 function renderPainelPendencias(){
   var lista=document.getElementById('adm-bell-list');
   if(!lista) return;
-  if(!pendenciasAdmin.length){
+  var dispensadas=pendDispensadas();
+  var visiveis=pendenciasAdmin.filter(function(p){return dispensadas.indexOf(chavePendencia(p))===-1;});
+  var cnt=document.getElementById('adm-bell-count');
+  if(cnt){
+    if(visiveis.length>0){cnt.textContent=visiveis.length>9?'9+':String(visiveis.length);cnt.style.display='inline-flex';}
+    else cnt.style.display='none';
+  }
+  if(!visiveis.length){
     lista.innerHTML='<div style="padding:22px 16px;text-align:center;font-size:12px;color:#888;">Nenhuma pendência. Tudo em dia! 🎉</div>';
     return;
   }
   var LBL={piscinas:'🏊 Piscina',repasses:'💸 Repasse',ocorrencias:'⚖️ Ocorrência'};
-  lista.innerHTML=pendenciasAdmin.map(function(p){
+  lista.innerHTML=visiveis.map(function(p){
     var dt=p.criado_em?new Date(p.criado_em).toLocaleDateString('pt-BR'):'';
-    return '<div onclick="fecharBellAdmin();irPara(\''+p.categoria+'\')" style="padding:11px 14px;border-bottom:1px solid rgba(0,0,0,0.05);cursor:pointer;transition:.15s;" onmouseover="this.style.background=\'rgba(18,85,204,0.05)\'" onmouseout="this.style.background=\'\'">'
-      +'<div style="font-size:11px;font-weight:800;color:#1255CC;">'+(LBL[p.categoria]||p.categoria)+'</div>'
+    var chave=chavePendencia(p);
+    return '<div onclick="irParaPendencia(\''+p.categoria+'\',\''+(p.dono_ref||'')+'\')" style="position:relative;padding:11px 34px 11px 14px;border-bottom:1px solid rgba(0,0,0,0.05);cursor:pointer;transition:.15s;" onmouseover="this.style.background=\'rgba(18,85,204,0.05)\'" onmouseout="this.style.background=\'\'">'
+      +'<div style="font-size:11px;font-weight:800;color:#1255CC;">'+(LBL[p.categoria]||p.categoria)+' <span style="font-weight:600;color:#889;">→ ir para aba</span></div>'
       +'<div style="font-size:12px;color:#333;margin-top:2px;line-height:1.45;">'+p.descricao+'</div>'
       +'<div style="font-size:10px;color:#999;margin-top:2px;">'+dt+'</div>'
+      +'<button onclick="dispensarPendencia(\''+chave+'\',event)" title="Dispensar aviso" style="position:absolute;top:8px;right:8px;background:transparent;border:none;color:#999;font-size:15px;cursor:pointer;padding:2px 5px;line-height:1;">×</button>'
       +'</div>';
   }).join('');
+}
+
+async function recusarPiscina(id){
+  var motivo=prompt('Motivo da recusa (será enviado ao dono):');
+  if(motivo===null) return;
+  await sb.rpc('admin_atualizar_piscina',{p_id:id,p_status:'recusada'});
+  var pisc=(dados.piscinas||[]).find(function(p){return Number(p.id)===Number(id);});
+  if(pisc&&pisc.dono_id){
+    await sb.rpc('notificar_usuario',{p_user_id:pisc.dono_id,p_tipo:'piscina_recusada',p_mensagem:'Sua piscina de '+(pisc.servico||'')+' não foi aprovada.'+(motivo?' Motivo: '+motivo:''),p_link:'dashboard-owner.html'});
+  }
+  showToast('Piscina recusada. Dono notificado.','success');
+  await carregarPiscinas();
+  atualizarBadgesAdmin();
+}
+
+async function recusarRepasse(id){
+  var motivo=prompt('Motivo da recusa (será enviado ao dono):');
+  if(motivo===null) return;
+  var {data:repArr}=await sb.rpc('admin_atualizar_repasse',{p_id:id,p_status:'recusado'});
+  var rep=repArr&&repArr[0];
+  if(rep&&rep.dono_id){
+    await sb.rpc('notificar_usuario',{p_user_id:rep.dono_id,p_tipo:'repasse_recusado',p_mensagem:'Seu repasse'+(rep.mes_referencia?' de '+rep.mes_referencia:'')+' não foi aprovado.'+(motivo?' Motivo: '+motivo:''),p_link:'dashboard-owner.html'});
+  }
+  showToast('Repasse recusado. Dono notificado.','success');
+  await carregarRepasses();
+  atualizarBadgesAdmin();
+}
+
+function chavePendencia(p){
+  return p.categoria+'|'+(p.dono_ref||'')+'|'+(p.criado_em||'');
+}
+function pendDispensadas(){
+  try{return JSON.parse(localStorage.getItem('sp_adm_dismiss')||'[]');}catch(e){return[];}
+}
+function dispensarPendencia(chave,ev){
+  if(ev) ev.stopPropagation();
+  var d=pendDispensadas();
+  if(d.indexOf(chave)===-1) d.push(chave);
+  localStorage.setItem('sp_adm_dismiss',JSON.stringify(d.slice(-100)));
+  renderPainelPendencias();
+}
+async function irParaPendencia(cat,ref){
+  fecharBellAdmin();
+  await irPara(cat);
+  if(ref){
+    setTimeout(function(){
+      var prefixo=cat==='piscinas'?'pisc-':'rep-';
+      var el=document.querySelector('[data-grp="'+prefixo+ref+'"]');
+      if(el){
+        el.scrollIntoView({behavior:'smooth',block:'center'});
+        el.style.outline='3px solid #e74c3c';
+        el.style.outlineOffset='2px';
+        setTimeout(function(){el.style.outline='';el.style.outlineOffset='';},2600);
+      }
+    },350);
+  }
 }
 
 function toggleBellAdmin(ev){
@@ -688,9 +748,10 @@ function renderRepasses(){
     var porPisc={};
     reps.forEach(function(r){if(!porPisc[r.piscina_id])porPisc[r.piscina_id]=[];porPisc[r.piscina_id].push(r);});
     var bodyId='body-'+donoId.replace(/-/g,'');
-    html+='<div class="dono-group">';
+    var nPendDono=dados.repasses.filter(function(x){return x.dono_id===donoId&&x.status==='pendente';}).length;
+    html+='<div class="dono-group" data-grp="rep-'+donoId+'">';
     html+='<div class="dono-header" onclick="toggleDonoGroup(\''+bodyId+'\',this)">';
-    html+='<div><div class="dono-nome">👤 '+nome+' <span class="dono-chevron" style="font-size:11px;">▼</span></div><div class="dono-email">'+email+'</div>'
+    html+='<div><div class="dono-nome">👤 '+nome+(nPendDono>0?' <span style="background:#e74c3c;color:#fff;font-size:10px;font-weight:800;min-width:17px;height:17px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;vertical-align:middle;margin-left:4px;">'+nPendDono+'</span>':'')+' <span class="dono-chevron" style="font-size:11px;">▼</span></div><div class="dono-email">'+email+'</div>'
       +(perfil.pix_chave?'<div class="dono-email" style="margin-top:2px;">💳 PIX: <strong style="user-select:all;">'+perfil.pix_chave+'</strong></div>':'<div class="dono-email" style="margin-top:2px;color:#ffb4b4;">⚠️ Sem chave PIX cadastrada</div>')
       +(perfil.telefone?'<div class="dono-email" style="margin-top:2px;">📱 '+perfil.telefone+'</div>':'')
       +'</div>';
@@ -713,7 +774,8 @@ function renderRepasses(){
       preps.forEach(function(r){
         var lucroSP=getLucroSP(pisc.servico||'','');
         var acoes='';
-        if(r.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="aprovar(\''+r.id+'\')">Aprovar</button>';
+        if(r.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="aprovar(\''+r.id+'\')">Aprovar</button> <button class="btn-act" style="background:#dc2626;color:#fff;" onclick="recusarRepasse(\''+r.id+'\')">Recusar</button>';
+        else if(r.status==='recusado') acoes='<span style="color:#991b1b;font-size:12px;font-weight:700;">✕ Recusado</span>';
         else if(r.status==='aprovado') acoes='<button class="btn-act btn-pago" onclick="marcarPago(\''+r.id+'\')">Pago</button>';
         else acoes='<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Pago '+fmtData(r.pago_em)+'</span>';
         html+='<div class="rep-item">';
@@ -886,9 +948,10 @@ function renderPiscinas(){
     var totalReceita=piscs.reduce(function(s,p){return s+Number(p.preco_por_vaga||0)*Number(p.vagas_ocupadas||0);},0);
     var totalLucroSP=piscs.reduce(function(s,p){return s+getLucroSP(p.servico,'')*Number(p.vagas_ocupadas||0);},0);
     var bodyId='pisc-body-'+donoId.replace(/-/g,'');
-    html+='<div class="dono-group">';
+    var nPiscPend=piscs.filter(function(x){return x.status==='pendente';}).length;
+    html+='<div class="dono-group" data-grp="pisc-'+donoId+'">';
     html+='<div class="dono-header" onclick="toggleDonoGroup(\''+bodyId+'\',this)">';
-    html+='<div><div class="dono-nome">👤 '+nome+' <span class="dono-chevron" style="font-size:11px;">▼</span></div><div class="dono-email">'+email+'</div></div>';
+    html+='<div><div class="dono-nome">👤 '+nome+(nPiscPend>0?' <span style="background:#e74c3c;color:#fff;font-size:10px;font-weight:800;min-width:17px;height:17px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;vertical-align:middle;margin-left:4px;">'+nPiscPend+'</span>':'')+' <span class="dono-chevron" style="font-size:11px;">▼</span></div><div class="dono-email">'+email+'</div></div>';
     html+='<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">';
     html+='<div class="dono-total"><div class="dono-total-val">'+fmt(totalReceita)+'</div><div class="dono-total-lbl">Receita/mês</div></div>';
     html+='<div class="dono-total"><div class="dono-total-val" style="color:var(--teal);">'+fmt(totalLucroSP)+'</div><div class="dono-total-lbl">Lucro SP</div></div>';
@@ -917,7 +980,7 @@ function renderPiscinas(){
       var lucrodono=getRepasse(p.servico,'')*Number(p.vagas_ocupadas||0);
       var receita=Number(p.preco_por_vaga||0)*Number(p.vagas_ocupadas||0);
       var acoes='<button class="btn-act btn-abrir" onclick="event.stopPropagation();toggleMembrosPisc('+p.id+',this)" title="Ver membros">👥</button> ';
-      if(p.status==='pendente') acoes+='<button class="btn-act btn-aprovar" onclick="event.stopPropagation();aprovarPiscina('+p.id+')">Aprovar</button>';
+      if(p.status==='pendente') acoes+='<button class="btn-act btn-aprovar" onclick="event.stopPropagation();aprovarPiscina('+p.id+')">Aprovar</button> <button class="btn-act" style="background:#dc2626;color:#fff;" onclick="event.stopPropagation();recusarPiscina('+p.id+')">Recusar</button>';
       else if(p.status==='aberta') acoes+='<button class="btn-act btn-pausar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'pausada\')">Pausar</button>';
       else if(p.status==='pausada') acoes+='<button class="btn-act btn-reativar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'aberta\')">Reativar</button>';
       var linkHtml=p.link_convite
