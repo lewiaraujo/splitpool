@@ -223,8 +223,8 @@ tbody td{padding:12px 16px;font-size:13px;}
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Nome</th><th>Email</th><th>Piscinas criadas</th><th>Assinaturas</th><th>Tipo</th><th>Nível</th></tr></thead>
-        <tbody id="tbody-usuarios"><tr><td colspan="6"><div class="empty">Carregando...</div></td></tr></tbody>
+        <thead><tr><th>Nome</th><th>Email</th><th>WhatsApp</th><th>Chave PIX</th><th>Piscinas criadas</th><th>Assinaturas</th><th>Tipo</th><th>Nível</th></tr></thead>
+        <tbody id="tbody-usuarios"><tr><td colspan="8"><div class="empty">Carregando...</div></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -405,6 +405,8 @@ async function init(){
   // Restaurar aba que estava ativa antes do refresh
   var abaGuardada=localStorage.getItem('sp_admin_aba')||'repasses';
   if(abaGuardada!=='repasses') await irPara(abaGuardada);
+  atualizarBadgesAdmin();
+  setInterval(atualizarBadgesAdmin,60000);
 }
 
 // ── REPASSES ──
@@ -517,6 +519,71 @@ async function concluirOcorr(id){
   if(error){showToast('Erro: '+error.message,'error');return;}
   showToast('Ocorrência concluída!','success');
   await carregarOcorrencias();
+}
+
+// ── MEMBROS POR PISCINA (expansível) ──
+async function toggleMembrosPisc(piscId,btn){
+  var rowId='membros-pisc-'+piscId;
+  var existente=document.getElementById(rowId);
+  if(existente){existente.remove();return;}
+
+  var tr=btn.closest('tr');
+  var nCols=tr.children.length;
+  if(!dados.assinaturas) await carregarAssinaturas();
+  var membros=(dados.assinaturas||[]).filter(function(a){return Number(a.piscina_id)===Number(piscId)&&a.status!=='cancelado';});
+
+  var inner='';
+  if(!membros.length){
+    inner='<div style="padding:10px 14px;font-size:12px;opacity:.5;">Nenhum membro ativo nesta piscina.</div>';
+  } else {
+    var idsM=[...new Set(membros.map(function(a){return a.membro_id;}))];
+    var mMap={};
+    var {data:perfsM}=await sb.rpc('buscar_perfis_admin',{p_ids:idsM});
+    (perfsM||[]).forEach(function(x){mMap[x.id]=x;});
+    inner='<table style="width:100%;border-collapse:collapse;"><thead><tr>'
+      +'<th style="text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:6px 12px;">Membro</th>'
+      +'<th style="text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:6px 12px;">Email</th>'
+      +'<th style="text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:6px 12px;">WhatsApp</th>'
+      +'<th style="text-align:right;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:6px 12px;">Valor</th>'
+      +'<th style="text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:6px 12px;">Status</th>'
+      +'</tr></thead><tbody>';
+    membros.forEach(function(a){
+      var pf=mMap[a.membro_id]||{};
+      inner+='<tr>'
+        +'<td style="padding:6px 12px;font-size:12px;font-weight:600;">'+(pf.nome||'—')+'</td>'
+        +'<td style="padding:6px 12px;font-size:12px;opacity:.7;"><span style="user-select:all;">'+(pf.email||'—')+'</span></td>'
+        +'<td style="padding:6px 12px;font-size:12px;">'+(pf.telefone?'<span style="user-select:all;">'+pf.telefone+'</span>':'<span style="opacity:.35;">—</span>')+'</td>'
+        +'<td style="padding:6px 12px;font-size:12px;text-align:right;">'+fmt(Number(a.valor||0))+'</td>'
+        +'<td style="padding:6px 12px;font-size:11px;text-align:center;">'+(a.status||'—')+(a.cancela_em?'<div style="font-size:10px;color:#8a5c00;">encerra '+new Date(a.cancela_em).toLocaleDateString('pt-BR')+'</div>':'')+'</td>'
+        +'</tr>';
+    });
+    inner+='</tbody></table>';
+  }
+  tr.insertAdjacentHTML('afterend','<tr id="'+rowId+'"><td colspan="'+nCols+'" style="background:rgba(18,85,204,0.03);border-top:1px solid rgba(18,85,204,0.08);padding:4px 8px;">'+inner+'</td></tr>');
+}
+
+// ── NOTIFICAÇÕES DO ADMIN (badges nas abas) ──
+function setBadgeAdmin(sec,n){
+  document.querySelectorAll('.nav-link[data-sec="'+sec+'"]').forEach(function(l){
+    l.style.position='relative';
+    var b=l.querySelector('.nav-badge-adm');
+    if(n>0){
+      if(!b){b=document.createElement('span');b.className='nav-badge-adm';b.style.cssText='position:absolute;top:-3px;right:-3px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;line-height:1;';l.appendChild(b);}
+      b.textContent=n>9?'9+':String(n);
+    } else if(b){b.remove();}
+  });
+}
+
+async function atualizarBadgesAdmin(){
+  try{
+    var {count:cP}=await sb.from('piscinas').select('id',{count:'exact',head:true}).eq('status','pendente');
+    var {count:cR}=await sb.from('repasses').select('id',{count:'exact',head:true}).eq('status','pendente');
+    var {data:oc}=await sb.rpc('buscar_ocorrencias_admin');
+    var cO=(oc||[]).filter(function(o){return o.status==='aberta';}).length;
+    setBadgeAdmin('piscinas',cP||0);
+    setBadgeAdmin('repasses',cR||0);
+    setBadgeAdmin('ocorrencias',cO);
+  }catch(e){}
 }
 
 async function carregarRepasses(){
@@ -793,10 +860,10 @@ function renderPiscinas(){
       var lucroSP=getLucroSP(p.servico,'')*Number(p.vagas_ocupadas||0);
       var lucrodono=getRepasse(p.servico,'')*Number(p.vagas_ocupadas||0);
       var receita=Number(p.preco_por_vaga||0)*Number(p.vagas_ocupadas||0);
-      var acoes='';
-      if(p.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="event.stopPropagation();aprovarPiscina('+p.id+')">Aprovar</button>';
-      else if(p.status==='aberta') acoes='<button class="btn-act btn-pausar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'pausada\')">Pausar</button>';
-      else if(p.status==='pausada') acoes='<button class="btn-act btn-reativar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'aberta\')">Reativar</button>';
+      var acoes='<button class="btn-act btn-abrir" onclick="event.stopPropagation();toggleMembrosPisc('+p.id+',this)" title="Ver membros">👥</button> ';
+      if(p.status==='pendente') acoes+='<button class="btn-act btn-aprovar" onclick="event.stopPropagation();aprovarPiscina('+p.id+')">Aprovar</button>';
+      else if(p.status==='aberta') acoes+='<button class="btn-act btn-pausar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'pausada\')">Pausar</button>';
+      else if(p.status==='pausada') acoes+='<button class="btn-act btn-reativar" onclick="event.stopPropagation();alterarStatus('+p.id+',\'aberta\')">Reativar</button>';
       var linkHtml=p.link_convite
         ?'<a href="'+p.link_convite+'" target="_blank" style="color:var(--blue);font-size:11px;display:block;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+p.link_convite+'">'+p.link_convite+'</a>'
         :'<span style="opacity:.3;">—</span>';
@@ -852,6 +919,13 @@ async function carregarUsuarios(){
   var {data:profs}=await sb.rpc('buscar_usuarios_admin');
   var {data:piscs}=await sb.rpc('buscar_dono_ids_piscinas');
   var {data:assins}=await sb.rpc('buscar_membros_ids_assinaturas');
+  // Enriquecer com telefone e pix (RPC contorna RLS)
+  var contatosMap={};
+  var idsU=(profs||[]).map(function(u){return u.id;});
+  if(idsU.length){
+    var {data:cts}=await sb.rpc('buscar_perfis_admin',{p_ids:idsU});
+    (cts||[]).forEach(function(c){contatosMap[c.id]=c;});
+  }
   var donos=new Set((piscs||[]).map(function(p){return p.dono_id;}));
   var membros=new Set((assins||[]).map(function(a){return a.membro_id;}));
   var contPisc={},contAssins={};
@@ -862,6 +936,9 @@ async function carregarUsuarios(){
     u._isMembro=membros.has(u.id);
     u._nPisc=contPisc[u.id]||0;
     u._nAssins=contAssins[u.id]||0;
+    var ct=contatosMap[u.id]||{};
+    u._telefone=ct.telefone||null;
+    u._pix=ct.pix_chave||null;
     return u;
   });
   renderResumoUsuarios();
@@ -885,13 +962,15 @@ function renderUsuarios(){
     if(f==='membro') return u._isMembro;
     return true;
   });
-  if(!lista.length){document.getElementById('tbody-usuarios').innerHTML='<tr><td colspan="6"><div class="empty">Nenhum usuário encontrado.</div></td></tr>';return;}
+  if(!lista.length){document.getElementById('tbody-usuarios').innerHTML='<tr><td colspan="8"><div class="empty">Nenhum usuário encontrado.</div></td></tr>';return;}
   var html=lista.map(function(u){
     var tipo=u._isDono&&u._isMembro?'dono/membro':u._isDono?'dono':u._isMembro?'membro':'—';
     var pillClass=u._isDono&&u._isMembro?'repasse':u._isDono?'aberta':u._isMembro?'membro':'';
     return '<tr>'+
       '<td data-label="Nome" style="font-weight:600;">'+u.nome+'</td>'+
       '<td data-label="Email" style="font-size:12px;opacity:.7;">'+u.email+'</td>'+
+      '<td data-label="WhatsApp" style="font-size:12px;">'+(u._telefone?'<span style="user-select:all;">'+u._telefone+'</span>':'<span style="opacity:.35;">—</span>')+'</td>'+
+      '<td data-label="Chave PIX" style="font-size:12px;">'+(u._pix?'<span style="user-select:all;">'+u._pix+'</span>':'<span style="opacity:.35;">—</span>')+'</td>'+
       '<td data-label="Piscinas">'+u._nPisc+'</td>'+
       '<td data-label="Assinaturas">'+u._nAssins+'</td>'+
       '<td data-label="Tipo"><span class="pill '+pillClass+'">'+tipo+'</span></td>'+

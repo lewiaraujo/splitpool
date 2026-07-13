@@ -486,6 +486,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         <input type="checkbox" id="aceite" style="width:auto;margin-top:3px;flex-shrink:0;">
         <label for="aceite" style="font-size:14px;font-weight:500;color:var(--bluedark);opacity:.8;cursor:pointer;">Li e aceito os termos. Meu plano está ativo e tenho as vagas disponíveis para os membros.</label>
       </div>
+      <div class="msg" id="msg-pub" style="margin-bottom:12px;"></div>
       <div class="btn-row">
         <button class="btn-secondary" onclick="goStep(2)">← Voltar</button>
         <button class="btn-primary" id="btn-publicar" onclick="publicarPiscina()">🚀 Enviar para validação</button>
@@ -909,17 +910,17 @@ function renderResumo(){
 }
 
 async function publicarPiscina(){
-  if(!document.getElementById('aceite').checked){showMsg('Aceite os termos para publicar.','error');return}
-  if(!comprovanteFile){showMsg('Envie o comprovante do plano ativo antes de publicar.','error');return}
+  if(!document.getElementById('aceite').checked){showMsgPub('Aceite os termos para publicar.','aceite');return}
+  if(!comprovanteFile){showMsgPub('Envie o comprovante do plano ativo antes de publicar.','comprovante-input');return}
   const dia=document.getElementById('cartao-dia').value
-  if(!dia){showMsg('Informe o dia de vencimento do seu cartão.','error');return}
+  if(!dia){showMsgPub('Informe o dia de vencimento do seu cartão.','cartao-dia');return}
   const dataCompra=document.getElementById('data-compra-plano').value
-  if(!dataCompra){showMsg('Informe quando você comprou esse plano.','error');return}
+  if(!dataCompra){showMsgPub('Informe quando você comprou esse plano.','data-compra-plano');return}
 
   const telDono=document.getElementById('dono-telefone').value.trim()
   const pixDono=document.getElementById('dono-pix').value.trim()
-  if(!telDono){showMsg('Informe seu WhatsApp para contato.','error');return}
-  if(!pixDono){showMsg('Informe sua chave PIX para receber os repasses.','error');return}
+  if(!telDono){showMsgPub('Informe seu WhatsApp para contato.','dono-telefone');return}
+  if(!pixDono){showMsgPub('Informe sua chave PIX para receber os repasses.','dono-pix');return}
 
   const btn=document.getElementById('btn-publicar')
   btn.disabled=true;btn.textContent='Enviando...'
@@ -974,6 +975,25 @@ async function publicarPiscina(){
 }
 
 function showMsg(t,tipo){const e=document.getElementById('msg');e.textContent=t;e.className='msg '+tipo;e.style.display='block';}
+
+function showMsgPub(t,campoId){
+  const e=document.getElementById('msg-pub')
+  e.textContent=t;e.className='msg error';e.style.display='block'
+  e.scrollIntoView({behavior:'smooth',block:'center'})
+  if(campoId) destacarCampo(campoId)
+}
+
+function destacarCampo(campoId){
+  const el=document.getElementById(campoId)
+  if(!el) return
+  const alvo=(el.type==='file'||el.type==='checkbox')?el.parentElement:el
+  const bordaOriginal=alvo.style.border
+  alvo.style.border='2px solid #dc2626'
+  alvo.style.borderRadius=alvo.style.borderRadius||'10px'
+  const limpar=()=>{alvo.style.border=bordaOriginal;el.removeEventListener('input',limpar);el.removeEventListener('change',limpar);}
+  el.addEventListener('input',limpar)
+  el.addEventListener('change',limpar)
+}
 function hideMsg(){document.getElementById('msg').style.display='none';}
 async function logout(){await sb.auth.signOut();window.location.href='index.html';}
 
