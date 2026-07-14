@@ -233,8 +233,8 @@ tbody td{padding:12px 16px;font-size:13px;}
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Nome</th><th>Email</th><th>WhatsApp</th><th>Chave PIX</th><th>Piscinas criadas</th><th>Assinaturas</th><th>Tipo</th><th>Nível</th></tr></thead>
-        <tbody id="tbody-usuarios"><tr><td colspan="8"><div class="empty">Carregando...</div></td></tr></tbody>
+        <thead><tr><th>Nome + Contato</th><th>Email</th><th>Piscinas</th><th>Assinaturas</th><th>Tipo</th><th>Nível</th></tr></thead>
+        <tbody id="tbody-usuarios"><tr><td colspan="6"><div class="empty">Carregando...</div></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1098,15 +1098,16 @@ function renderUsuarios(){
     if(f==='membro') return u._isMembro;
     return true;
   });
-  if(!lista.length){document.getElementById('tbody-usuarios').innerHTML='<tr><td colspan="8"><div class="empty">Nenhum usuário encontrado.</div></td></tr>';return;}
+  if(!lista.length){document.getElementById('tbody-usuarios').innerHTML='<tr><td colspan="6"><div class="empty">Nenhum usuário encontrado.</div></td></tr>';return;}
   var html=lista.map(function(u){
     var tipo=u._isDono&&u._isMembro?'dono/membro':u._isDono?'dono':u._isMembro?'membro':'—';
     var pillClass=u._isDono&&u._isMembro?'repasse':u._isDono?'aberta':u._isMembro?'membro':'';
+    var contato='';
+    if(u._telefone) contato+='<span style="font-size:10px;background:rgba(0,180,210,0.08);padding:1px 6px;border-radius:4px;margin-right:3px;">📱 <span style="user-select:all;">'+u._telefone+'</span></span>';
+    if(u._pix) contato+='<span style="font-size:10px;background:rgba(18,85,204,0.07);padding:1px 6px;border-radius:4px;">💳 <span style="user-select:all;">'+u._pix+'</span></span>';
     return '<tr>'+
-      '<td data-label="Nome" style="font-weight:600;">'+u.nome+'</td>'+
+      '<td data-label="Nome" style="font-weight:600;">'+u.nome+(contato?'<div style="margin-top:4px;flex-wrap:wrap;display:flex;gap:3px;">'+contato+'</div>':'')+'</td>'+
       '<td data-label="Email" style="font-size:12px;opacity:.7;">'+u.email+'</td>'+
-      '<td data-label="WhatsApp" style="font-size:12px;">'+(u._telefone?'<span style="user-select:all;">'+u._telefone+'</span>':'<span style="opacity:.35;">—</span>')+'</td>'+
-      '<td data-label="Chave PIX" style="font-size:12px;">'+(u._pix?'<span style="user-select:all;">'+u._pix+'</span>':'<span style="opacity:.35;">—</span>')+'</td>'+
       '<td data-label="Piscinas">'+u._nPisc+'</td>'+
       '<td data-label="Assinaturas">'+u._nAssins+'</td>'+
       '<td data-label="Tipo"><span class="pill '+pillClass+'">'+tipo+'</span></td>'+
