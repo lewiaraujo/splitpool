@@ -491,7 +491,7 @@ function renderOcorrencias(){
     var acoes='';
     if(o.status==='aberta'){
       if(o.valor_reembolso){
-        acoes='<button class="btn-act btn-aprovar" onclick="resolverReembolso('+o.id+')">✓ Marcar reembolso pago</button>';
+        acoes='<button class="btn-act btn-aprovar" onclick="resolverReembolso('+o.id+')">✓ Marcar reembolso pago</button> <button class="btn-act" style="background:#dc2626;color:#fff;" onclick="recusarReembolso('+o.id+')">✕ Recusar reembolso</button>';
       } else {
         acoes='<button class="btn-act btn-aprovar" onclick="concluirOcorr('+o.id+')">✓ Concluir</button>';
       }
@@ -500,7 +500,7 @@ function renderOcorrencias(){
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">'
       +'<div style="flex:1;min-width:200px;">'
       +'<div style="font-size:14px;font-weight:800;color:#0A3080;">'+labelTipoOcorr(o.tipo)+'</div>'
-      +'<div style="font-size:12px;color:#777;margin-top:3px;">'+(o.servico||'')+' · <strong>'+(o.aberto_por_nome||'—')+'</strong>'+(o.aberto_por_email?' · <span style="user-select:all;">'+o.aberto_por_email+'</span>':'')+' · '+dt+'</div>'
+      +'<div style="font-size:12px;color:#777;margin-top:3px;">'+(o.servico?o.servico+(o.piscina_id?' '+poolCode(Number(o.piscina_id)):''):'—')+' · <strong>'+(o.aberto_por_nome||'—')+'</strong>'+(o.aberto_por_email?' · <span style="user-select:all;">'+o.aberto_por_email+'</span>':'')+' · '+dt+'</div>'
       +'</div>'
       +badgeStatusOcorr(o.status)
       +'</div>'
@@ -521,6 +521,17 @@ async function resolverReembolso(id){
   if(error){showToast('Erro: '+error.message,'error');return;}
   showToast('Reembolso marcado como pago!','success');
   await carregarOcorrencias();
+}
+
+async function recusarReembolso(id){
+  var motivo=prompt('Motivo da recusa do reembolso (será enviado ao membro):');
+  if(motivo===null) return;
+  var msg='Seu pedido de reembolso não foi aprovado.'+(motivo?' Motivo: '+motivo:' Entre em contato com o suporte para mais detalhes.');
+  var {error}=await sb.rpc('resolver_ocorrencia',{p_id:id,p_status:'improcedente',p_decisao:motivo||'Improcedente',p_mensagem_notif:msg});
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Reembolso recusado. Membro notificado.','success');
+  await carregarOcorrencias();
+  atualizarBadgesAdmin();
 }
 
 async function concluirOcorr(id){

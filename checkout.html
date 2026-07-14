@@ -543,11 +543,20 @@ async function confirmarPagamento(){
   // Telefone obrigatório se o campo está visível (perfil ainda sem telefone)
   const telBox=document.getElementById('telefone-box')
   const telVal=document.getElementById('telefone-input').value.trim()
-  if(telBox&&telBox.style.display!=='none'&&!telVal){
-    btn.disabled=false
-    btn.textContent='Confirmar pagamento via PIX'
-    alert('Informe seu WhatsApp para receber avisos sobre sua assinatura.')
-    return
+  if(telBox&&telBox.style.display!=='none'){
+    const dTel=telVal.replace(/\D/g,'')
+    if(!telVal){
+      btn.disabled=false
+      btn.textContent='Confirmar pagamento via PIX'
+      alert('Informe seu WhatsApp para receber avisos sobre sua assinatura.')
+      return
+    }
+    if(dTel.length<10||dTel.length>11||Number(dTel.substring(0,2))<11){
+      btn.disabled=false
+      btn.textContent='Confirmar pagamento via PIX'
+      alert('WhatsApp inválido — use DDD + número, ex: (85) 99999-9999.')
+      return
+    }
   }
 
   // Verificar sessão e validações

@@ -267,10 +267,13 @@ input::placeholder{color:#8BAAC8;}
       }
       else window.location.href = getNextUrl()
     } else {
-      // Verificar se email já existe tentando login com senha errada
+      // E-mail já existe? Tenta logar direto com a senha informada
       const { data: existing } = await sb.from('profiles').select('id').eq('email', email).limit(1)
       if (existing && existing.length > 0) {
-        showMsg('Este e-mail já está cadastrado. Clique em "Entrar".', 'error')
+        const { error: eLogin } = await sb.auth.signInWithPassword({ email, password })
+        if (!eLogin) { window.location.href = getNextUrl(); return }
+        if (eLogin.message.includes('Invalid login credentials')) showMsg('Esta conta já existe, mas a senha não confere. Corrija a senha ou use "Esqueci a senha".', 'error')
+        else showMsg(eLogin.message, 'error')
         btn.disabled = false
         btn.textContent = 'Criar conta'
         return

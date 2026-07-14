@@ -436,6 +436,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         <select id="cartao-dia" style="max-width:200px;">
           <option value="">Selecione o dia</option>
         </select>
+        <div style="font-size:11px;color:var(--bluedark);opacity:.55;margin-top:5px;line-height:1.5;">Vencimento nos dias 29, 30 ou 31? Selecione 28 — assim o aviso vale para todos os meses.</div>
       </div>
 
       <!-- DATA DE COMPRA DO PLANO -->
@@ -856,7 +857,7 @@ function irPasso2(){
 function popularSelectsCartao(){
   const dia=document.getElementById('cartao-dia')
   if(dia.options.length>1) return
-  for(let i=1;i<=31;i++){const v=String(i).padStart(2,'0');dia.innerHTML+=`<option value="${v}">Dia ${v}</option>`}
+  for(let i=1;i<=28;i++){const v=String(i).padStart(2,'0');dia.innerHTML+=`<option value="${v}">Dia ${v}</option>`}
 }
 
 function irPasso3(){
@@ -920,7 +921,9 @@ async function publicarPiscina(){
   const telDono=document.getElementById('dono-telefone').value.trim()
   const pixDono=document.getElementById('dono-pix').value.trim()
   if(!telDono){showMsgPub('Informe seu WhatsApp para contato.','dono-telefone');return}
+  if(!validarTelefoneBR(telDono)){showMsgPub('WhatsApp inválido — use DDD + número, ex: (85) 99999-9999.','dono-telefone');return}
   if(!pixDono){showMsgPub('Informe sua chave PIX para receber os repasses.','dono-pix');return}
+  if(!validarChavePix(pixDono)){showMsgPub('Chave PIX inválida — use CPF, e-mail, telefone ou chave aleatória válidos.','dono-pix');return}
 
   const btn=document.getElementById('btn-publicar')
   btn.disabled=true;btn.textContent='Enviando...'
@@ -975,6 +978,30 @@ async function publicarPiscina(){
 }
 
 function showMsg(t,tipo){const e=document.getElementById('msg');e.textContent=t;e.className='msg '+tipo;e.style.display='block';}
+
+function validarTelefoneBR(t){
+  const d=(t||'').replace(/\D/g,'')
+  return d.length>=10&&d.length<=11&&Number(d.substring(0,2))>=11
+}
+function validarCPF(cpf){
+  const d=(cpf||'').replace(/\D/g,'')
+  if(d.length!==11||/^(\d)\1{10}$/.test(d)) return false
+  let s=0;for(let i=0;i<9;i++)s+=Number(d[i])*(10-i)
+  let r=(s*10)%11;if(r===10)r=0;if(r!==Number(d[9]))return false
+  s=0;for(let i=0;i<10;i++)s+=Number(d[i])*(11-i)
+  r=(s*10)%11;if(r===10)r=0;return r===Number(d[10])
+}
+function validarChavePix(p){
+  const t=(p||'').trim()
+  if(!t) return false
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return true
+  const d=t.replace(/\D/g,'')
+  if(d.length===11&&validarCPF(t)) return true
+  if(d.length>=10&&d.length<=11&&validarTelefoneBR(t)) return true
+  if(d.length===14) return true
+  if(/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(t)) return true
+  return false
+}
 
 function showMsgPub(t,campoId){
   const e=document.getElementById('msg-pub')

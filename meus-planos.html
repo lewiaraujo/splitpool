@@ -220,7 +220,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
     <div class="nav-right">
       <span class="nav-user" id="nav-user"></span>
       <a href="explorar.html" class="nav-btn">Explorar</a>
-      <a href="dashboard-owner.html" class="nav-btn" id="nav-btn-dashboard" style="position:relative;">Dashboard</a>
+      <a href="dashboard-owner.html" class="nav-btn" id="nav-btn-dashboard" style="position:relative;">Minhas piscinas</a>
       <button class="nav-btn" onclick="sair()">Sair</button>
     </div>
   </div>
@@ -394,6 +394,26 @@ function fecharCancel(){
 
 function ehWellness(servico){return /wellhub|totalpass/i.test(servico||'');}
 
+function validarCPF(cpf){
+  const d=(cpf||'').replace(/\D/g,'')
+  if(d.length!==11||/^(\d)\1{10}$/.test(d)) return false
+  let s=0;for(let i=0;i<9;i++)s+=Number(d[i])*(10-i)
+  let r=(s*10)%11;if(r===10)r=0;if(r!==Number(d[9]))return false
+  s=0;for(let i=0;i<10;i++)s+=Number(d[i])*(11-i)
+  r=(s*10)%11;if(r===10)r=0;return r===Number(d[10])
+}
+function validarChavePix(p){
+  const t=(p||'').trim()
+  if(!t) return false
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return true
+  const d=t.replace(/\D/g,'')
+  if(d.length===11&&validarCPF(t)) return true
+  if(d.length>=10&&d.length<=11&&Number(d.substring(0,2))>=11) return true
+  if(d.length===14) return true
+  if(/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(t)) return true
+  return false
+}
+
 function calcReembolso(a){
   if(!a.proximo_pagamento) return {dias:0,valor:0};
   const dias=Math.max(0,Math.min(30,Math.ceil((new Date(a.proximo_pagamento).getTime()-Date.now())/86400000)));
@@ -426,6 +446,7 @@ function abrirCancel(id){
         <label style="font-size:12px;font-weight:700;color:#0A3080;display:block;margin-bottom:6px;">Chave PIX para o reembolso</label>
         <input id="cancel-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:10px 12px;border:1px solid rgba(0,160,200,0.3);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box;">
         <div id="cancel-pix-erro" style="display:none;font-size:11px;color:#dc2626;font-weight:700;margin-top:4px;">Informe a chave PIX para receber o reembolso.</div>
+        <div style="font-size:11px;color:#8a5c00;background:#fff8e0;border-radius:8px;padding:8px 10px;margin-top:8px;line-height:1.5;">⚠️ Por segurança, o reembolso é feito somente para chave PIX <strong>do mesmo titular (CPF)</strong> que realizou o pagamento. Chaves de terceiros serão recusadas na análise.</div>
       </div>`:''}
       <div class="conf-actions">
         <button class="conf-btn-nao" onclick="fecharCancel()">Voltar</button>
@@ -449,9 +470,12 @@ async function confirmarCancelamento(){
     if(calcPre.valor>0){
       const pixEl=document.getElementById('cancel-pix');
       pixChave=pixEl?pixEl.value.trim():'';
-      if(!pixChave){
-        const erroEl=document.getElementById('cancel-pix-erro');
-        if(erroEl) erroEl.style.display='block';
+      const erroEl=document.getElementById('cancel-pix-erro');
+      if(!pixChave||!validarChavePix(pixChave)){
+        if(erroEl){
+          erroEl.textContent=!pixChave?'Informe a chave PIX para receber o reembolso.':'Chave PIX inválida — use CPF, e-mail, telefone ou chave aleatória válidos.';
+          erroEl.style.display='block';
+        }
         if(btn){btn.disabled=false;btn.textContent='Confirmar cancelamento';}
         return;
       }
@@ -710,7 +734,7 @@ async function carregarPlanos(){
   let cancelados=[];
   if(canceladosBrutos.length){
     const {data:ocs}=await sb.from('ocorrencias')
-      .select('assinatura_id,status,valor_reembolso,resolvida_em,pix_chave')
+      .select('assinatura_id,status,valor_reembolso,resolvida_em,pix_chave,decisao_admin')
       .eq('tipo','cancelamento_membro')
       .in('assinatura_id',canceladosBrutos.map(a=>a.id));
     (ocs||[]).forEach(o=>{ocorrenciasCancel[o.assinatura_id]=o;});
@@ -796,6 +820,11 @@ function renderPlanoCancelado(a){
         <div style="font-size:13px;font-weight:700;color:#1e40af;">💸 Reembolso em processamento</div>
         <div style="font-size:12px;color:#1e40af;opacity:.85;line-height:1.6;margin-top:2px;">Você receberá <strong>${fmt(oc.valor_reembolso)}</strong> via PIX na chave <strong>${oc.pix_chave||'informada'}</strong> em até 5 dias úteis.</div>
       </div>`;
+    } else if(oc.status==='improcedente'){
+      reembolsoHTML=`<div style="background:#fef2f2;border:1px solid rgba(220,38,38,0.25);border-radius:10px;padding:12px 14px;margin-top:12px;">
+        <div style="font-size:13px;font-weight:700;color:#991b1b;">Reembolso não aprovado</div>
+        <div style="font-size:12px;color:#991b1b;opacity:.85;line-height:1.6;margin-top:2px;">${oc.decisao_admin?('Motivo: '+oc.decisao_admin):'Entre em contato com o suporte para mais detalhes.'}</div>
+      </div>`;
     } else {
       const dataPag=oc.resolvida_em?new Date(oc.resolvida_em).toLocaleDateString('pt-BR'):'';
       reembolsoHTML=`<div style="background:#f0fdf4;border:1px solid rgba(22,163,74,0.25);border-radius:10px;padding:12px 14px;margin-top:12px;">
@@ -860,7 +889,7 @@ init();
 <button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span><div id="ham-dot"></div></button>
 <div id="mob-menu">
   <a class="mob-lnk" href="explorar.html">Explorar</a>
-  <a class="mob-lnk" href="dashboard-owner.html">Dashboard<span id="mob-dot-dashboard" class="mob-lnk-dot" style="display:none;"></span></a>
+  <a class="mob-lnk" href="dashboard-owner.html">Minhas piscinas<span id="mob-dot-dashboard" class="mob-lnk-dot" style="display:none;"></span></a>
   <button class="mob-lnk" onclick="sair();toggleMenu()">Sair</button>
 </div>
 <script>
