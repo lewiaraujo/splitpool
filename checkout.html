@@ -332,6 +332,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
       </div>
 
       <!-- TELEFONE -->
+      <div id="cpf-box" style="display:none;background:#f0f9ff;border:1.5px solid rgba(0,180,210,0.3);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:4px;">🪪 Seu CPF <span style="color:#dc2626;">*</span></div>
+        <div style="font-size:12px;color:var(--bluedark);opacity:.6;margin-bottom:10px;line-height:1.5;">Garante que reembolsos sejam pagos apenas a você, titular do pagamento.</div>
+        <input type="text" id="cpf-input" placeholder="000.000.000-00" maxlength="14" style="width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid rgba(0,180,210,0.3);font-family:inherit;font-size:14px;color:var(--bluedark);background:#fff;outline:none;">
+      </div>
+
       <div id="telefone-box" style="display:none;background:#f0f9ff;border:1.5px solid rgba(0,180,210,0.3);border-radius:12px;padding:16px;margin-bottom:16px;">
         <div style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:4px;">📱 Seu WhatsApp <span style="color:#dc2626;">*</span></div>
         <div style="font-size:12px;color:var(--bluedark);opacity:.6;margin-bottom:10px;line-height:1.5;">Para avisos importantes sobre sua assinatura (envio de acesso, cobranças e suporte).</div>
@@ -453,13 +459,16 @@ async function load(){
   if(!sess.session){window.location.href='cadastro.html';return}
 
   // Pré-preencher email do serviço com email do perfil
-  const {data:profile}=await sb.from('profiles').select('email,telefone').eq('id',sess.session.user.id).single()
+  const {data:profile}=await sb.from('profiles').select('email,telefone,cpf').eq('id',sess.session.user.id).single()
   if(profile&&profile.email){
     document.getElementById('email-servico-input').value=profile.email
   }
   // Telefone: pedir apenas se ainda não cadastrado
   if(!profile||!profile.telefone){
     document.getElementById('telefone-box').style.display='block'
+  }
+  if(!profile||!profile.cpf){
+    document.getElementById('cpf-box').style.display='block'
   }
 
   try{
@@ -540,6 +549,32 @@ async function confirmarPagamento(){
     return
   }
 
+  // CPF obrigatório se o campo está visível (perfil ainda sem CPF)
+  const cpfBox=document.getElementById('cpf-box')
+  const cpfVal=document.getElementById('cpf-input').value.trim()
+  if(cpfBox&&cpfBox.style.display!=='none'){
+    function validarCPFck(cpf){
+      const d=(cpf||'').replace(/\D/g,'')
+      if(d.length!==11||/^(\d)\1{10}$/.test(d)) return false
+      let s=0;for(let i=0;i<9;i++)s+=Number(d[i])*(10-i)
+      let r=(s*10)%11;if(r===10)r=0;if(r!==Number(d[9]))return false
+      s=0;for(let i=0;i<10;i++)s+=Number(d[i])*(11-i)
+      r=(s*10)%11;if(r===10)r=0;return r===Number(d[10])
+    }
+    if(!cpfVal){
+      btn.disabled=false
+      btn.textContent='Confirmar pagamento via PIX'
+      alert('Informe seu CPF para concluir a assinatura.')
+      return
+    }
+    if(!validarCPFck(cpfVal)){
+      btn.disabled=false
+      btn.textContent='Confirmar pagamento via PIX'
+      alert('CPF inválido — confira os dígitos.')
+      return
+    }
+  }
+
   // Telefone obrigatório se o campo está visível (perfil ainda sem telefone)
   const telBox=document.getElementById('telefone-box')
   const telVal=document.getElementById('telefone-input').value.trim()
@@ -588,8 +623,11 @@ async function confirmarPagamento(){
 
   // Salvar assinatura no Supabase
   if(sess.session && piscinaData){
-    if(telVal){
-      await sb.from('profiles').update({telefone:telVal}).eq('id',sess.session.user.id)
+    if(telVal||cpfVal){
+      const upd={}
+      if(telVal) upd.telefone=telVal
+      if(cpfVal) upd.cpf=cpfVal.replace(/\D/g,'')
+      await sb.from('profiles').update(upd).eq('id',sess.session.user.id)
     }
     const ps=new URLSearchParams(window.location.search)
     const planoNome=ps.get('plano')||null

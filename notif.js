@@ -19,7 +19,8 @@
     'ocorrencia_resolvida':'meus-planos.html',
     'piscina_aprovada':'dashboard-owner.html',
     'piscina_recusada':'dashboard-owner.html',
-    'repasse_recusado':'dashboard-owner.html'
+    'repasse_recusado':'dashboard-owner.html',
+    'credencial_pendente':'dashboard-owner.html'
   };
 
   var ICONE_TIPO={
@@ -34,7 +35,8 @@
     'ocorrencia_resolvida':'📋',
     'piscina_aprovada':'🚀',
     'piscina_recusada':'🚫',
-    'repasse_recusado':'🚫'
+    'repasse_recusado':'🚫',
+    'credencial_pendente':'⏰'
   };
 
   var cacheNotifs=[];
