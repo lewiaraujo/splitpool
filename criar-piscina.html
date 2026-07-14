@@ -443,7 +443,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
       <div class="field" style="margin-bottom:1.5rem;">
         <label>📅 Quando você comprou esse plano?</label>
         <div class="field-hint" style="margin-bottom:10px;">Usamos essa data para calcular quanto tempo de plano ainda resta, especialmente importante em planos anuais.</div>
-        <input type="date" id="data-compra-plano" style="max-width:200px;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;">
+        <input type="date" id="data-compra-plano" max="" style="max-width:200px;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;">
       </div>
 
       <!-- O QUE ACONTECE APÓS PUBLICAR -->
@@ -854,6 +854,11 @@ function irPasso2(){
   goStep(2)
 }
 
+document.addEventListener('DOMContentLoaded', function(){
+  var inp = document.getElementById('data-compra-plano');
+  if(inp) inp.max = new Date().toISOString().slice(0,10);
+});
+
 function popularSelectsCartao(){
   const dia=document.getElementById('cartao-dia')
   if(dia.options.length>1) return
@@ -917,6 +922,7 @@ async function publicarPiscina(){
   if(!dia){showMsgPub('Informe o dia de vencimento do seu cartão.','cartao-dia');return}
   const dataCompra=document.getElementById('data-compra-plano').value
   if(!dataCompra){showMsgPub('Informe quando você comprou esse plano.','data-compra-plano');return}
+  if(dataCompra > new Date().toISOString().slice(0,10)){showMsgPub('A data de aquisição não pode ser no futuro.','data-compra-plano');return}
 
   const telDono=document.getElementById('dono-telefone').value.trim()
   const pixDono=document.getElementById('dono-pix').value.trim()
