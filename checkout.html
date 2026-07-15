@@ -344,6 +344,23 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
         <input type="tel" id="telefone-input" placeholder="(85) 99999-9999" style="width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid rgba(0,180,210,0.3);font-family:inherit;font-size:14px;color:var(--bluedark);background:#fff;outline:none;">
       </div>
 
+      <!-- TERMOS DE SERVIÇO -->
+      <div style="background:#f0f9ff;border:1.5px solid rgba(0,180,210,0.3);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:10px;">📋 Antes de confirmar</div>
+        <div style="font-size:12px;color:var(--bluedark);opacity:.75;line-height:1.7;margin-bottom:12px;">Ao entrar nesta piscina, você está contratando uma vaga num plano de assinatura compartilhado. Isso significa que:</div>
+        <div style="font-size:12px;color:var(--bluedark);opacity:.75;line-height:1.8;margin-bottom:12px;">
+          <div>✅ Você se compromete a <strong>permanecer até o fim do ciclo pago</strong></div>
+          <div>✅ Cancelamentos antecipados geram <strong>reembolso proporcional</strong> (planos família) ou <strong>sem reembolso</strong> (wellness — acesso até o fim do ciclo)</div>
+          <div>✅ O reembolso é feito <strong>somente na chave PIX do mesmo CPF</strong> que realizou o pagamento</div>
+          <div>✅ O acesso é pessoal e intransferível — compartilhar os dados com terceiros viola os termos</div>
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="checkout-termos" style="margin-top:2px;width:16px;height:16px;cursor:pointer;flex-shrink:0;">
+          <span style="font-size:12px;font-weight:700;color:var(--bluedark);">Li e concordo com as condições acima</span>
+        </label>
+        <div id="checkout-termos-erro" style="display:none;font-size:11px;color:#dc2626;font-weight:700;margin-top:6px;">Você precisa aceitar as condições para prosseguir.</div>
+      </div>
+
       <!-- TRUST -->
       <div class="trust-row" style="margin-bottom:16px;">
         <div class="trust-item">
@@ -546,6 +563,16 @@ async function confirmarPagamento(){
     btn.disabled=false
     btn.textContent='Confirmar pagamento via PIX'
     alert('Informe o email que você usa no '+piscinaData.servico+' para receber o acesso.')
+    return
+  }
+
+  // Termos obrigatórios
+  const termosEl=document.getElementById('checkout-termos')
+  if(termosEl&&!termosEl.checked){
+    btn.disabled=false
+    btn.textContent='Confirmar pagamento via PIX'
+    document.getElementById('checkout-termos-erro').style.display='block'
+    termosEl.scrollIntoView({behavior:'smooth',block:'center'})
     return
   }
 

@@ -410,6 +410,9 @@ function abrirReporte(assinaturaId, piscinaId, servico){
         <option value="disputa_diferente_anunciado">O serviço é diferente do anunciado</option>
       </select>
       <textarea id="report-desc" placeholder="Descreva o que está acontecendo com detalhes..." style="width:100%;padding:10px 12px;border:1px solid rgba(0,160,200,0.3);border-radius:8px;font-size:13px;font-family:inherit;min-height:80px;resize:vertical;box-sizing:border-box;"></textarea>
+      <label style="font-size:12px;font-weight:700;color:#0A3080;display:block;margin-top:10px;margin-bottom:6px;">📎 Evidência (opcional, mas recomendado)</label>
+      <input type="file" id="report-evidencia" accept="image/*,.pdf" style="width:100%;font-size:12px;font-family:inherit;padding:4px 0;">
+      <div style="font-size:11px;color:#0A3080;opacity:.5;margin-top:4px;">Print de erro, e-mail ou qualquer comprovante. Isso agiliza muito a análise.</div>
       <div id="report-erro" style="display:none;font-size:11px;color:#dc2626;font-weight:700;margin-top:4px;"></div>
     </div>
     <div class="conf-actions">
@@ -428,9 +431,22 @@ async function enviarReporte(){
   if(desc.length<10){erro.textContent='Descreva o problema com pelo menos 10 caracteres.';erro.style.display='block';return;}
   const btn=document.querySelector('#report-modal-body .conf-btn-sim');
   if(btn){btn.disabled=true;btn.textContent='Enviando...';}
+  // Upload de evidência (opcional)
+  let evidenciaUrl=null;
+  const fileInput=document.getElementById('report-evidencia');
+  if(fileInput&&fileInput.files&&fileInput.files[0]){
+    const file=fileInput.files[0];
+    const ext=file.name.split('.').pop();
+    const path=userId+'/'+Date.now()+'.'+ext;
+    const {data:upData,error:upErr}=await sb.storage.from('evidencias').upload(path,file,{upsert:true});
+    if(!upErr&&upData){
+      const {data:urlData}=sb.storage.from('evidencias').getPublicUrl(path);
+      evidenciaUrl=urlData.publicUrl;
+    }
+  }
   const {error}=await sb.from('ocorrencias').insert({
     tipo:tipo, piscina_id:reportePiscinaId, assinatura_id:reporteAssinaturaId,
-    aberto_por:userId, status:'aberta', descricao:desc
+    aberto_por:userId, status:'aberta', descricao:desc, evidencia_url:evidenciaUrl
   });
   if(error){
     if(btn){btn.disabled=false;btn.textContent='Enviar reporte';}

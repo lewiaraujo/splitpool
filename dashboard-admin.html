@@ -424,6 +424,56 @@ async function init(){
 var ocorrenciasData=[];
 var filtroOcorr='abertas';
 
+async function toggleUserAssins(userId,nome,trEl){
+  var existente=document.getElementById('assins-row-'+userId);
+  if(existente){existente.remove();return;}
+  var {data:assins}=await sb.rpc('buscar_assinaturas_admin');
+  var mine=(assins||[]).filter(function(a){return a.membro_id===userId;});
+  var nCols=trEl.children.length;
+  var inner='';
+  if(!mine.length){
+    inner='<div style="padding:8px 14px;font-size:12px;opacity:.5;">Nenhuma assinatura ativa.</div>';
+  } else {
+    var idsP=[...new Set(mine.map(function(a){return a.piscina_id;}))];
+    var piscNomes={};
+    var donoIds=[];
+    if(dados.piscinas&&dados.piscinas.length){
+      dados.piscinas.forEach(function(p){piscNomes[p.id]=p.servico;donoIds.push(p.dono_id);});
+    }
+    var donoMap={};
+    if(idsP.length){
+      var {data:piscsD}=await sb.rpc('buscar_piscinas_admin');
+      (piscsD||[]).forEach(function(p){piscNomes[p.id]=p.servico;});
+      var donoIdsUniq=[...new Set((piscsD||[]).map(function(p){return p.dono_id;}))];
+      if(donoIdsUniq.length){
+        var {data:donos}=await sb.rpc('buscar_perfis_admin',{p_ids:donoIdsUniq});
+        (donos||[]).forEach(function(d){donoMap[d.id]=d;});
+        (piscsD||[]).forEach(function(p){p._dono=donoMap[p.dono_id];});
+        (piscsD||[]).forEach(function(p){if(!piscNomes[p.id])piscNomes[p.id]=p.servico;});
+        piscsD.forEach(function(p){donoMap['pisc_'+p.id]=p._dono;});
+      }
+    }
+    inner='<table style="width:100%;border-collapse:collapse;"><thead><tr>'
+      +'<th style="text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:5px 12px;">Serviço</th>'
+      +'<th style="text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:5px 12px;">Dono da piscina</th>'
+      +'<th style="text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:5px 12px;">Valor/mês</th>'
+      +'<th style="text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:5px 12px;">Status</th>'
+      +'</tr></thead><tbody>';
+    mine.forEach(function(a){
+      var dono=donoMap['pisc_'+a.piscina_id]||{};
+      var svc=piscNomes[a.piscina_id]||a.servico||'—';
+      inner+='<tr>'
+        +'<td style="padding:5px 12px;font-size:12px;font-weight:600;">'+svc+'</td>'
+        +'<td style="padding:5px 12px;font-size:12px;">'+(dono.nome||'—')+'<div style="font-size:10px;opacity:.6;">'+(dono.email||'')+'</div></td>'
+        +'<td style="padding:5px 12px;font-size:12px;">'+fmt(Number(a.valor||0))+'</td>'
+        +'<td style="padding:5px 12px;font-size:11px;">'+a.status+'</td>'
+        +'</tr>';
+    });
+    inner+='</tbody></table>';
+  }
+  trEl.insertAdjacentHTML('afterend','<tr id="assins-row-'+userId+'"><td colspan="'+nCols+'" style="background:rgba(18,85,204,0.03);border-top:1px solid rgba(18,85,204,0.08);padding:4px 8px;"><div style="font-size:11px;font-weight:800;color:#1255CC;padding:6px 12px 4px;">Piscinas de '+nome+':</div>'+inner+'</td></tr>');
+}
+
 async function carregarOcorrencias(){
   var {data,error}=await sb.rpc('buscar_ocorrencias_admin');
   if(error){
@@ -507,6 +557,7 @@ function renderOcorrencias(){
       +'</div>'
       +(o.descricao?'<div style="font-size:13px;color:#444;margin-top:10px;line-height:1.55;">'+o.descricao+'</div>':'')
       +reembHTML
+      +(o.evidencia_url?'<div style="margin-top:10px;"><a href="'+o.evidencia_url+'" target="_blank" style="font-size:12px;font-weight:700;color:#1255CC;text-decoration:none;background:#eff6ff;border:1px solid rgba(18,85,204,0.2);padding:5px 12px;border-radius:7px;display:inline-flex;align-items:center;gap:5px;">📎 Ver evidência anexada</a></div>':'')
       +(o.decisao_admin?'<div style="font-size:12px;color:#777;margin-top:8px;">Decisão: '+o.decisao_admin+(o.resolvida_em?' ('+new Date(o.resolvida_em).toLocaleDateString('pt-BR')+')':'')+'</div>':'')
       +(acoes?'<div style="margin-top:12px;">'+acoes+'</div>':'')
       +'</div>';
@@ -1137,8 +1188,7 @@ function renderUsuarios(){
     var contato='';
     if(u._telefone) contato+='<span style="font-size:10px;background:rgba(0,180,210,0.08);padding:1px 6px;border-radius:4px;margin-right:3px;">📱 <span style="user-select:all;">'+u._telefone+'</span></span>';
     if(u._pix) contato+='<span style="font-size:10px;background:rgba(18,85,204,0.07);padding:1px 6px;border-radius:4px;">💳 <span style="user-select:all;">'+u._pix+'</span></span>';
-    return '<tr>'+
-      '<td data-label="Nome" style="font-weight:600;">'+u.nome+(contato?'<div style="margin-top:4px;flex-wrap:wrap;display:flex;gap:3px;">'+contato+'</div>':'')+'</td>'+
+    return '<tr id="user-row-'+u.id+'">'+'<td data-label="Nome" style="font-weight:600;">'+u.nome+(contato?'<div style="margin-top:4px;flex-wrap:wrap;display:flex;gap:3px;">'+contato+'</div>':'')+'</td>'+
       '<td data-label="Email" style="font-size:12px;opacity:.7;">'+u.email+'</td>'+
       '<td data-label="Piscinas">'+u._nPisc+'</td>'+
       '<td data-label="Assinaturas">'+u._nAssins+'</td>'+
@@ -1147,6 +1197,14 @@ function renderUsuarios(){
       '</tr>';
   }).join('');
   document.getElementById('tbody-usuarios').innerHTML=html;
+  // Linhas de assinaturas (expandíveis)
+  lista.forEach(function(u){
+    var tr=document.getElementById('user-row-'+u.id);
+    if(!tr) return;
+    tr.style.cursor='pointer';
+    tr.title='Clique para ver piscinas';
+    tr.addEventListener('click',function(){toggleUserAssins(u.id,u.nome,this);});
+  });
 }
 
 // ── ASSINATURAS ──
