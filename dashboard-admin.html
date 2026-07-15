@@ -193,6 +193,7 @@ tbody td{padding:12px 16px;font-size:13px;}
       <button class="btn-export" onclick="exportarCSV()">⬇ Exportar CSV</button>
     </div>
     <div class="filters">
+      <input id="busca-repasses" type="text" placeholder="🔍 Dono, email ou serviço..." oninput="renderRepasses()" style="padding:8px 14px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:12px;font-family:inherit;outline:none;min-width:200px;">
       <div class="fbtn act" onclick="filtrar('repasses','todos',this)">Todos</div>
       <div class="fbtn" onclick="filtrar('repasses','pendente',this)">Pendentes</div>
       <div class="fbtn" onclick="filtrar('repasses','aprovado',this)">Aprovados</div>
@@ -212,6 +213,10 @@ tbody td{padding:12px 16px;font-size:13px;}
         style="flex:1;min-width:200px;padding:8px 14px;border:1.5px solid rgba(18,85,204,0.2);border-radius:8px;font-size:13px;font-family:inherit;color:var(--bluedark);outline:none;">
     </div>
     <div class="filters">
+      <select id="ordem-piscinas" onchange="renderPiscinas()" style="padding:8px 12px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:12px;font-family:inherit;outline:none;cursor:pointer;">
+        <option value="recentes">Mais recentes</option>
+        <option value="antigas">Mais antigas</option>
+      </select>
       <div class="fbtn act" onclick="filtrar('piscinas','todas',this)">Todas</div>
       <div class="fbtn" onclick="filtrar('piscinas','aberta',this)">Abertas</div>
       <div class="fbtn" onclick="filtrar('piscinas','pendente',this)">Pendentes</div>
@@ -227,6 +232,7 @@ tbody td{padding:12px 16px;font-size:13px;}
       <div><div class="sec-title">👥 Usuários</div><div class="sec-sub">Donos e membros da plataforma</div></div>
     </div>
     <div class="filters">
+      <input id="busca-usuarios" type="text" placeholder="🔍 Nome, email, WhatsApp ou PIX..." oninput="renderUsuarios()" style="padding:8px 14px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:12px;font-family:inherit;outline:none;min-width:220px;">
       <div class="fbtn act" onclick="filtrar('usuarios','todos',this)">Todos</div>
       <div class="fbtn" onclick="filtrar('usuarios','dono',this)">Donos</div>
       <div class="fbtn" onclick="filtrar('usuarios','membro',this)">Membros</div>
@@ -246,6 +252,19 @@ tbody td{padding:12px 16px;font-size:13px;}
       <div><div class="sec-title">⚖️ Ocorrências</div><div class="sec-sub">Cancelamentos, reembolsos e disputas</div></div>
     </div>
     <div class="filters">
+      <input id="busca-ocorr" type="text" placeholder="🔍 Membro, serviço ou descrição..." oninput="renderOcorrencias()" style="padding:8px 14px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:12px;font-family:inherit;outline:none;min-width:200px;">
+      <select id="tipo-ocorr" onchange="renderOcorrencias()" style="padding:8px 12px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:12px;font-family:inherit;outline:none;cursor:pointer;">
+        <option value="">Todos os tipos</option>
+        <option value="cancelamento_membro">Cancelamento</option>
+        <option value="disputa_sem_acesso">Disputa — sem acesso</option>
+        <option value="disputa_acesso_parou">Disputa — acesso parou</option>
+        <option value="disputa_diferente_anunciado">Disputa — diferente do anunciado</option>
+        <option value="credencial_atrasada">Credencial atrasada</option>
+      </select>
+      <select id="ordem-ocorr" onchange="renderOcorrencias()" style="padding:8px 12px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:12px;font-family:inherit;outline:none;cursor:pointer;">
+        <option value="recentes">Mais recentes</option>
+        <option value="antigas">Mais antigas</option>
+      </select>
       <div class="fbtn act" id="focorr-abertas" onclick="filtrarOcorr('abertas',this)">Abertas</div>
       <div class="fbtn" id="focorr-todas" onclick="filtrarOcorr('todas',this)">Todas</div>
     </div>
@@ -516,7 +535,20 @@ function badgeStatusOcorr(s){
 }
 
 function renderOcorrencias(){
-  var lista=filtroOcorr==='abertas'?ocorrenciasData.filter(function(o){return o.status==='aberta';}):ocorrenciasData;
+  var lista=filtroOcorr==='abertas'?ocorrenciasData.filter(function(o){return o.status==='aberta';}):ocorrenciasData.slice();
+  var qO=((document.getElementById('busca-ocorr')||{}).value||'').toLowerCase().trim();
+  if(qO){
+    lista=lista.filter(function(o){
+      return ((o.aberto_por_nome||'')+' '+(o.aberto_por_email||'')+' '+(o.servico||'')+' '+(o.descricao||'')+' '+(o.tipo||'')).toLowerCase().indexOf(qO)!==-1;
+    });
+  }
+  var tO=(document.getElementById('tipo-ocorr')||{}).value||'';
+  if(tO) lista=lista.filter(function(o){return o.tipo===tO;});
+  var ordO=((document.getElementById('ordem-ocorr')||{}).value)||'recentes';
+  lista=lista.slice().sort(function(a,b){
+    var da=new Date(a.criado_em||a.created_at||0).getTime(), db=new Date(b.criado_em||b.created_at||0).getTime();
+    return ordO==='antigas'?da-db:db-da;
+  });
 
   var abertas=ocorrenciasData.filter(function(o){return o.status==='aberta';});
   var pendReemb=abertas.reduce(function(s,o){return s+(Number(o.valor_reembolso)||0);},0);
@@ -826,6 +858,14 @@ function renderResumoRepasses(){
 function renderRepasses(){
   var f=filtros.repasses;
   var lista=f==='todos'?dados.repasses:dados.repasses.filter(function(r){return r.status===f;});
+  var q=((document.getElementById('busca-repasses')||{}).value||'').toLowerCase().trim();
+  if(q){
+    lista=lista.filter(function(r){
+      var p=dados.perfisMap[r.dono_id]||{};
+      var pi=dados.piscMap[r.piscina_id]||{};
+      return ((p.nome||'')+' '+(p.email||'')+' '+(pi.servico||'')).toLowerCase().indexOf(q)!==-1;
+    });
+  }
   var el=document.getElementById('repasses-list');
   if(!lista.length){el.innerHTML='<div class="empty">Nenhum repasse encontrado.</div>';return;}
   var porDono={};
@@ -1013,7 +1053,12 @@ function renderPiscinas(){
   var f=filtros.piscinas;
   var busca=(document.getElementById('busca-piscinas')||{}).value||'';
   busca=busca.toLowerCase().trim();
-  var lista=f==='todas'?dados.piscinas:dados.piscinas.filter(function(p){return p.status===f;});
+  var lista=f==='todas'?dados.piscinas.slice():dados.piscinas.filter(function(p){return p.status===f;});
+  var ordP=((document.getElementById('ordem-piscinas')||{}).value)||'recentes';
+  lista.sort(function(a,b){
+    var da=new Date(a.created_at||0).getTime(), db=new Date(b.created_at||0).getTime();
+    return ordP==='antigas'?da-db:db-da;
+  });
   if(busca){
     lista=lista.filter(function(p){
       var dono=((p.profiles&&p.profiles.nome)||'').toLowerCase();
@@ -1176,7 +1221,12 @@ function renderResumoUsuarios(){
 
 function renderUsuarios(){
   var f=filtros.usuarios;
+  var q=((document.getElementById('busca-usuarios')||{}).value||'').toLowerCase().trim();
   var lista=dados.usuarios.filter(function(u){
+    if(q){
+      var alvo=((u.nome||'')+' '+(u.email||'')+' '+(u._telefone||'')+' '+(u._pix||'')).toLowerCase();
+      if(alvo.indexOf(q)===-1) return false;
+    }
     if(f==='dono') return u._isDono;
     if(f==='membro') return u._isMembro;
     return true;

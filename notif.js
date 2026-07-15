@@ -43,6 +43,21 @@
   var painelAberto=false;
   var idsConhecidos={};
   var primeiroPoll=true;
+  var nomeAtualizado=false;
+
+  function atualizarNomeNav(uid,token){
+    if(nomeAtualizado) return;
+    nomeAtualizado=true;
+    fetch(SBU+'/rest/v1/profiles?select=nome&id=eq.'+uid,{
+      headers:{'apikey':SBK,'Authorization':'Bearer '+token}
+    }).then(function(r){return r.json();}).then(function(rows){
+      var nm=rows&&rows[0]&&rows[0].nome;
+      if(nm&&nm.trim()){
+        var nu=document.getElementById('nav-user');if(nu)nu.textContent=nm;
+        var mn=document.getElementById('mob-name');if(mn)mn.textContent=nm;
+      }
+    }).catch(function(){});
+  }
 
   function getSession(){
     try{
@@ -231,6 +246,7 @@
     if(mobCnt) mobCnt.style.display=tem?'inline-block':'none';
 
     if(!document.getElementById('notif-bell')) injetarUI();
+    atualizarNomeNav(uid,token);
 
     if(painelAberto) renderPainel();
 

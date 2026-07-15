@@ -594,7 +594,14 @@ sb.auth.getSession().then(({data})=>{
     if(pf){
       if(pf.telefone) document.getElementById('dono-telefone').value=pf.telefone
       if(pf.pix_chave) document.getElementById('dono-pix').value=pf.pix_chave
-      if(pf.cpf) document.getElementById('dono-cpf').value=pf.cpf
+      if(pf.cpf){
+        const cpfEl=document.getElementById('dono-cpf')
+        cpfEl.value=pf.cpf
+        cpfEl.readOnly=true
+        cpfEl.style.background='#f3f6fa'
+        cpfEl.style.color='#8a94a6'
+        cpfEl.title='CPF não pode ser alterado por política de segurança.'
+      }
     }
   })
   // Renderiza grid vazio logo (sem bloqueios ainda)
