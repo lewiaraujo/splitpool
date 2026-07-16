@@ -156,6 +156,7 @@ tbody td{padding:12px 16px;font-size:13px;}
       <button class="nav-link" data-sec="piscinas" onclick="irPara('piscinas',this)">🏊 Piscinas</button>
       <button class="nav-link" data-sec="usuarios" onclick="irPara('usuarios',this)">👥 Usuários</button>
       <button class="nav-link" data-sec="ocorrencias" onclick="irPara('ocorrencias',this)">⚖️ Ocorrências</button>
+      <button class="nav-link" data-sec="setup" onclick="irPara('setup',this)">⚙️ Setup</button>
       <button class="nav-link" data-sec="financeiro" onclick="irPara('financeiro',this)">📊 Financeiro</button>
     </div>
     <div class="nav-right">
@@ -180,6 +181,7 @@ tbody td{padding:12px 16px;font-size:13px;}
   <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('piscinas',this);toggleMobNav()">🏊 Piscinas</button>
   <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('usuarios',this);toggleMobNav()">👥 Usuários</button>
   <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('ocorrencias',this);toggleMobNav()">⚖️ Ocorrências</button>
+  <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('setup',this);toggleMobNav()">⚙️ Setup</button>
   <button class="nav-link" style="display:block;width:100%;text-align:left;margin-bottom:4px;" onclick="irPara('financeiro',this);toggleMobNav()">📊 Financeiro</button>
 </div>
 
@@ -269,6 +271,53 @@ tbody td{padding:12px 16px;font-size:13px;}
       <div class="fbtn" id="focorr-todas" onclick="filtrarOcorr('todas',this)">Todas</div>
     </div>
     <div id="lista-ocorrencias"><div class="empty">Carregando...</div></div>
+  </div>
+
+  <!-- ── SETUP ── -->
+  <div class="section" id="sec-setup">
+    <div class="sec-header">
+      <div><div class="sec-title">⚙️ Setup da Plataforma</div><div class="sec-sub">Catálogo de serviços e conteúdo do site — mudanças valem na hora, sem deploy</div></div>
+    </div>
+
+    <!-- Catálogo -->
+    <div style="background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:18px;margin-bottom:18px;">
+      <div style="font-size:15px;font-weight:800;color:#0A3080;margin-bottom:4px;">📦 Catálogo de serviços</div>
+      <div style="font-size:12px;color:#777;margin-bottom:14px;">Serviços que podem ser ofertados na plataforma. Desativar é bloqueado se houver piscinas abertas.</div>
+      <div id="setup-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;">
+        <input type="hidden" id="svc-id">
+        <input id="svc-nome" placeholder="Nome (ex: ChatGPT Plus)" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;grid-column:span 2;">
+        <select id="svc-categoria" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+          <option value="ia">IA & Produt.</option><option value="streaming">Streaming</option>
+          <option value="wellness">Wellness</option><option value="musica">Música</option>
+        </select>
+        <select id="svc-tipo" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+          <option value="familia">Plano família</option><option value="wellness">Wellness (corporativo)</option>
+        </select>
+        <input id="svc-vagas" type="number" min="1" max="10" placeholder="Vagas máx" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        <input id="svc-preco" type="number" step="0.01" placeholder="Preço/vaga R$" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        <input id="svc-repasse" type="number" step="0.01" placeholder="Repasse dono R$" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        <input id="svc-lucro" type="number" step="0.01" placeholder="Lucro SP R$" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        <input id="svc-icone" placeholder="URL do ícone (opcional)" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;grid-column:span 2;">
+        <input id="svc-descricao" placeholder="Descrição curta (ex: até 5 vagas · IA avançada)" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;grid-column:span 2;">
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="btn-act btn-aprovar" onclick="salvarServico()">💾 Salvar serviço</button>
+        <button class="btn-act" style="background:#eef2f7;color:#0A3080;" onclick="limparFormServico()">Limpar</button>
+      </div>
+      <div id="setup-lista"><div class="empty">Carregando...</div></div>
+      <div style="font-size:11px;color:#999;margin-top:10px;line-height:1.5;">⚠️ Validação financeira: Repasse dono + Lucro SP deve ser ≤ Preço/vaga × vagas. Serviços novos aparecem no Explorar quando a primeira piscina for criada. Integração completa (criar-piscina lendo o catálogo) é a Fase 2.</div>
+    </div>
+
+    <!-- Conteúdo do site -->
+    <div style="background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:18px;">
+      <div style="font-size:15px;font-weight:800;color:#0A3080;margin-bottom:4px;">🎨 Conteúdo do Index (página inicial)</div>
+      <div style="font-size:12px;color:#777;margin-bottom:14px;">Boias flutuantes e estatísticas do hero. Salve e o site atualiza no próximo carregamento.</div>
+      <div style="font-size:12px;font-weight:800;color:#0A3080;margin-bottom:8px;">Boias flutuantes (4)</div>
+      <div id="cfg-boias" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:16px;"></div>
+      <div style="font-size:12px;font-weight:800;color:#0A3080;margin-bottom:8px;">Estatísticas do hero (4)</div>
+      <div id="cfg-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px;"></div>
+      <button class="btn-act btn-aprovar" onclick="salvarConfigIndex()">💾 Salvar conteúdo do site</button>
+    </div>
   </div>
 
   <!-- ── FINANCEIRO ── -->
@@ -403,6 +452,9 @@ async function irPara(sec,el){
   }
   if(sec==='ocorrencias'){
     await carregarOcorrencias();
+  }
+  if(sec==='setup'){
+    await carregarSetup();
   }
   if(sec==='financeiro'){
     if(!dados.piscinas.length) await carregarPiscinas();
@@ -821,6 +873,126 @@ document.addEventListener('click',function(ev){
   var p=document.getElementById('adm-bell-panel');
   if(p&&p.style.display==='block'&&!p.contains(ev.target)) fecharBellAdmin();
 });
+
+/* ── SETUP ── */
+var catalogoData=[];
+var configIndexData=null;
+
+async function carregarSetup(){
+  var {data:svcs}=await sb.from('servicos_catalogo').select('*').order('nome');
+  catalogoData=svcs||[];
+  renderCatalogo();
+  var {data:cfg}=await sb.from('site_config').select('valor').eq('chave','index').single();
+  configIndexData=(cfg&&cfg.valor)||{boias:[{},{},{},{}],stats:[{valor:'R$380',rotulo:'Gasto médio com serviços/mês'},{valor:'60%',rotulo:'Economia real por usuário'},{valor:'+9',rotulo:'Plataformas disponíveis'},{valor:'0%',rotulo:'Custo de entrada'}]};
+  renderConfigIndex();
+}
+
+function renderCatalogo(){
+  var el=document.getElementById('setup-lista');
+  if(!catalogoData.length){el.innerHTML='<div class="empty">Nenhum serviço no catálogo ainda. Adicione o primeiro acima.</div>';return;}
+  el.innerHTML='<table style="width:100%;border-collapse:collapse;"><thead><tr>'
+    +['Serviço','Categoria','Tipo','Vagas','Preço/vaga','Repasse','Lucro SP','Status','Ações'].map(function(h){return '<th style="text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:6px 10px;">'+h+'</th>';}).join('')
+    +'</tr></thead><tbody>'
+    +catalogoData.map(function(s){
+      return '<tr style="border-top:1px solid rgba(0,0,0,0.05);'+(s.ativo?'':'opacity:.45;')+'">'
+        +'<td style="padding:8px 10px;font-size:12px;font-weight:700;">'+s.nome+(s.descricao?'<div style="font-size:10px;opacity:.55;font-weight:500;">'+s.descricao+'</div>':'')+'</td>'
+        +'<td style="padding:8px 10px;font-size:11px;">'+s.categoria+'</td>'
+        +'<td style="padding:8px 10px;font-size:11px;">'+s.tipo+'</td>'
+        +'<td style="padding:8px 10px;font-size:12px;">'+s.vagas_max+'</td>'
+        +'<td style="padding:8px 10px;font-size:12px;">'+fmt(Number(s.preco_por_vaga))+'</td>'
+        +'<td style="padding:8px 10px;font-size:12px;">'+fmt(Number(s.repasse_dono))+'</td>'
+        +'<td style="padding:8px 10px;font-size:12px;">'+fmt(Number(s.lucro_sp))+'</td>'
+        +'<td style="padding:8px 10px;">'+(s.ativo?'<span class="pill aberta">ativo</span>':'<span class="pill pausada">inativo</span>')+'</td>'
+        +'<td style="padding:8px 10px;white-space:nowrap;">'
+          +'<button class="btn-act btn-abrir" onclick="editarServico('+s.id+')">✏️</button> '
+          +'<button class="btn-act '+(s.ativo?'btn-pausar':'btn-reativar')+'" onclick="toggleServico('+s.id+','+(!s.ativo)+')">'+(s.ativo?'Desativar':'Ativar')+'</button>'
+        +'</td></tr>';
+    }).join('')+'</tbody></table>';
+}
+
+function limparFormServico(){
+  ['svc-id','svc-nome','svc-vagas','svc-preco','svc-repasse','svc-lucro','svc-icone','svc-descricao'].forEach(function(id){document.getElementById(id).value='';});
+}
+
+function editarServico(id){
+  var s=catalogoData.find(function(x){return x.id===id;});
+  if(!s) return;
+  document.getElementById('svc-id').value=s.id;
+  document.getElementById('svc-nome').value=s.nome;
+  document.getElementById('svc-categoria').value=s.categoria;
+  document.getElementById('svc-tipo').value=s.tipo;
+  document.getElementById('svc-vagas').value=s.vagas_max;
+  document.getElementById('svc-preco').value=s.preco_por_vaga;
+  document.getElementById('svc-repasse').value=s.repasse_dono;
+  document.getElementById('svc-lucro').value=s.lucro_sp;
+  document.getElementById('svc-icone').value=s.icone_url||'';
+  document.getElementById('svc-descricao').value=s.descricao||'';
+  document.getElementById('setup-form').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+async function salvarServico(){
+  var nome=document.getElementById('svc-nome').value.trim();
+  var vagas=parseInt(document.getElementById('svc-vagas').value)||0;
+  var preco=parseFloat(document.getElementById('svc-preco').value)||0;
+  var repasse=parseFloat(document.getElementById('svc-repasse').value)||0;
+  var lucro=parseFloat(document.getElementById('svc-lucro').value)||0;
+  if(!nome){showToast('Informe o nome do serviço.','error');return;}
+  if(vagas<1){showToast('Vagas deve ser pelo menos 1.','error');return;}
+  if(preco<=0){showToast('Informe o preço por vaga.','error');return;}
+  if(repasse+lucro>preco*vagas){showToast('Repasse + Lucro SP não pode exceder Preço × Vagas ('+fmt(preco*vagas)+').','error');return;}
+  var idVal=document.getElementById('svc-id').value;
+  var {data,error}=await sb.rpc('admin_salvar_servico',{
+    p_id:idVal?Number(idVal):null,
+    p_nome:nome,
+    p_categoria:document.getElementById('svc-categoria').value,
+    p_tipo:document.getElementById('svc-tipo').value,
+    p_vagas:vagas,p_preco:preco,p_repasse:repasse,p_lucro:lucro,
+    p_icone:document.getElementById('svc-icone').value.trim(),
+    p_descricao:document.getElementById('svc-descricao').value.trim()
+  });
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Serviço salvo!','success');
+  limparFormServico();
+  await carregarSetup();
+}
+
+async function toggleServico(id,ativar){
+  if(!ativar&&!confirm('Desativar este serviço? Novas piscinas dele não poderão ser criadas.')) return;
+  var {data,error}=await sb.rpc('admin_toggle_servico',{p_id:id,p_ativo:ativar});
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  if(data!=='OK'){showToast(data,'error');return;}
+  showToast(ativar?'Serviço ativado!':'Serviço desativado.','success');
+  await carregarSetup();
+}
+
+function renderConfigIndex(){
+  var boias=configIndexData.boias||[{},{},{},{}];
+  document.getElementById('cfg-boias').innerHTML=boias.map(function(b,i){
+    return '<div style="border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;">'
+      +'<div style="font-size:10px;font-weight:800;opacity:.5;margin-bottom:6px;">BOIA '+(i+1)+'</div>'
+      +'<input id="boia-txt-'+i+'" placeholder="Texto (ex: Claude Pro · R$50,00/mês)" value="'+((b.texto||'').replace(/"/g,'&quot;'))+'" style="width:100%;padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;margin-bottom:6px;box-sizing:border-box;">'
+      +'<input id="boia-img-'+i+'" placeholder="URL da imagem da boia" value="'+((b.img||'').replace(/"/g,'&quot;'))+'" style="width:100%;padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;box-sizing:border-box;">'
+      +'</div>';
+  }).join('');
+  var stats=configIndexData.stats||[{},{},{},{}];
+  document.getElementById('cfg-stats').innerHTML=stats.map(function(s,i){
+    return '<div style="border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;">'
+      +'<input id="stat-val-'+i+'" placeholder="Valor (ex: R$380)" value="'+((s.valor||'').replace(/"/g,'&quot;'))+'" style="width:100%;padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;margin-bottom:6px;box-sizing:border-box;">'
+      +'<input id="stat-rot-'+i+'" placeholder="Rótulo (ex: Gasto médio...)" value="'+((s.rotulo||'').replace(/"/g,'&quot;'))+'" style="width:100%;padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;box-sizing:border-box;">'
+      +'</div>';
+  }).join('');
+}
+
+async function salvarConfigIndex(){
+  var boias=[],stats=[];
+  for(var i=0;i<4;i++){
+    boias.push({texto:document.getElementById('boia-txt-'+i).value.trim(),img:document.getElementById('boia-img-'+i).value.trim()});
+    stats.push({valor:document.getElementById('stat-val-'+i).value.trim(),rotulo:document.getElementById('stat-rot-'+i).value.trim()});
+  }
+  var {error}=await sb.rpc('admin_salvar_config',{p_chave:'index',p_valor:{boias:boias,stats:stats}});
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Conteúdo salvo! O site atualiza no próximo carregamento.','success');
+}
 
 async function carregarRepasses(){
   var {data:r}=await sb.rpc('admin_listar_repasses');
