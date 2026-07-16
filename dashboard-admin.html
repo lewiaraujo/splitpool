@@ -1203,6 +1203,8 @@ async function carregarUsuarios(){
     var ct=contatosMap[u.id]||{};
     u._telefone=ct.telefone||null;
     u._pix=ct.pix_chave||null;
+    u._nivelDono=ct.nivel||u.nivel||null;
+    u._nivelMembro=ct.nivel_membro||null;
     return u;
   });
   renderResumoUsuarios();
@@ -1217,6 +1219,23 @@ function renderResumoUsuarios(){
     '<div class="rcard"><div class="rcard-val blue">'+u.length+'</div><div class="rcard-lbl">Total usuários</div></div>'+
     '<div class="rcard"><div class="rcard-val green">'+donos+'</div><div class="rcard-lbl">Donos</div></div>'+
     '<div class="rcard"><div class="rcard-val teal">'+membros+'</div><div class="rcard-lbl">Membros</div></div>';
+}
+
+var SELO_SEAL='M23 12l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.69 3.1 5.5l.34 3.7L1 12l2.44 2.79-.34 3.7 3.61.82L8.6 22.5l3.4-1.47 3.4 1.46 1.89-3.19 3.61-.82-.34-3.69L23 12zm-12.91 4.72l-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35z';
+function seloNivel(nivel,tipo){
+  if(!nivel) return '';
+  var badges={
+    'Experiente':['#1877F2','Dono Experiente — 9+ meses sem problemas'],
+    'Elite':['#8B5CF6','Dono Elite — 1+ ano sem problemas'],
+    'Splitmaster':['#E9A509','Dono Splitmaster — 1,5+ ano impecável'],
+    'Aquanaut':['#14B8A6','Membro Aquanaut — 3+ assinaturas, 6+ meses'],
+    'Residente':['#E9A509','Membro Residente — veterano da plataforma']
+  }[nivel];
+  if(badges){
+    return '<span class="selo-ic" style="display:inline-flex;align-items:center;margin:1px 2px;cursor:help;vertical-align:middle;" title="'+badges[1]+'" onclick="event.stopPropagation();alert(\''+badges[1]+'\')">'
+      +'<svg width="14" height="14" viewBox="0 0 24 24" style="display:block;"><path d="'+SELO_SEAL+'" fill="'+badges[0]+'"/></svg></span>';
+  }
+  return '<span style="font-size:10px;opacity:.55;margin:1px 3px;" title="'+(tipo||'')+'">'+nivel+'</span>';
 }
 
 function renderUsuarios(){
@@ -1243,7 +1262,7 @@ function renderUsuarios(){
       '<td data-label="Piscinas">'+u._nPisc+'</td>'+
       '<td data-label="Assinaturas">'+u._nAssins+'</td>'+
       '<td data-label="Tipo"><span class="pill '+pillClass+'">'+tipo+'</span></td>'+
-      '<td data-label="Nível" style="font-size:12px;opacity:.6;">'+(u.nivel||'—')+'</td>'+
+      '<td data-label="Nível">'+((seloNivel(u._nivelDono,'Nível de dono')+seloNivel(u._nivelMembro,'Nível de membro'))||'<span style="opacity:.35;">—</span>')+'</td>'+
       '</tr>';
   }).join('');
   document.getElementById('tbody-usuarios').innerHTML=html;
