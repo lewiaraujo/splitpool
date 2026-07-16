@@ -54,6 +54,20 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 .fbtn:hover{background:rgba(255,255,255,0.95);}
 .fbtn.act{background:rgba(18,85,204,0.12);border-color:var(--blue);color:var(--blue);}
 .total-badge{margin-left:auto;font-size:13px;color:var(--bluedark);opacity:.55;font-weight:600;white-space:nowrap;}
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;}
+.svc-card{background:rgba(255,255,255,0.93);border:1px solid rgba(0,180,210,0.18);border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:.2s;box-shadow:0 3px 16px rgba(0,20,80,0.06);}
+.svc-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,20,80,0.13);border-color:rgba(18,85,204,0.35);}
+.svc-ico{width:52px;height:52px;border-radius:12px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f4f8fc;font-weight:800;font-size:20px;color:var(--blue);}
+.svc-ico img{width:100%;height:100%;object-fit:contain;}
+.svc-nome{font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;color:var(--bluedark);line-height:1.2;}
+.svc-sub{font-size:11.5px;color:var(--bluedark);opacity:.55;font-weight:600;margin-top:3px;}
+.svc-preco{margin-left:auto;text-align:right;flex-shrink:0;}
+.svc-preco-val{font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;color:var(--blue);white-space:nowrap;}
+.svc-preco-sub{font-size:10px;color:var(--bluedark);opacity:.5;font-weight:600;}
+.svc-apartir{font-size:10px;color:var(--blue);font-weight:800;display:block;}
+.voltar-planos{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--blue);background:rgba(255,255,255,0.85);border:1.5px solid rgba(18,85,204,0.25);border-radius:10px;padding:9px 16px;cursor:pointer;text-decoration:none;margin-bottom:18px;transition:.2s;}
+.voltar-planos:hover{background:rgba(18,85,204,0.06);}
+@media(max-width:680px){.svc-grid{grid-template-columns:1fr;gap:12px;}.svc-card{padding:14px;}}
 
 /* GRID */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
@@ -528,6 +542,14 @@ async function renderizar() {
     return matchBusca && matchCat && !bloqueado
   })
 
+  // ETAPA 1: sem serviço na URL → grade de planos
+  if(!servicoSelecionado){
+    renderServicos(lista)
+    return
+  }
+  // ETAPA 2: só as piscinas do serviço escolhido
+  lista = lista.filter(p => p.servico === servicoSelecionado)
+
   // Buscar dados dos donos (nome + avatar) em paralelo
   await Promise.all(lista.map(async p => {
     if(p.dono_info === undefined) p.dono_info = await buscarDono(p.dono_id)
@@ -613,7 +635,7 @@ async function renderizar() {
     </div>`
   }).join('')
 
-  document.getElementById('conteudo').innerHTML = ''
+  document.getElementById('conteudo').innerHTML = servicoSelecionado?'<a href="explorar.html" class="voltar-planos">← Todos os planos</a>':''
   document.getElementById('conteudo').appendChild(grid)
 }
 
@@ -667,6 +689,41 @@ function getWellnessMin(servico){
   return '—'
 }
 const SELO_SEAL='M23 12l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.69 3.1 5.5l.34 3.7L1 12l2.44 2.79-.34 3.7 3.61.82L8.6 22.5l3.4-1.47 3.4 1.46 1.89-3.19 3.61-.82-.34-3.69L23 12zm-12.91 4.72l-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35z'
+function renderServicos(lista){
+  const porServico={}
+  lista.forEach(p=>{
+    if(!porServico[p.servico]) porServico[p.servico]={servico:p.servico,pools:0,vagas:0,precos:[],icone_url:p.icone_url||''}
+    const s=porServico[p.servico]
+    s.pools++
+    s.vagas+=Math.max(0,(p.vagas_total||0)-(p.vagas_ocupadas||0))
+    s.precos.push(Number(p.preco_por_vaga||0))
+    if(!s.icone_url&&p.icone_url) s.icone_url=p.icone_url
+  })
+  const servicos=Object.values(porServico).sort((a,b)=>b.vagas-a.vagas)
+  document.getElementById('total-badge').textContent=`${servicos.length} plano${servicos.length!==1?'s':''} disponíve${servicos.length!==1?'is':'l'}`
+  if(!servicos.length){
+    mostrarVazio('Nenhum plano disponível','Tente outro filtro ou volte mais tarde.')
+    return
+  }
+  const fmtP=v=>'R$'+v.toFixed(2).replace('.',',')
+  document.getElementById('conteudo').innerHTML='<div class="svc-grid">'+servicos.map(s=>{
+    const minP=Math.min(...s.precos), maxP=Math.max(...s.precos)
+    const variado=minP!==maxP
+    return `<div class="svc-card" onclick="location.href='explorar.html?servico=${encodeURIComponent(s.servico)}'">
+      <div class="svc-ico">${getIcone(s.servico,s.icone_url)}</div>
+      <div style="min-width:0;">
+        <div class="svc-nome">${s.servico}</div>
+        <div class="svc-sub">${s.pools} piscina${s.pools!==1?'s':''} · ${s.vagas} vaga${s.vagas!==1?'s':''} livre${s.vagas!==1?'s':''}</div>
+      </div>
+      <div class="svc-preco">
+        ${variado?'<span class="svc-apartir">A partir de</span>':''}
+        <div class="svc-preco-val">${fmtP(minP)}</div>
+        <div class="svc-preco-sub">/mês por vaga</div>
+      </div>
+    </div>`
+  }).join('')+'</div>'
+}
+
 function seloDono(nivel){
   const cfg={
     'Experiente':{cor:'#1877F2',txt:'Dono Experiente — 9+ meses de operação sem problemas'},
@@ -677,6 +734,8 @@ function seloDono(nivel){
   return '<span class="selo-ic" title="'+cfg.txt+'" onclick="event.stopPropagation();alert(\''+cfg.txt+'\')">'
     +'<svg width="16" height="16" viewBox="0 0 24 24" aria-label="'+nivel+'"><path d="'+SELO_SEAL+'" fill="'+cfg.cor+'"/></svg></span>'
 }
+
+const servicoSelecionado=new URLSearchParams(location.search).get('servico')
 
 let donosCache={}
 async function buscarDono(donoId){
