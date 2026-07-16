@@ -286,9 +286,10 @@ tbody td{padding:12px 16px;font-size:13px;}
       <div id="setup-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;">
         <input type="hidden" id="svc-id">
         <input id="svc-nome" placeholder="Nome (ex: ChatGPT Plus)" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;grid-column:span 2;">
-        <select id="svc-categoria" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        <select id="svc-categoria" onchange="checarNovaCategoria(this)" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
           <option value="ia">IA & Produt.</option><option value="streaming">Streaming</option>
           <option value="wellness">Wellness</option><option value="musica">Música</option>
+          <option value="__nova">➕ Nova categoria...</option>
         </select>
         <select id="svc-tipo" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
           <option value="familia">Plano família</option><option value="wellness">Wellness (corporativo)</option>
@@ -297,7 +298,11 @@ tbody td{padding:12px 16px;font-size:13px;}
         <input id="svc-preco" type="number" step="0.01" placeholder="Preço/vaga R$" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
         <input id="svc-repasse" type="number" step="0.01" placeholder="Repasse dono R$" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
         <input id="svc-lucro" type="number" step="0.01" placeholder="Lucro SP R$" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
-        <input id="svc-icone" placeholder="URL do ícone (opcional)" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;grid-column:span 2;">
+        <div style="grid-column:span 2;display:flex;align-items:center;gap:8px;">
+          <input type="hidden" id="svc-icone">
+          <img id="svc-icone-prev" src="" style="display:none;width:32px;height:32px;border-radius:6px;object-fit:contain;background:#f4f8fc;border:1px solid rgba(0,0,0,0.08);">
+          <input type="file" id="svc-icone-file" accept="image/*" style="flex:1;font-size:11px;font-family:inherit;">
+        </div>
         <input id="svc-descricao" placeholder="Descrição curta (ex: até 5 vagas · IA avançada)" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;grid-column:span 2;">
       </div>
       <div style="display:flex;gap:8px;margin-bottom:16px;">
@@ -881,6 +886,7 @@ var configIndexData=null;
 async function carregarSetup(){
   var {data:svcs}=await sb.from('servicos_catalogo').select('*').order('nome');
   catalogoData=svcs||[];
+  popularCategoriasCatalogo();
   renderCatalogo();
   var {data:cfg}=await sb.from('site_config').select('valor').eq('chave','index').single();
   configIndexData=(cfg&&cfg.valor)||{boias:[{},{},{},{}],stats:[{valor:'R$380',rotulo:'Gasto médio com serviços/mês'},{valor:'60%',rotulo:'Economia real por usuário'},{valor:'+9',rotulo:'Plataformas disponíveis'},{valor:'0%',rotulo:'Custo de entrada'}]};
@@ -910,8 +916,49 @@ function renderCatalogo(){
     }).join('')+'</tbody></table>';
 }
 
+function checarNovaCategoria(sel){
+  if(sel.value!=='__nova') { sel.dataset.prev=sel.value; return; }
+  var nome=prompt('Nome da nova categoria (ex: Educação):');
+  if(!nome||!nome.trim()){ sel.value=sel.dataset.prev||'ia'; return; }
+  var slug=nome.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  if(!slug){ sel.value=sel.dataset.prev||'ia'; return; }
+  // Já existe?
+  var existente=Array.from(sel.options).find(function(o){return o.value===slug;});
+  if(existente){ sel.value=slug; return; }
+  var opt=document.createElement('option');
+  opt.value=slug; opt.textContent=nome.trim();
+  sel.insertBefore(opt, sel.querySelector('option[value="__nova"]'));
+  sel.value=slug;
+  sel.dataset.prev=slug;
+}
+
+function popularCategoriasCatalogo(){
+  var sel=document.getElementById('svc-categoria');
+  if(!sel) return;
+  var existentes=new Set(Array.from(sel.options).map(function(o){return o.value;}));
+  catalogoData.forEach(function(s){
+    if(s.categoria&&!existentes.has(s.categoria)){
+      var opt=document.createElement('option');
+      opt.value=s.categoria;
+      opt.textContent=s.categoria.charAt(0).toUpperCase()+s.categoria.slice(1);
+      sel.insertBefore(opt, sel.querySelector('option[value="__nova"]'));
+      existentes.add(s.categoria);
+    }
+  });
+}
+
+async function uploadImagemSite(file, pasta){
+  var ext=(file.name.split('.').pop()||'png').toLowerCase();
+  var path=pasta+'/'+Date.now()+'.'+ext;
+  var {error}=await sb.storage.from('icones').upload(path, file, {upsert:true});
+  if(error) throw new Error(error.message+' — verifique se você está logado com alguma conta do site neste navegador.');
+  return sb.storage.from('icones').getPublicUrl(path).data.publicUrl;
+}
+
 function limparFormServico(){
-  ['svc-id','svc-nome','svc-vagas','svc-preco','svc-repasse','svc-lucro','svc-icone','svc-descricao'].forEach(function(id){document.getElementById(id).value='';});
+  ['svc-id','svc-nome','svc-vagas','svc-preco','svc-repasse','svc-lucro','svc-icone','svc-descricao','svc-icone-file'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var prev=document.getElementById('svc-icone-prev');
+  if(prev){prev.src='';prev.style.display='none';}
 }
 
 function editarServico(id){
@@ -926,6 +973,12 @@ function editarServico(id){
   document.getElementById('svc-repasse').value=s.repasse_dono;
   document.getElementById('svc-lucro').value=s.lucro_sp;
   document.getElementById('svc-icone').value=s.icone_url||'';
+  var prev=document.getElementById('svc-icone-prev');
+  if(prev){
+    if(s.icone_url){prev.src=s.icone_url;prev.style.display='block';}
+    else{prev.src='';prev.style.display='none';}
+  }
+  document.getElementById('svc-icone-file').value='';
   document.getElementById('svc-descricao').value=s.descricao||'';
   document.getElementById('setup-form').scrollIntoView({behavior:'smooth',block:'center'});
 }
@@ -940,6 +993,14 @@ async function salvarServico(){
   if(vagas<1){showToast('Vagas deve ser pelo menos 1.','error');return;}
   if(preco<=0){showToast('Informe o preço por vaga.','error');return;}
   if(repasse+lucro>preco*vagas){showToast('Repasse + Lucro SP não pode exceder Preço × Vagas ('+fmt(preco*vagas)+').','error');return;}
+  // Upload do ícone (se um arquivo foi escolhido)
+  var fileEl=document.getElementById('svc-icone-file');
+  if(fileEl&&fileEl.files&&fileEl.files[0]){
+    try{
+      var urlIcone=await uploadImagemSite(fileEl.files[0],'catalogo');
+      document.getElementById('svc-icone').value=urlIcone;
+    }catch(e){showToast('Erro no upload do ícone: '+e.message,'error');return;}
+  }
   var idVal=document.getElementById('svc-id').value;
   var {data,error}=await sb.rpc('admin_salvar_servico',{
     p_id:idVal?Number(idVal):null,
@@ -971,7 +1032,11 @@ function renderConfigIndex(){
     return '<div style="border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;">'
       +'<div style="font-size:10px;font-weight:800;opacity:.5;margin-bottom:6px;">BOIA '+(i+1)+'</div>'
       +'<input id="boia-txt-'+i+'" placeholder="Texto (ex: Claude Pro · R$50,00/mês)" value="'+((b.texto||'').replace(/"/g,'&quot;'))+'" style="width:100%;padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;margin-bottom:6px;box-sizing:border-box;">'
-      +'<input id="boia-img-'+i+'" placeholder="URL da imagem da boia" value="'+((b.img||'').replace(/"/g,'&quot;'))+'" style="width:100%;padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;box-sizing:border-box;">'
+      +'<input type="hidden" id="boia-img-'+i+'" value="'+((b.img||'').replace(/"/g,'&quot;'))+'">'
+      +'<div style="display:flex;align-items:center;gap:6px;">'
+        +(b.img?'<img src="'+b.img+'" style="width:28px;height:28px;border-radius:5px;object-fit:contain;background:#f4f8fc;border:1px solid rgba(0,0,0,0.08);">':'')
+        +'<input type="file" id="boia-file-'+i+'" accept="image/*" style="flex:1;font-size:10px;font-family:inherit;">'
+      +'</div>'
       +'</div>';
   }).join('');
   var stats=configIndexData.stats||[{},{},{},{}];
@@ -986,7 +1051,13 @@ function renderConfigIndex(){
 async function salvarConfigIndex(){
   var boias=[],stats=[];
   for(var i=0;i<4;i++){
-    boias.push({texto:document.getElementById('boia-txt-'+i).value.trim(),img:document.getElementById('boia-img-'+i).value.trim()});
+    var imgUrl=document.getElementById('boia-img-'+i).value.trim();
+    var fEl=document.getElementById('boia-file-'+i);
+    if(fEl&&fEl.files&&fEl.files[0]){
+      try{ imgUrl=await uploadImagemSite(fEl.files[0],'boias'); }
+      catch(e){showToast('Erro no upload da boia '+(i+1)+': '+e.message,'error');return;}
+    }
+    boias.push({texto:document.getElementById('boia-txt-'+i).value.trim(),img:imgUrl});
     stats.push({valor:document.getElementById('stat-val-'+i).value.trim(),rotulo:document.getElementById('stat-rot-'+i).value.trim()});
   }
   var {error}=await sb.rpc('admin_salvar_config',{p_chave:'index',p_valor:{boias:boias,stats:stats}});
