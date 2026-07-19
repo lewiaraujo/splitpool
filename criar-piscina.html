@@ -577,6 +577,31 @@ const SVCS_CORP=[
     planos:[{nome:'Corporativo (vaga de dependente)',custo:0,vagas:2,desc:'1.500+ cursos de tecnologia, certificados e formações'}]
   },
 ]
+
+// Setup Fase 2: serviços cadastrados dinamicamente pelo admin (Setup) que ainda não têm
+// lógica hardcoded aqui. Só ENTRAM se o nome não existir nas listas acima (nunca sobrescrevem).
+// Atenção: repasses gerados no dashboard-owner/admin ainda dependem dos mapas hardcoded
+// (LUCRO_SP_MAP/REPASSE_MAP/LUCRO_DONO_MAP) — ao promover um serviço do catálogo pra produção
+// real, adicionar as mesmas chaves nesses mapas para o cálculo de repasse funcionar.
+sb.from('servicos_catalogo').select('*').eq('ativo',true).then(({data:catalogo})=>{
+  (catalogo||[]).forEach(function(s){
+    var jaExisteFamilia=SVCS_FAMILIA.some(function(x){return x.nome===s.nome})
+    var jaExisteCorp=SVCS_CORP.some(function(x){return x.nome===s.nome})
+    if(jaExisteFamilia||jaExisteCorp) return
+    var novoItem={
+      nome:s.nome,
+      sub:s.descricao||(s.tipo==='wellness'?'Benefício corporativo':'Plano família'),
+      img:s.icone_url||(BASE+'SplitPool_Icon.png'),
+      precoVenda:Number(s.preco_por_vaga||0),
+      repasse:Number(s.repasse_dono||0),
+      planos:[{nome:s.nome,custo:0,vagas:Number(s.vagas_max||4),desc:s.descricao||''}]
+    }
+    if(s.tipo==='wellness') SVCS_CORP.push(novoItem)
+    else SVCS_FAMILIA.push(novoItem)
+  })
+  if(tipoSelecionado) renderSvcs()
+}).catch(function(){})
+
 const WH_PLANOS=[
   {nome:'Starter',preco:39.99,repasse:8.04,academias:'6.000+ academias parceiras',popular:false},
   {nome:'Basic',preco:69.99,repasse:7.33,academias:'SmartFit, CrossFit e parceiros',popular:false},
