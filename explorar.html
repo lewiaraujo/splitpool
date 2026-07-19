@@ -727,8 +727,8 @@ function renderServicos(lista){
         <div class="svc-sub">${s.pools} piscina${s.pools!==1?'s':''} · ${s.vagas} vaga${s.vagas!==1?'s':''} livre${s.vagas!==1?'s':''}</div>
       </div>
       <div class="svc-preco">
-        ${variado?'<span class="svc-apartir">A partir de</span>':''}
-        <div class="svc-preco-val">${fmtP(minP)}</div>
+        ${(isWellness(s.servico)||variado)?'<span class="svc-apartir">A partir de</span>':''}
+        <div class="svc-preco-val">${isWellness(s.servico)?('R$'+getWellnessMin(s.servico)):fmtP(minP)}</div>
         <div class="svc-preco-sub">/mês por vaga</div>
       </div>
     </div>`
