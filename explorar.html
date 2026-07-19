@@ -464,6 +464,7 @@ const ICONES = {
 }
 
 let todasPiscinas = []
+let CATALOGO_EX = []
 let OCULTOS_EX = []
 function servicoOcultoEx(nome){
   const n=(nome||'').toLowerCase()
@@ -499,6 +500,11 @@ async function carregarPiscinas() {
   }
 
   todasPiscinas = data || []
+  // Setup Fase 2: serviços do catálogo sem nenhuma piscina ainda ("Seja o primeiro")
+  try{
+    const {data:cat}=await sb.from('servicos_catalogo').select('*').eq('ativo',true)
+    CATALOGO_EX=cat||[]
+  }catch(e){CATALOGO_EX=[]}
   // Serviços ocultos pelo admin
   try{
     const {data:cfgOc}=await sb.from('site_config').select('valor').eq('chave','servicos_ocultos').maybeSingle()
@@ -710,14 +716,17 @@ function renderServicos(lista){
     s.precos.push(Number(p.preco_por_vaga||0))
     if(!s.icone_url&&p.icone_url) s.icone_url=p.icone_url
   })
+  // Serviços do catálogo (Setup) que ainda não têm nenhuma piscina aberta
+  const semPiscina=(CATALOGO_EX||[]).filter(s=>!porServico[s.nome]&&!servicoOcultoEx(s.nome))
   const servicos=Object.values(porServico).sort((a,b)=>b.vagas-a.vagas)
-  document.getElementById('total-badge').textContent=`${servicos.length} plano${servicos.length!==1?'s':''} disponíve${servicos.length!==1?'is':'l'}`
-  if(!servicos.length){
+  const totalCards=servicos.length+semPiscina.length
+  document.getElementById('total-badge').textContent=`${totalCards} plano${totalCards!==1?'s':''} disponíve${totalCards!==1?'is':'l'}`
+  if(!totalCards){
     mostrarVazio('Nenhum plano disponível','Tente outro filtro ou volte mais tarde.')
     return
   }
   const fmtP=v=>'R$'+v.toFixed(2).replace('.',',')
-  document.getElementById('conteudo').innerHTML='<div class="svc-grid">'+servicos.map(s=>{
+  let html='<div class="svc-grid">'+servicos.map(s=>{
     const minP=Math.min(...s.precos), maxP=Math.max(...s.precos)
     const variado=minP!==maxP
     return `<div class="svc-card" onclick="location.href='explorar.html?servico=${encodeURIComponent(s.servico)}'">
@@ -732,7 +741,22 @@ function renderServicos(lista){
         <div class="svc-preco-sub">/mês por vaga</div>
       </div>
     </div>`
-  }).join('')+'</div>'
+  }).join('')
+  html+=semPiscina.map(s=>{
+    return `<div class="svc-card" style="opacity:.88;border-style:dashed;" onclick="location.href='criar-piscina.html'">
+      <div class="svc-ico">${getIcone(s.nome,s.icone_url)}</div>
+      <div style="min-width:0;">
+        <div class="svc-nome">${s.nome}</div>
+        <div class="svc-sub">${s.descricao||'Novo no catálogo'}</div>
+      </div>
+      <div class="svc-preco">
+        <span class="svc-apartir" style="color:var(--green);">Seja o primeiro!</span>
+        <div class="svc-preco-val" style="font-size:14px;">Criar piscina →</div>
+      </div>
+    </div>`
+  }).join('')
+  html+='</div>'
+  document.getElementById('conteudo').innerHTML=html
 }
 
 function seloDono(nivel){
