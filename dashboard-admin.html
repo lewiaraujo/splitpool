@@ -313,6 +313,14 @@ tbody td{padding:12px 16px;font-size:13px;}
       <div style="font-size:11px;color:#999;margin-top:10px;line-height:1.5;">⚠️ Validação financeira: Repasse dono + Lucro SP deve ser ≤ Preço/vaga × vagas. Serviços novos aparecem no Explorar quando a primeira piscina for criada. Integração completa (criar-piscina lendo o catálogo) é a Fase 2.</div>
     </div>
 
+    <!-- Visibilidade -->
+    <div style="background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:18px;margin-bottom:18px;">
+      <div style="font-size:15px;font-weight:800;color:#0A3080;margin-bottom:4px;">👁️ Visibilidade de serviços</div>
+      <div style="font-size:12px;color:#777;margin-bottom:14px;">Marque para <strong>ocultar</strong> o serviço de todo o site: cards e boias do index, Explorar (inclusive piscinas abertas dele) e opções do criar piscina. Membros ativos não são afetados.</div>
+      <div id="vis-lista" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:14px;"><div class="empty">Carregando...</div></div>
+      <button class="btn-act btn-aprovar" onclick="salvarVisibilidade()">💾 Salvar visibilidade</button>
+    </div>
+
     <!-- Conteúdo do site -->
     <div style="background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:18px;">
       <div style="font-size:15px;font-weight:800;color:#0A3080;margin-bottom:4px;">🎨 Conteúdo do Index (página inicial)</div>
@@ -888,6 +896,9 @@ async function carregarSetup(){
   catalogoData=svcs||[];
   popularCategoriasCatalogo();
   renderCatalogo();
+  var {data:cfgOc}=await sb.from('site_config').select('valor').eq('chave','servicos_ocultos').maybeSingle();
+  ocultosAtuais=(cfgOc&&cfgOc.valor&&cfgOc.valor.lista)||[];
+  renderVisibilidade();
   var {data:cfg}=await sb.from('site_config').select('valor').eq('chave','index').single();
   configIndexData=(cfg&&cfg.valor)||{boias:[{},{},{},{}],stats:[{valor:'R$380',rotulo:'Gasto médio com serviços/mês'},{valor:'60%',rotulo:'Economia real por usuário'},{valor:'+9',rotulo:'Plataformas disponíveis'},{valor:'0%',rotulo:'Custo de entrada'}]};
   renderConfigIndex();
@@ -1024,6 +1035,32 @@ async function toggleServico(id,ativar){
   if(data!=='OK'){showToast(data,'error');return;}
   showToast(ativar?'Serviço ativado!':'Serviço desativado.','success');
   await carregarSetup();
+}
+
+var SERVICOS_BASE=['Microsoft 365','Duolingo Super','Canva Teams','Notion Team','Claude Pro','Wellhub','TotalPass','Alura'];
+var ocultosAtuais=[];
+
+function renderVisibilidade(){
+  var nomes=new Set(SERVICOS_BASE);
+  catalogoData.forEach(function(s){nomes.add(s.nome);});
+  ocultosAtuais.forEach(function(n){nomes.add(n);});
+  var el=document.getElementById('vis-lista');
+  el.innerHTML=Array.from(nomes).sort().map(function(n){
+    var esc=n.replace(/"/g,'&quot;');
+    var checked=ocultosAtuais.indexOf(n)!==-1?' checked':'';
+    return '<label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#333;cursor:pointer;padding:6px 10px;border:1px solid rgba(0,0,0,0.08);border-radius:8px;'+(checked?'background:#fff1f2;border-color:rgba(220,38,38,0.3);':'')+'">'
+      +'<input type="checkbox" class="vis-chk" value="'+esc+'"'+checked+' style="cursor:pointer;"> '
+      +(checked?'🚫 ':'')+n+'</label>';
+  }).join('');
+}
+
+async function salvarVisibilidade(){
+  var marcados=Array.from(document.querySelectorAll('.vis-chk:checked')).map(function(ch){return ch.value;});
+  var {error}=await sb.rpc('admin_salvar_config',{p_chave:'servicos_ocultos',p_valor:{lista:marcados}});
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  ocultosAtuais=marcados;
+  renderVisibilidade();
+  showToast(marcados.length?marcados.length+' serviço(s) oculto(s) do site.':'Todos os serviços visíveis.','success');
 }
 
 function renderConfigIndex(){
@@ -1368,7 +1405,8 @@ function renderPiscinas(){
       var linkHtml=p.link_convite
         ?'<a href="'+p.link_convite+'" target="_blank" style="color:var(--blue);font-size:11px;display:block;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+p.link_convite+'">'+p.link_convite+'</a>'
         :'<span style="opacity:.3;">—</span>';
-      html+='<tr style="border-bottom:1px solid rgba(18,85,204,0.06);">';
+      var trBgPisc=p.status==='pausada'?'background:#fff1f2;':(p.status==='recusada'?'background:#f4f4f5;opacity:.7;':'');
+      html+='<tr style="border-bottom:1px solid rgba(18,85,204,0.06);'+trBgPisc+'">';
       html+='<td style="padding:10px 12px;font-size:13px;font-weight:800;color:var(--bluedark);white-space:nowrap;">🏊 '+p.servico+'</td>';
       html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;color:var(--blue);font-family:monospace;white-space:nowrap;">'+poolCode(p.id)+'</td>';
       html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;">'+p.vagas_ocupadas+'/'+p.vagas_total+'</td>';
@@ -1416,9 +1454,24 @@ async function aprovarPiscina(id){
   atualizarBadgesAdmin();
 }
 async function alterarStatus(id,status){
+  if(status==='pausada'){
+    if(!dados.assinaturas) await carregarAssinaturas();
+    var membrosAtv=(dados.assinaturas||[]).filter(function(a){return Number(a.piscina_id)===Number(id)&&(a.status==='ativo'||a.status==='aguardando_acesso');});
+    var receitaAtual=membrosAtv.reduce(function(s,a){return s+Number(a.valor||0);},0);
+    var piscInfo=(dados.piscinas||[]).find(function(p){return Number(p.id)===Number(id);})||{};
+    var vagasLivres=Math.max(0,Number(piscInfo.vagas_total||0)-Number(piscInfo.vagas_ocupadas||0));
+    var msgImpacto='⚠️ PAUSAR a piscina de '+(piscInfo.servico||'?')+'?\n\nIMPACTO NA CADEIA:\n'
+      +'• A piscina SOME do Explorar imediatamente\n'
+      +'• '+vagasLivres+' vaga(s) livre(s) deixam de ser vendidas\n'
+      +'• '+membrosAtv.length+' membro(s) ativo(s) MANTÊM o acesso ('+fmt(receitaAtual)+'/mês preservados)\n'
+      +'• Novas entradas ficam bloqueadas até reativar\n'
+      +'• O dono NÃO é notificado automaticamente\n\nConfirmar a pausa?';
+    if(!confirm(msgImpacto)) return;
+  }
   await sb.rpc('admin_atualizar_piscina',{p_id:id,p_status:status});
   showToast('Status atualizado!','success');
   await carregarPiscinas();
+  atualizarBadgesAdmin();
 }
 
 // ── USUÁRIOS ──
