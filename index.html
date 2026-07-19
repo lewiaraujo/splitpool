@@ -455,9 +455,16 @@ const SVCS=[
   {n:"Alura",m:"vagas corporativas · Educação tech",p:"R$39,90",cat:"ia",img:BASE+'logo_alura.png'},
 ];
 
+let SVC_OCULTOS=[];
+let _fAtualSvc='all';
+function svcOculto(nome){
+  const n=(nome||'').toLowerCase();
+  return SVC_OCULTOS.some(o=>{o=(o||'').toLowerCase();return n.includes(o)||o.includes(n);});
+}
 function renderSvcs(f){
+  _fAtualSvc=f;
   const g=document.getElementById('svc-grid');
-  const d=f==='all'?SVCS:SVCS.filter(s=>s.cat===f);
+  const d=(f==='all'?SVCS:SVCS.filter(s=>s.cat===f)).filter(s=>!svcOculto(s.n));
   g.innerHTML=d.map(s=>`<div class="svc-card" onclick="ir('explorar')"><div class="svc-ico"><img src="${s.img}" alt="${s.n}" style="width:52px;height:52px;object-fit:cover;border-radius:12px;display:block;" onerror="this.parentElement.innerHTML='<div style=\\'width:52px;height:52px;border-radius:12px;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:22px;\\'>${s.n[0]}</div>'"></div><div style="flex:1;min-width:0;"><div class="svc-name">${s.n}</div><div class="svc-meta">${s.m}</div></div><div style="text-align:right;flex-shrink:0;"><div class="svc-price${s.p.length>8?' small':''}">${s.p}</div><div class="svc-mo">/mês por vaga</div></div></div>`).join('');
 }
 function fSvc(f,el){document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('act'));el.classList.add('act');renderSvcs(f);}
@@ -483,6 +490,21 @@ function openM(id){
 function closeM(id){document.getElementById('m-'+id).classList.remove('open');}
 document.querySelectorAll('.mov').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 renderSvcs('all');
+
+// Visibilidade de serviços gerenciada pelo admin (site_config)
+fetch('https://eawfweuamtwlsilrkgoo.supabase.co/rest/v1/site_config?chave=eq.servicos_ocultos&select=valor',{
+  headers:{'apikey':'sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'}
+}).then(r=>r.json()).then(rows=>{
+  const lista=rows&&rows[0]&&rows[0].valor&&rows[0].valor.lista;
+  if(!lista||!lista.length) return;
+  SVC_OCULTOS=lista;
+  renderSvcs(_fAtualSvc);
+  // Esconder boias flutuantes do hero cujo texto bata com serviço oculto
+  document.querySelectorAll('.flt').forEach(flt=>{
+    const txt=(flt.textContent||'')+' '+Array.from(flt.querySelectorAll('img')).map(i=>i.alt||'').join(' ');
+    if(SVC_OCULTOS.some(o=>txt.toLowerCase().includes((o||'').toLowerCase()))) flt.style.display='none';
+  });
+}).catch(()=>{});
 </script>
 </body>
 </html>
