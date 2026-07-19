@@ -464,6 +464,11 @@ const ICONES = {
 }
 
 let todasPiscinas = []
+let OCULTOS_EX = []
+function servicoOcultoEx(nome){
+  const n=(nome||'').toLowerCase()
+  return OCULTOS_EX.some(o=>{o=(o||'').toLowerCase();return n.includes(o)||o.includes(n)})
+}
 let categoriaAtual = 'todos'
 let piscinaAtual = null
 let isWH_atual = false
@@ -494,6 +499,11 @@ async function carregarPiscinas() {
   }
 
   todasPiscinas = data || []
+  // Serviços ocultos pelo admin
+  try{
+    const {data:cfgOc}=await sb.from('site_config').select('valor').eq('chave','servicos_ocultos').maybeSingle()
+    OCULTOS_EX=(cfgOc&&cfgOc.valor&&cfgOc.valor.lista)||[]
+  }catch(e){OCULTOS_EX=[]}
   renderizar()
 }
 
@@ -539,7 +549,8 @@ async function renderizar() {
     const matchBusca = !busca || p.servico.toLowerCase().includes(busca) || (p.descricao||'').toLowerCase().includes(busca)
     const matchCat = categoriaAtual === 'todos' || getCategoria(p.servico) === categoriaAtual
     const bloqueado = BLOCKLIST.some(b => p.servico.toLowerCase().includes(b))
-    return matchBusca && matchCat && !bloqueado
+    const oculto = servicoOcultoEx(p.servico)
+    return matchBusca && matchCat && !bloqueado && !oculto
   })
 
   // ETAPA 1: sem serviço na URL → grade de planos
