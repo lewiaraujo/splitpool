@@ -505,6 +505,15 @@ const SUPABASE_URL='https://eawfweuamtwlsilrkgoo.supabase.co'
 const SUPABASE_KEY='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
 const {createClient}=supabase
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY)
+let OCULTOS_CP=[]
+function servicoOcultoCP(nome){
+  const n=(nome||'').toLowerCase()
+  return OCULTOS_CP.some(o=>{o=(o||'').toLowerCase();return n.includes(o)||o.includes(n)})
+}
+sb.from('site_config').select('valor').eq('chave','servicos_ocultos').maybeSingle().then(({data:cfg})=>{
+  OCULTOS_CP=(cfg&&cfg.valor&&cfg.valor.lista)||[]
+})
+
 let userId=null,nomeUsuario='',tipoSelecionado=null,svcSelecionado=null,planoAtual=null
 let piscinasExistentes=[] // serviços que o dono já tem piscina ativa
 let comprovanteFile=null
@@ -615,7 +624,8 @@ sb.auth.getSession().then(({data})=>{
 
 function renderSvcs(){
   const tipo=tipoSelecionado
-  const lista=tipo==='corporativo'?SVCS_CORP:tipo==='familia'?SVCS_FAMILIA:[...SVCS_FAMILIA,...SVCS_CORP]
+  const listaBase=tipo==='corporativo'?SVCS_CORP:tipo==='familia'?SVCS_FAMILIA:[...SVCS_FAMILIA,...SVCS_CORP]
+  const lista=listaBase.filter(s=>!servicoOcultoCP(s.nome))
   document.getElementById('svc-grid').innerHTML=lista.map(s=>{
     const jaTem=piscinasExistentes.includes(s.nome.toLowerCase())
     return`<div class="svc-item ${svcSelecionado?.nome===s.nome?'sel':''} ${jaTem?'bloqueado':''}" onclick="${jaTem?'showMsg(\'Você já tem uma piscina ativa de '+s.nome+'. No MVP só é permitida 1 piscina por serviço.\',\'error\')':'selecionarSvc(\''+s.nome+'\')'}">
