@@ -294,10 +294,10 @@ tbody td{padding:12px 16px;font-size:13px;}
         <select id="svc-tipo" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
           <option value="familia">Plano família</option><option value="wellness">Wellness (corporativo)</option>
         </select>
-        <input id="svc-vagas" type="number" min="1" max="10" placeholder="Vagas máx" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
-        <input id="svc-preco" type="number" step="0.01" placeholder="Preço/vaga R$" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
-        <input id="svc-repasse" type="number" step="0.01" placeholder="Repasse dono R$" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
-        <input id="svc-lucro" type="number" step="0.01" placeholder="Lucro SP R$" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        <input id="svc-vagas" type="number" min="1" max="10" placeholder="Vagas máx" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        <input id="svc-preco" type="number" step="0.01" placeholder="Preço/vaga R$ (membro paga)" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        <input id="svc-lucro" type="number" step="0.01" placeholder="Lucro SP R$/vaga" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        <input id="svc-custo" type="number" step="0.01" placeholder="Custo do plano p/ dono R$ (opcional)" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;grid-column:span 2;">
         <div style="grid-column:span 2;display:flex;align-items:center;gap:8px;">
           <input type="hidden" id="svc-icone">
           <img id="svc-icone-prev" src="" style="display:none;width:32px;height:32px;border-radius:6px;object-fit:contain;background:#f4f8fc;border:1px solid rgba(0,0,0,0.08);">
@@ -305,12 +305,31 @@ tbody td{padding:12px 16px;font-size:13px;}
         </div>
         <input id="svc-descricao" placeholder="Descrição curta (ex: até 5 vagas · IA avançada)" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;grid-column:span 2;">
       </div>
+      <!-- Taxa do cartão -->
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#f8fafc;border:1px solid rgba(0,0,0,0.06);border-radius:8px;padding:9px 12px;margin-bottom:10px;">
+        <span style="font-size:12px;font-weight:700;color:#0A3080;">💳 Taxa do cartão:</span>
+        <input id="taxa-pct" type="number" step="0.01" value="4.99" oninput="calcSimulacao()" style="width:70px;padding:5px 8px;border:1px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;font-family:inherit;"> <span style="font-size:12px;">% +</span>
+        <input id="taxa-fixo" type="number" step="0.01" value="0.49" oninput="calcSimulacao()" style="width:70px;padding:5px 8px;border:1px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;font-family:inherit;"> <span style="font-size:12px;">R$ fixo por transação</span>
+        <button class="btn-act" style="background:#eef2f7;color:#0A3080;font-size:11px;" onclick="salvarTaxaCartao()">Salvar taxa</button>
+      </div>
+
+      <!-- Simulação financeira em tempo real -->
+      <div id="sim-servico" style="display:none;background:#f0f9ff;border:1.5px solid rgba(18,85,204,0.2);border-radius:10px;padding:14px 16px;margin-bottom:12px;font-size:12.5px;line-height:2;color:#0A3080;"></div>
+
+      <!-- Planos múltiplos (multi-preço) -->
+      <div style="border:1px dashed rgba(0,0,0,0.15);border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:800;color:#0A3080;margin-bottom:4px;">📶 Planos múltiplos (opcional — estilo Wellhub/TotalPass)</div>
+        <div style="font-size:11px;color:#777;margin-bottom:10px;">Se o serviço tem vários tiers de preço, adicione aqui. No site aparece "A partir de" com o menor valor. O repasse de cada plano é calculado com a mesma base (preço − taxa − lucro SP).</div>
+        <div id="planos-fin-lista"></div>
+        <button class="btn-act" style="background:#eef2f7;color:#0A3080;font-size:11px;" onclick="addPlanoFin()">➕ Adicionar plano</button>
+      </div>
+
       <div style="display:flex;gap:8px;margin-bottom:16px;">
         <button class="btn-act btn-aprovar" onclick="salvarServico()">💾 Salvar serviço</button>
         <button class="btn-act" style="background:#eef2f7;color:#0A3080;" onclick="limparFormServico()">Limpar</button>
       </div>
       <div id="setup-lista"><div class="empty">Carregando...</div></div>
-      <div style="font-size:11px;color:#999;margin-top:10px;line-height:1.5;">⚠️ Validação financeira: Repasse dono + Lucro SP deve ser ≤ Preço/vaga × vagas. Serviços novos aparecem no Explorar quando a primeira piscina for criada. Integração completa (criar-piscina lendo o catálogo) é a Fase 2.</div>
+      <div style="font-size:11px;color:#999;margin-top:10px;line-height:1.6;">💡 Como funciona: você define o <strong>preço da vaga</strong> (o que o membro paga) e o <strong>lucro da Splitpool</strong>. O <strong>repasse ao dono é calculado automaticamente</strong> = preço − taxa do cartão − lucro SP. Serviços novos já aparecem no criar piscina e no Explorar ("Seja o primeiro") imediatamente após salvar.</div>
     </div>
 
     <!-- Visibilidade -->
@@ -433,9 +452,10 @@ function _popularMapas(catalogo){
       LUCRO_SP_MAP[nomeKey]=Number(s.lucro_sp);
     }
     if(s.repasse_dono>0){
-      // repasse_dono no catálogo = valor que o SP repassa ao dono por vaga
+      // repasse_dono no catálogo = valor que o SP transfere ao dono por vaga
       REPASSE_MAP[nomeKey]=Number(s.repasse_dono);
-      LUCRO_DONO_MAP[nomeKey]=Number(s.repasse_dono); // para wellness custo=0, repasse=lucro
+      var custoVagaCat=(s.custo_plano&&s.vagas_max)?Number(s.custo_plano)/Number(s.vagas_max):0;
+      LUCRO_DONO_MAP[nomeKey]=Math.max(0,Number(s.repasse_dono)-custoVagaCat);
     }
     // Planos multi-tier (Wellhub, TotalPass etc.)
     (s.planos_financeiros||[]).forEach(function(p){
@@ -450,7 +470,7 @@ function _popularMapas(catalogo){
   });
 }
 // Carrega ao iniciar (não bloqueia o render — fallback hardcoded garante o fluxo)
-sb.from('servicos_catalogo').select('nome,preco_por_vaga,repasse_dono,lucro_sp,planos_financeiros').eq('ativo',true).then(function(r){
+sb.from('servicos_catalogo').select('nome,preco_por_vaga,repasse_dono,lucro_sp,planos_financeiros,custo_plano,vagas_max').eq('ativo',true).then(function(r){
   if(r.data&&r.data.length) _popularMapas(r.data);
 }).catch(function(){});
 
@@ -927,6 +947,13 @@ async function carregarSetup(){
   catalogoData=svcs||[];
   popularCategoriasCatalogo();
   renderCatalogo();
+  var {data:cfgTx}=await sb.from('site_config').select('valor').eq('chave','taxa_cartao').maybeSingle();
+  if(cfgTx&&cfgTx.valor){
+    TAXA_CARTAO={pct:Number(cfgTx.valor.pct)||4.99,fixo:Number(cfgTx.valor.fixo)||0.49};
+    document.getElementById('taxa-pct').value=TAXA_CARTAO.pct;
+    document.getElementById('taxa-fixo').value=TAXA_CARTAO.fixo;
+  }
+  renderPlanosFin();
   var {data:cfgOc}=await sb.from('site_config').select('valor').eq('chave','servicos_ocultos').maybeSingle();
   ocultosAtuais=(cfgOc&&cfgOc.valor&&cfgOc.valor.lista)||[];
   renderVisibilidade();
@@ -943,7 +970,7 @@ function renderCatalogo(){
     +'</tr></thead><tbody>'
     +catalogoData.map(function(s){
       return '<tr style="border-top:1px solid rgba(0,0,0,0.05);'+(s.ativo?'':'opacity:.45;')+'">'
-        +'<td style="padding:8px 10px;font-size:12px;font-weight:700;">'+s.nome+(s.descricao?'<div style="font-size:10px;opacity:.55;font-weight:500;">'+s.descricao+'</div>':'')+'</td>'
+        +'<td style="padding:8px 10px;font-size:12px;font-weight:700;">'+s.nome+((s.planos_financeiros&&s.planos_financeiros.length)?' <span style="font-size:9px;background:#eef2ff;color:#3730a3;padding:1px 6px;border-radius:8px;font-weight:800;">'+s.planos_financeiros.length+' planos</span>':'')+(s.descricao?'<div style="font-size:10px;opacity:.55;font-weight:500;">'+s.descricao+'</div>':'')+'</td>'
         +'<td style="padding:8px 10px;font-size:11px;">'+s.categoria+'</td>'
         +'<td style="padding:8px 10px;font-size:11px;">'+s.tipo+'</td>'
         +'<td style="padding:8px 10px;font-size:12px;">'+s.vagas_max+'</td>'
@@ -997,10 +1024,79 @@ async function uploadImagemSite(file, pasta){
   return sb.storage.from('icones').getPublicUrl(path).data.publicUrl;
 }
 
+var TAXA_CARTAO={pct:4.99,fixo:0.49};
+var planosFin=[];
+
+function liquidoPosTaxa(preco){
+  return Math.max(0, preco - preco*(TAXA_CARTAO.pct/100) - TAXA_CARTAO.fixo);
+}
+
+function lerTaxaCampos(){
+  TAXA_CARTAO.pct=parseFloat(document.getElementById('taxa-pct').value)||0;
+  TAXA_CARTAO.fixo=parseFloat(document.getElementById('taxa-fixo').value)||0;
+}
+
+async function salvarTaxaCartao(){
+  lerTaxaCampos();
+  var {error}=await sb.rpc('admin_salvar_config',{p_chave:'taxa_cartao',p_valor:{pct:TAXA_CARTAO.pct,fixo:TAXA_CARTAO.fixo}});
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Taxa do cartão salva. Vale para todas as simulações e novos cálculos.','success');
+  calcSimulacao();
+}
+
+function calcSimulacao(){
+  lerTaxaCampos();
+  var preco=parseFloat(document.getElementById('svc-preco').value)||0;
+  var lucroSP=parseFloat(document.getElementById('svc-lucro').value)||0;
+  var custo=parseFloat(document.getElementById('svc-custo').value)||0;
+  var vagas=parseInt(document.getElementById('svc-vagas').value)||0;
+  var el=document.getElementById('sim-servico');
+  if(!preco||!vagas){el.style.display='none';return;}
+  var liquido=liquidoPosTaxa(preco);
+  var repasse=Math.max(0, liquido-lucroSP);
+  var custoVaga=custo>0&&vagas>0?custo/vagas:0;
+  var lucroDonoVaga=repasse-custoVaga;
+  var alerta=lucroSP>liquido?'<div style="color:#dc2626;font-weight:800;">⚠️ Lucro SP maior que o líquido pós-taxa — inviável!</div>':'';
+  el.style.display='block';
+  el.innerHTML='<div style="font-weight:800;margin-bottom:4px;">📊 Simulação por vaga (base: mesma do plano financeiro)</div>'
+    +alerta
+    +'Membro paga: <strong>'+fmt(preco)+'</strong>'
+    +' → taxa cartão ('+TAXA_CARTAO.pct+'% + R$'+TAXA_CARTAO.fixo.toFixed(2)+'): <strong style="color:#b45309;">−'+fmt(preco-liquido)+'</strong>'
+    +' → líquido: <strong>'+fmt(liquido)+'</strong><br>'
+    +'Repasse ao dono (calculado): <strong style="color:#0A5C36;">'+fmt(repasse)+'</strong>'
+    +' · Lucro SP líquido: <strong style="color:#1255CC;">'+fmt(Math.min(lucroSP,liquido))+'</strong><br>'
+    +(custo>0?('Custo do plano p/ dono: '+fmt(custo)+' ('+fmt(custoVaga)+'/vaga) → lucro do dono/vaga: <strong style="color:'+(lucroDonoVaga>=0?'#0A5C36':'#dc2626')+';">'+fmt(lucroDonoVaga)+'</strong><br>'):'')
+    +'<div style="border-top:1px solid rgba(18,85,204,0.15);margin-top:4px;padding-top:4px;">Piscina cheia ('+vagas+' vagas): membros pagam <strong>'+fmt(preco*vagas)+'</strong> · dono recebe <strong>'+fmt(repasse*vagas)+'</strong>'+(custo>0?' (lucro '+fmt(lucroDonoVaga*vagas)+')':'')+' · SP lucra <strong>'+fmt(Math.min(lucroSP,liquido)*vagas)+'</strong>/mês</div>';
+}
+
+function renderPlanosFin(){
+  var el=document.getElementById('planos-fin-lista');
+  if(!planosFin.length){el.innerHTML='<div style="font-size:11px;opacity:.45;margin-bottom:8px;">Nenhum plano extra — serviço de preço único.</div>';return;}
+  lerTaxaCampos();
+  el.innerHTML=planosFin.map(function(p,i){
+    var liq=liquidoPosTaxa(Number(p.preco)||0);
+    var rep=Math.max(0,liq-(Number(p.lucro_sp)||0));
+    return '<div style="display:grid;grid-template-columns:1fr 110px 110px 130px 34px;gap:6px;align-items:center;margin-bottom:6px;">'
+      +'<input value="'+(p.nome||'').replace(/"/g,'&quot;')+'" placeholder="Nome (ex: Silver)" oninput="planosFin['+i+'].nome=this.value" style="padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
+      +'<input type="number" step="0.01" value="'+(p.preco||'')+'" placeholder="Preço R$" oninput="planosFin['+i+'].preco=parseFloat(this.value)||0;renderPlanosFin()" style="padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
+      +'<input type="number" step="0.01" value="'+(p.lucro_sp||'')+'" placeholder="Lucro SP R$" oninput="planosFin['+i+'].lucro_sp=parseFloat(this.value)||0;renderPlanosFin()" style="padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
+      +'<span style="font-size:10.5px;color:#0A5C36;font-weight:700;">repasse: '+fmt(rep)+'</span>'
+      +'<button onclick="planosFin.splice('+i+',1);renderPlanosFin()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;width:30px;height:30px;cursor:pointer;font-weight:800;">×</button>'
+      +'</div>';
+  }).join('');
+}
+
+function addPlanoFin(){
+  planosFin.push({nome:'',preco:0,lucro_sp:0});
+  renderPlanosFin();
+}
+
 function limparFormServico(){
-  ['svc-id','svc-nome','svc-vagas','svc-preco','svc-repasse','svc-lucro','svc-icone','svc-descricao','svc-icone-file'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['svc-id','svc-nome','svc-vagas','svc-preco','svc-custo','svc-lucro','svc-icone','svc-descricao','svc-icone-file'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var prev=document.getElementById('svc-icone-prev');
   if(prev){prev.src='';prev.style.display='none';}
+  planosFin=[];renderPlanosFin();
+  var sim=document.getElementById('sim-servico');if(sim)sim.style.display='none';
 }
 
 function editarServico(id){
@@ -1012,8 +1108,11 @@ function editarServico(id){
   document.getElementById('svc-tipo').value=s.tipo;
   document.getElementById('svc-vagas').value=s.vagas_max;
   document.getElementById('svc-preco').value=s.preco_por_vaga;
-  document.getElementById('svc-repasse').value=s.repasse_dono;
+  document.getElementById('svc-custo').value=s.custo_plano||'';
   document.getElementById('svc-lucro').value=s.lucro_sp;
+  planosFin=(s.planos_financeiros||[]).map(function(p){return {nome:p.nome||'',preco:Number(p.preco)||0,lucro_sp:Number(p.lucro_sp)||0};});
+  renderPlanosFin();
+  calcSimulacao();
   document.getElementById('svc-icone').value=s.icone_url||'';
   var prev=document.getElementById('svc-icone-prev');
   if(prev){
@@ -1026,15 +1125,22 @@ function editarServico(id){
 }
 
 async function salvarServico(){
+  lerTaxaCampos();
   var nome=document.getElementById('svc-nome').value.trim();
   var vagas=parseInt(document.getElementById('svc-vagas').value)||0;
   var preco=parseFloat(document.getElementById('svc-preco').value)||0;
-  var repasse=parseFloat(document.getElementById('svc-repasse').value)||0;
+  var custo=parseFloat(document.getElementById('svc-custo').value)||0;
   var lucro=parseFloat(document.getElementById('svc-lucro').value)||0;
   if(!nome){showToast('Informe o nome do serviço.','error');return;}
   if(vagas<1){showToast('Vagas deve ser pelo menos 1.','error');return;}
   if(preco<=0){showToast('Informe o preço por vaga.','error');return;}
-  if(repasse+lucro>preco*vagas){showToast('Repasse + Lucro SP não pode exceder Preço × Vagas ('+fmt(preco*vagas)+').','error');return;}
+  var liquido=liquidoPosTaxa(preco);
+  if(lucro>=liquido){showToast('Lucro SP ('+fmt(lucro)+') não pode ser maior que o líquido pós-taxa ('+fmt(liquido)+').','error');return;}
+  var repasse=Number((liquido-lucro).toFixed(2));
+  var planosLimpos=planosFin.filter(function(p){return p.nome&&p.preco>0;}).map(function(p){
+    var liqP=liquidoPosTaxa(Number(p.preco));
+    return {nome:p.nome.trim(),preco:Number(p.preco),lucro_sp:Number(p.lucro_sp)||0,repasse:Number((liqP-(Number(p.lucro_sp)||0)).toFixed(2))};
+  });
   // Upload do ícone (se um arquivo foi escolhido)
   var fileEl=document.getElementById('svc-icone-file');
   if(fileEl&&fileEl.files&&fileEl.files[0]){
@@ -1051,7 +1157,9 @@ async function salvarServico(){
     p_tipo:document.getElementById('svc-tipo').value,
     p_vagas:vagas,p_preco:preco,p_repasse:repasse,p_lucro:lucro,
     p_icone:document.getElementById('svc-icone').value.trim(),
-    p_descricao:document.getElementById('svc-descricao').value.trim()
+    p_descricao:document.getElementById('svc-descricao').value.trim(),
+    p_custo:custo>0?custo:null,
+    p_planos:planosLimpos.length?planosLimpos:null
   });
   if(error){showToast('Erro: '+error.message,'error');return;}
   showToast('Serviço salvo!','success');
