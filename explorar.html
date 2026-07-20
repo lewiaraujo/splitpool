@@ -466,6 +466,21 @@ const ICONES = {
 let todasPiscinas = []
 let CATALOGO_EX = []
 let OCULTOS_EX = []
+function catalogoInfoEx(nome){
+  const n=String(nome||'').toLowerCase()
+  return (CATALOGO_EX||[]).find(s=>String(s.nome||'').toLowerCase()===n)
+}
+function temPlanosDin(nome){
+  const s=catalogoInfoEx(nome)
+  return !!(s&&s.planos_financeiros&&s.planos_financeiros.length)
+}
+function minPlanoDin(nome){
+  const s=catalogoInfoEx(nome)
+  const ps=(s&&s.planos_financeiros)||[]
+  if(!ps.length) return null
+  const m=Math.min(...ps.map(p=>Number(p.preco||0)))
+  return m.toFixed(2).replace('.',',')
+}
 function servicoOcultoEx(nome){
   const n=(nome||'').toLowerCase()
   return OCULTOS_EX.some(o=>{o=(o||'').toLowerCase();return n.includes(o)||o.includes(n)})
@@ -632,7 +647,7 @@ async function renderizar() {
           </div>
         </div>
         <div class="card-preco">
-          <div class="preco-val${isWellness(p.servico)?' small':''}">${isWellness(p.servico) ? 'A partir de<br>R$' + getWellnessMin(p.servico) : 'R$' + Number(p.preco_por_vaga).toFixed(2).replace('.',',')}</div>
+          <div class="preco-val${(isWellness(p.servico)||temPlanosDin(p.servico))?' small':''}">${isWellness(p.servico) ? 'A partir de<br>R$' + getWellnessMin(p.servico) : (temPlanosDin(p.servico) ? 'A partir de<br>R$' + minPlanoDin(p.servico) : 'R$' + Number(p.preco_por_vaga).toFixed(2).replace('.',','))}</div>
           <div class="preco-label">/mês</div>
         </div>
       </div>
@@ -736,8 +751,8 @@ function renderServicos(lista){
         <div class="svc-sub">${s.pools} piscina${s.pools!==1?'s':''} · ${s.vagas} vaga${s.vagas!==1?'s':''} livre${s.vagas!==1?'s':''}</div>
       </div>
       <div class="svc-preco">
-        ${(isWellness(s.servico)||variado)?'<span class="svc-apartir">A partir de</span>':''}
-        <div class="svc-preco-val">${isWellness(s.servico)?('R$'+getWellnessMin(s.servico)):fmtP(minP)}</div>
+        ${(isWellness(s.servico)||temPlanosDin(s.servico)||variado)?'<span class="svc-apartir">A partir de</span>':''}
+        <div class="svc-preco-val">${isWellness(s.servico)?('R$'+getWellnessMin(s.servico)):(temPlanosDin(s.servico)?('R$'+minPlanoDin(s.servico)):fmtP(minP))}</div>
         <div class="svc-preco-sub">/mês por vaga</div>
       </div>
     </div>`
