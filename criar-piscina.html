@@ -1014,7 +1014,7 @@ async function publicarPiscina(){
     vagas_ocupadas:0,
     preco_por_vaga:isWH?0:isTP?0:svc.precoVenda,
     status:'pendente',
-    icone_url:null,
+    icone_url:(svcSelecionado&&svcSelecionado.img)||null,
     cartao_vencimento:dia,
     data_compra_ciclo:dataCompra,
     comprovante_url:comprovanteUrl,
@@ -1028,8 +1028,20 @@ async function publicarPiscina(){
     return
   }
 
-  showMsg('✅ Piscina enviada para validação! Você receberá um e-mail em até 24h úteis.','success')
-  setTimeout(()=>window.location.href='explorar.html',3000)
+  // Tela de sucesso: expectativa clara de análise antes da publicação
+  var p3=document.getElementById('panel-3');
+  if(p3){
+    p3.innerHTML='<div style="text-align:center;padding:40px 18px;background:rgba(255,255,255,0.92);border-radius:16px;">'
+      +'<div style="font-size:52px;margin-bottom:10px;">🔍</div>'
+      +'<div style="font-family:\'Nunito\',sans-serif;font-size:22px;font-weight:900;color:var(--bluedark);margin-bottom:8px;">Piscina enviada para análise!</div>'
+      +'<div style="font-size:14px;color:var(--bluedark);opacity:.72;line-height:1.75;max-width:440px;margin:0 auto 20px;">A Splitpool valida os dados e o comprovante em até <strong>24h úteis</strong>. Você recebe uma notificação no sino 🔔 assim que ela for aprovada — só então ela aparece no Explorar para receber membros.</div>'
+      +'<a href="dashboard-owner.html" style="display:inline-block;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;font-weight:800;font-size:14px;padding:13px 26px;border-radius:10px;text-decoration:none;box-shadow:0 4px 16px rgba(18,85,204,0.3);">Ir para Minhas Piscinas →</a>'
+      +'</div>';
+    p3.scrollIntoView({behavior:'smooth',block:'center'});
+  } else {
+    showMsg('✅ Piscina enviada para análise! A Splitpool valida em até 24h úteis e te avisa no sino.','success')
+    setTimeout(()=>window.location.href='dashboard-owner.html',3500)
+  }
 }
 
 function showMsg(t,tipo){const e=document.getElementById('msg');e.textContent=t;e.className='msg '+tipo;e.style.display='block';}
