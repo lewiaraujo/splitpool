@@ -423,6 +423,37 @@ var LUCRO_SP_MAP={
 
 function poolCode(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var s='';for(var i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
 
+
+/* ── MAPAS FINANCEIROS DINÂMICOS (carregam do banco, sobrepõem hardcoded) ── */
+function _popularMapas(catalogo){
+  (catalogo||[]).forEach(function(s){
+    var nomeKey=s.nome.toLowerCase().trim();
+    // Valores de nível raiz (serviços simples)
+    if(s.lucro_sp>0){
+      LUCRO_SP_MAP[nomeKey]=Number(s.lucro_sp);
+    }
+    if(s.repasse_dono>0){
+      // repasse_dono no catálogo = valor que o SP repassa ao dono por vaga
+      REPASSE_MAP[nomeKey]=Number(s.repasse_dono);
+      LUCRO_DONO_MAP[nomeKey]=Number(s.repasse_dono); // para wellness custo=0, repasse=lucro
+    }
+    // Planos multi-tier (Wellhub, TotalPass etc.)
+    (s.planos_financeiros||[]).forEach(function(p){
+      var k=(p.nome||'').toLowerCase().trim();
+      if(!k) return;
+      if(p.lucro_sp!=null) LUCRO_SP_MAP[k]=Number(p.lucro_sp);
+      if(p.repasse!=null){
+        REPASSE_MAP[k]=Number(p.repasse);
+        LUCRO_DONO_MAP[k]=Number(p.repasse);
+      }
+    });
+  });
+}
+// Carrega ao iniciar (não bloqueia o render — fallback hardcoded garante o fluxo)
+sb.from('servicos_catalogo').select('nome,preco_por_vaga,repasse_dono,lucro_sp,planos_financeiros').eq('ativo',true).then(function(r){
+  if(r.data&&r.data.length) _popularMapas(r.data);
+}).catch(function(){});
+
 function getLucroSP(servico,plano){
   var k=((plano||servico)||'').toLowerCase().trim();
   if(LUCRO_SP_MAP[k]) return LUCRO_SP_MAP[k];
