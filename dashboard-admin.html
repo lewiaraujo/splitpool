@@ -418,6 +418,25 @@ tbody td{padding:12px 16px;font-size:13px;}
 
 </div>
 
+<div id="recusa-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,30,80,0.5);z-index:6000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px);">
+  <div style="background:#fff;border-radius:18px;padding:26px;max-width:480px;width:100%;box-shadow:0 12px 48px rgba(0,20,80,0.3);max-height:90vh;overflow-y:auto;">
+    <div style="font-family:'Nunito',sans-serif;font-size:19px;font-weight:900;color:#b91c1c;margin-bottom:4px;">⚠️ Recusar reembolso</div>
+    <div style="font-size:12.5px;color:#555;line-height:1.6;margin-bottom:14px;">Esta decisão é enviada ao membro e pode ser contestada. Revise a evidência e a descrição antes de negar — uma recusa sem justificativa clara é motivo de reclamação.</div>
+    <div id="recusa-contexto" style="background:#f8fafc;border:1px solid rgba(0,0,0,0.08);border-radius:10px;padding:12px 14px;font-size:12px;color:#333;line-height:1.6;margin-bottom:14px;"></div>
+    <label style="font-size:12px;font-weight:700;color:#0A3080;display:block;margin-bottom:6px;">Motivo da recusa (obrigatório, mín. 20 caracteres — vai para o membro)</label>
+    <textarea id="recusa-motivo" placeholder="Explique claramente por que o reembolso não procede, com base na evidência e na política da Splitpool..." style="width:100%;min-height:90px;padding:10px 12px;border:1.5px solid rgba(220,38,38,0.3);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box;"></textarea>
+    <div id="recusa-erro" style="display:none;font-size:11px;color:#dc2626;font-weight:700;margin-top:4px;"></div>
+    <label style="display:flex;align-items:flex-start;gap:8px;margin-top:12px;cursor:pointer;">
+      <input type="checkbox" id="recusa-check" style="margin-top:2px;width:16px;height:16px;cursor:pointer;flex-shrink:0;">
+      <span style="font-size:12px;color:#333;font-weight:600;">Revisei a evidência e a descrição da ocorrência e confirmo que o reembolso não procede.</span>
+    </label>
+    <div style="display:flex;gap:10px;margin-top:18px;">
+      <button onclick="fecharRecusaModal()" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid rgba(0,0,0,0.15);background:#fff;color:#333;font-weight:700;font-size:13px;cursor:pointer;">Cancelar</button>
+      <button onclick="confirmarRecusaReembolso()" style="flex:1;padding:12px;border-radius:10px;border:none;background:#dc2626;color:#fff;font-weight:800;font-size:13px;cursor:pointer;">Recusar reembolso</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -723,13 +742,41 @@ async function resolverReembolso(id){
   await carregarOcorrencias();
 }
 
-async function recusarReembolso(id){
-  var motivo=prompt('Motivo da recusa do reembolso (será enviado ao membro):');
-  if(motivo===null) return;
-  var msg='Seu pedido de reembolso não foi aprovado.'+(motivo?' Motivo: '+motivo:' Entre em contato com o suporte para mais detalhes.');
-  var {error}=await sb.rpc('resolver_ocorrencia',{p_id:id,p_status:'improcedente',p_decisao:motivo||'Improcedente',p_mensagem_notif:msg});
-  if(error){showToast('Erro: '+error.message,'error');return;}
-  showToast('Reembolso recusado. Membro notificado.','success');
+var recusaOcorrenciaId=null;
+
+function fecharRecusaModal(){
+  document.getElementById('recusa-overlay').style.display='none';
+  document.getElementById('recusa-motivo').value='';
+  document.getElementById('recusa-check').checked=false;
+  document.getElementById('recusa-erro').style.display='none';
+  recusaOcorrenciaId=null;
+}
+
+function recusarReembolso(id){
+  var o=ocorrenciasData.find(function(x){return x.id===id;});
+  if(!o) return;
+  recusaOcorrenciaId=id;
+  document.getElementById('recusa-contexto').innerHTML=
+    '<strong>'+(o.servico||'—')+'</strong> · '+(o.aberto_por_nome||o.aberto_por_email||'membro')+'<br>'
+    +'Valor pedido: <strong>'+fmt(o.valor_reembolso)+'</strong><br>'
+    +(o.descricao?'<div style="margin-top:6px;">"'+o.descricao+'"</div>':'')
+    +(o.evidencia_url?'<div style="margin-top:8px;"><a href="'+o.evidencia_url+'" target="_blank" style="color:#1255CC;font-weight:700;">📎 Ver evidência anexada</a></div>':'<div style="margin-top:8px;color:#b45309;">⚠️ Nenhuma evidência anexada pelo membro.</div>');
+  document.getElementById('recusa-overlay').style.display='flex';
+}
+
+async function confirmarRecusaReembolso(){
+  var id=recusaOcorrenciaId;
+  if(!id) return;
+  var motivo=document.getElementById('recusa-motivo').value.trim();
+  var checado=document.getElementById('recusa-check').checked;
+  var erroEl=document.getElementById('recusa-erro');
+  if(motivo.length<20){erroEl.textContent='Descreva o motivo com pelo menos 20 caracteres — precisa ser claro para o membro.';erroEl.style.display='block';return;}
+  if(!checado){erroEl.textContent='Confirme que revisou a evidência antes de recusar.';erroEl.style.display='block';return;}
+  var msg='Seu pedido de reembolso não foi aprovado. Motivo: '+motivo;
+  var {error}=await sb.rpc('resolver_ocorrencia',{p_id:id,p_status:'improcedente',p_decisao:motivo,p_mensagem_notif:msg});
+  if(error){erroEl.textContent='Erro: '+error.message;erroEl.style.display='block';return;}
+  fecharRecusaModal();
+  showToast('Reembolso recusado. Membro notificado com o motivo.','success');
   await carregarOcorrencias();
   atualizarBadgesAdmin();
 }
