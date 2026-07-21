@@ -457,6 +457,13 @@ tbody td{padding:12px 16px;font-size:13px;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 const SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
+
+function comprovanteHref(v){
+  if(!v) return '#';
+  if(/^https?:\/\//i.test(v)) return v; // já é URL completa (piscinas criadas após a correção)
+  // Piscinas criadas antes da correção salvavam só o caminho interno do Storage — reconstrói a URL pública
+  return SBU+'/storage/v1/object/public/comprovantes/'+v;
+}
 const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
 const sb=supabase.createClient(SBU,SBK);
 
@@ -1667,7 +1674,7 @@ function renderPiscinas(){
       html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;">'+comprouEm+'</td>';
       html+='<td style="padding:10px 12px;text-align:center;white-space:nowrap;"><span style="font-size:12px;font-weight:700;'+(venceCor?'color:'+venceCor+';background:'+venceBg+';border-radius:6px;padding:2px 7px;':'')+'">'+(venceCor?'⚠ ':'')+venceEm+'</span></td>';
       html+='<td style="padding:10px 12px;">'+linkHtml+'</td>';
-      html+='<td style="padding:10px 12px;text-align:center;white-space:nowrap;">'+(p.comprovante_url?'<a href="'+p.comprovante_url+'" target="_blank" style="font-size:11px;font-weight:700;color:#1255CC;text-decoration:none;background:#eff6ff;border:1px solid rgba(18,85,204,0.2);padding:3px 9px;border-radius:6px;">📎 Ver</a>':'<span style="opacity:.35;font-size:11px;">—</span>')+'</td>';
+      html+='<td style="padding:10px 12px;text-align:center;white-space:nowrap;">'+(p.comprovante_url?'<a href="'+comprovanteHref(p.comprovante_url)+'" target="_blank" style="font-size:11px;font-weight:700;color:#1255CC;text-decoration:none;background:#eff6ff;border:1px solid rgba(18,85,204,0.2);padding:3px 9px;border-radius:6px;">📎 Ver</a>':'<span style="opacity:.35;font-size:11px;">—</span>')+'</td>';
       html+='<td style="padding:10px 12px;font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--green);text-align:right;white-space:nowrap;">'+fmt(receita)+'</td>';
       html+='<td style="padding:10px 12px;font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--blue);text-align:right;white-space:nowrap;">'+fmt(lucrodono)+'</td>';
       html+='<td style="padding:10px 12px;font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--teal);text-align:right;white-space:nowrap;">'+fmt(lucroSP)+'</td>';
