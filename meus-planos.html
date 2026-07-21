@@ -664,22 +664,30 @@ function renderPlano(a){
       <button class="btn-desfazer-cancel" onclick="desfazerCancelamento(${a.id})">Desfazer cancelamento</button>
     </div>`;
   }
-  // Janela de fraude: credenciais JÁ enviadas pelo dono mas ainda não confirmadas pelo membro.
-  // Nesse estado específico, cancelar/reportar ficam bloqueados até o membro confirmar
-  // recebimento (credenciais borradas) — evita cancelamento/disputa sem sequer ter visto o acesso.
-  // Se o dono nunca enviou nada, o membro continua podendo cancelar normalmente (nada foi entregue).
+  // Cancelar sempre disponível (mesmo com credenciais recém-enviadas e ainda não confirmadas) —
+  // se o membro nunca usou o acesso, o reembolso proporcional já reflete isso, então não há
+  // fraude possível em permitir o cancelamento. Já "Reportar problema" exige ter confirmado o
+  // acesso primeiro: reportar "não funciona" ou "diferente do anunciado" sem antes ter conferido
+  // é a janela de fraude real — por isso fica travado até a confirmação.
   const aguardandoConfirmacaoAposEnvio=a.status==='aguardando_acesso'&&!!a.acesso_enviado_em;
-  const podeCancelar=!a.cancela_em&&(a.status==='ativo'||(a.status==='aguardando_acesso'&&!a.acesso_enviado_em));
+  const podeCancelar=!a.cancela_em&&(a.status==='ativo'||a.status==='aguardando_acesso');
   const cancelarLink=podeCancelar?`<button class="btn-cancelar-plano" onclick="abrirCancel(${a.id})">Cancelar assinatura</button>`:'';
   const podeReportar=a.status==='ativo'&&!a.cancela_em;
   const reportarLink=podeReportar?`<button class="btn-cancelar-plano" style="color:#b45309;" onclick="abrirReporte(${a.id},${a.piscina_id},'${a.servico}')">⚠️ Reportar problema de acesso</button>`:'';
-  const avisoConfirmarPrimeiro=aguardandoConfirmacaoAposEnvio?`<div style="font-size:11px;color:#8a5c00;opacity:.8;margin-top:8px;">Confirme o recebimento acima para poder cancelar ou reportar um problema.</div>`:'';
+  const avisoConfirmarPrimeiro=aguardandoConfirmacaoAposEnvio?`<div style="font-size:11px;color:#8a5c00;opacity:.8;margin-top:8px;">Confirme o recebimento acima para poder reportar um problema de acesso.</div>`:'';
 
   // Bloco de acesso baseado no estado
   let acessoHTML='';
   let confirmarBtn='';
 
-  if(a.status==='aguardando_acesso'){
+  if(a.cancela_em){
+    // Cancelamento já solicitado — credenciais somem daqui em diante,
+    // mesmo que o membro já tivesse confirmado o acesso antes.
+    acessoHTML=`<div style="background:#f8fafc;border:1px solid rgba(0,0,0,0.1);border-radius:10px;padding:14px 16px;margin-top:12px;">
+      <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:4px;">🔒 Acesso não exibido</div>
+      <div style="font-size:12px;color:#666;line-height:1.6;">Sua assinatura está em processo de cancelamento. Os dados de acesso não são mais exibidos aqui, mesmo que o serviço continue disponível até o fim do ciclo pago.</div>
+    </div>`;
+  } else if(a.status==='aguardando_acesso'){
     if(!a.acesso_enviado_em){
       // Dono ainda não enviou
       acessoHTML=`<div style="background:#fff8e0;border:1px solid rgba(180,120,0,0.2);border-radius:10px;padding:14px 16px;margin-top:12px;">
