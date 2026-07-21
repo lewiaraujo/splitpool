@@ -524,7 +524,7 @@ function abrirCancel(id){
       <div class="conf-text">O cancelamento é imediato: seu acesso termina agora e a vaga é liberada.${calc.valor>0?` Pelos <strong>${calc.dias} dia${calc.dias===1?'':'s'}</strong> não utilizados do ciclo, você recebe um reembolso proporcional de <strong>${fmt(calc.valor)}</strong> via PIX em até 5 dias úteis.`:' Não há dias restantes no ciclo, portanto não há reembolso.'}</div>
       ${calc.valor>0?`<div style="margin:14px 0 4px;">
         <label style="font-size:12px;font-weight:700;color:#0A3080;display:block;margin-bottom:6px;">Chave PIX para o reembolso</label>
-        <input id="cancel-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:10px 12px;border:1px solid rgba(0,160,200,0.3);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box;">`+(perfilPixChave?`value="${perfilPixChave}"`:"")+ `>
+        <input id="cancel-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" value="${perfilPixChave||''}" style="width:100%;padding:10px 12px;border:1px solid rgba(0,160,200,0.3);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box;">
         <div id="cancel-pix-erro" style="display:none;font-size:11px;color:#dc2626;font-weight:700;margin-top:4px;">Informe a chave PIX para receber o reembolso.</div>
         <div style="font-size:11px;color:#8a5c00;background:#fff8e0;border-radius:8px;padding:8px 10px;margin-top:8px;line-height:1.5;">⚠️ Por segurança, o reembolso é feito somente para chave PIX <strong>do mesmo titular (CPF)</strong> que realizou o pagamento. Chaves de terceiros serão recusadas na análise.</div>
       </div>`:''}
@@ -674,7 +674,7 @@ function renderPlano(a){
   const cancelarLink=podeCancelar?`<button class="btn-cancelar-plano" onclick="abrirCancel(${a.id})">Cancelar assinatura</button>`:'';
   const podeReportar=a.status==='ativo'&&!a.cancela_em;
   const reportarLink=podeReportar?`<button class="btn-cancelar-plano" style="color:#b45309;" onclick="abrirReporte(${a.id},${a.piscina_id},'${a.servico}')">⚠️ Reportar problema de acesso</button>`:'';
-  const avisoConfirmarPrimeiro=aguardandoConfirmacaoAposEnvio?`<div style="font-size:11px;color:#8a5c00;opacity:.8;margin-top:8px;">Confirme o recebimento acima para poder reportar um problema de acesso.</div>`:'';
+  const avisoConfirmarPrimeiro='';
 
   // Bloco de acesso baseado no estado
   let acessoHTML='';
@@ -710,7 +710,7 @@ function renderPlano(a){
             <span style="font-size:12px;font-weight:800;color:#15803d;background:#fff;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.12);">🔒 Confirme para revelar</span>
           </div>
         </div>
-        <div style="font-size:11px;color:#92400e;background:#fff8e0;border-radius:8px;padding:8px 10px;">⚠️ Confirme em até 72h. Caso não confirme, sua vaga pode ser cancelada sem reembolso.</div>
+        <div style="font-size:11px;color:#92400e;background:#fff8e0;border-radius:8px;padding:8px 10px;">⏰ Confirme em até 72h. Se não confirmar, sua assinatura é cancelada automaticamente e você recebe reembolso integral, já que o acesso nunca chegou a ser revelado.</div>
       </div>`;
       confirmarBtn=`<button class="btn-confirmar" style="margin-top:12px;" onclick="abrirConf(${a.id})">🔓 Confirmar recebimento e revelar acesso</button>`;
     }
