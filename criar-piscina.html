@@ -432,11 +432,20 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
       <!-- VENCIMENTO DO CARTÃO -->
       <div class="field" style="margin-bottom:1.5rem;">
         <label>💳 Dia de vencimento do seu cartão</label>
-        <div class="field-hint" style="margin-bottom:10px;">Precisamos saber para avisar você com antecedência antes de cada renovação.</div>
-        <select id="cartao-dia" style="max-width:200px;">
+        <div class="field-hint" style="margin-bottom:10px;">O dia em que a fatura precisa ser PAGA. Usamos para avisar você com antecedência antes de cada renovação.</div>
+        <select id="cartao-dia" onchange="autoFecharDia()" style="max-width:200px;">
           <option value="">Selecione o dia</option>
         </select>
         <div style="font-size:11px;color:var(--bluedark);opacity:.55;margin-top:5px;line-height:1.5;">Vencimento nos dias 29, 30 ou 31? Selecione 28 — assim o aviso vale para todos os meses.</div>
+      </div>
+
+      <!-- FECHAMENTO DA FATURA -->
+      <div class="field" style="margin-bottom:1.5rem;">
+        <label>📅 Dia de fechamento da fatura</label>
+        <div class="field-hint" style="margin-bottom:10px;">O dia em que a fatura FECHA (diferente do vencimento — geralmente ~10 dias antes). É o que decide se um membro novo entra no repasse deste mês ou do próximo. Preenchemos uma estimativa; ajuste se souber o valor exato no seu banco.</div>
+        <select id="fechamento-dia" style="max-width:200px;">
+          <option value="">Selecione o dia</option>
+        </select>
       </div>
 
       <!-- DATA DE COMPRA DO PLANO -->
@@ -909,6 +918,19 @@ function popularSelectsCartao(){
   const dia=document.getElementById('cartao-dia')
   if(dia.options.length>1) return
   for(let i=1;i<=28;i++){const v=String(i).padStart(2,'0');dia.innerHTML+=`<option value="${v}">Dia ${v}</option>`}
+  const fech=document.getElementById('fechamento-dia')
+  if(fech&&fech.options.length<=1){
+    for(let i=1;i<=28;i++){const v=String(i).padStart(2,'0');fech.innerHTML+=`<option value="${v}">Dia ${v}</option>`}
+  }
+}
+
+function autoFecharDia(){
+  const diaVenc=parseInt(document.getElementById('cartao-dia').value)
+  const fech=document.getElementById('fechamento-dia')
+  if(!diaVenc||!fech||fech.value) return // não sobrescreve se o dono já ajustou manualmente
+  let diaFech=diaVenc-10
+  if(diaFech<1) diaFech+=28
+  fech.value=String(diaFech).padStart(2,'0')
 }
 
 function irPasso3(){
@@ -966,6 +988,13 @@ async function publicarPiscina(){
   if(!comprovanteFile){showMsgPub('Envie o comprovante do plano ativo antes de publicar.','comprovante-input');return}
   const dia=document.getElementById('cartao-dia').value
   if(!dia){showMsgPub('Informe o dia de vencimento do seu cartão.','cartao-dia');return}
+  let diaFechamento=document.getElementById('fechamento-dia').value
+  if(!diaFechamento){
+    // Fallback automático: vencimento - 10 dias, caso o dono não tenha ajustado o select
+    let df=parseInt(dia)-10
+    if(df<1) df+=28
+    diaFechamento=String(df).padStart(2,'0')
+  }
   const dataCompra=document.getElementById('data-compra-plano').value
   if(!dataCompra){showMsgPub('Informe quando você comprou esse plano.','data-compra-plano');return}
   if(dataCompra > new Date().toISOString().slice(0,10)){showMsgPub('A data de aquisição não pode ser no futuro.','data-compra-plano');return}
@@ -1016,6 +1045,7 @@ async function publicarPiscina(){
     status:'pendente',
     icone_url:(svcSelecionado&&svcSelecionado.img)||null,
     cartao_vencimento:dia,
+    dia_fechamento_fatura:diaFechamento,
     data_compra_ciclo:dataCompra,
     comprovante_url:comprovanteUrl,
     link_convite:linkConvite
