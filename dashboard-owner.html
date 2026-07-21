@@ -1479,34 +1479,55 @@ async function gerarRepassePiscina(piscinaId, e){
     if(btn){btn.disabled=false;btn.textContent='⚡ Gerar repasse';}
     return;
   }
-  var {data:assins}=await sb.from('assinaturas').select('*').eq('piscina_id',piscinaId).eq('status','ativo');
-  if(!assins||!assins.length){
+  var {data:todosAtivos}=await sb.from('assinaturas').select('*').eq('piscina_id',piscinaId).eq('status','ativo');
+  if(!todosAtivos||!todosAtivos.length){
     showToast('Nenhum membro ativo nesta piscina.','error');
     if(btn){btn.disabled=false;btn.textContent='⚡ Gerar repasse';}
     return;
   }
   var mesRef=getMesAtual();
-  var {data:jaExiste}=await sb.from('repasses').select('id').eq('piscina_id',piscinaId).eq('mes_referencia',mesRef);
-  if(jaExiste&&jaExiste.length){
-    showToast('Repasse desta piscina já foi gerado para '+formatarMes(mesRef)+'.','error');
+
+  // Corte do ciclo: membros que entraram ATÉ o dia de vencimento do cartão neste mês entram
+  // no repasse deste ciclo; quem entrou depois só entra no repasse do mês seguinte.
+  var venc=pool.cartao_vencimento;
+  var hoje=new Date();
+  var dtCorte=null;
+  if(venc){
+    var diaVenc=parseInt(venc);
+    dtCorte=new Date(hoje.getFullYear(),hoje.getMonth(),diaVenc,23,59,59);
+  }
+
+  // Só considera membros que ainda não entraram em NENHUM repasse deste mês (permite
+  // gerar repasses adicionais quando membros novos entram no meio do ciclo)
+  var elegiveisNovos=todosAtivos.filter(function(a){return a.ultimo_repasse_mes!==mesRef;});
+  if(!elegiveisNovos.length){
+    showToast('Todos os membros ativos já foram incluídos no repasse de '+formatarMes(mesRef)+'.','error');
     if(btn){btn.disabled=false;btn.textContent='⚡ Gerar repasse';}
     return;
   }
 
-  var valRepasse=calcRepasseReal(pool,assins);
-  var valLucroSP=calcLucroSPPiscina(pool,assins);
-  var venc=pool.cartao_vencimento;
-  var obsData='';
-  if(venc){
-    var hoje=new Date();
-    var diaVenc=parseInt(venc);
-    var dtVenc=new Date(hoje.getFullYear(),hoje.getMonth(),diaVenc);
-    if(dtVenc<=hoje) dtVenc.setMonth(dtVenc.getMonth()+1);
-    dtVenc.setDate(dtVenc.getDate()-5);
-    obsData=' · Pagar até '+dtVenc.toLocaleDateString('pt-BR');
+  var assinsDesteCiclo=dtCorte?elegiveisNovos.filter(function(a){return new Date(a.created_at)<=dtCorte;}):elegiveisNovos;
+  var assinsProximoCiclo=dtCorte?elegiveisNovos.filter(function(a){return new Date(a.created_at)>dtCorte;}):[];
+
+  if(!assinsDesteCiclo.length){
+    showToast('Os membros novos entraram após o vencimento do cartão ('+venc+') — eles entram no repasse do próximo ciclo automaticamente.','error');
+    if(btn){btn.disabled=false;btn.textContent='⚡ Gerar repasse';}
+    return;
   }
 
-  var valLucroDono=assins.filter(function(a){return a.status==='ativo';}).reduce(function(s,a){return s+getLucroDono(pool.servico,a.plano_nome);},0);
+  var {data:jaExiste}=await sb.from('repasses').select('id').eq('piscina_id',piscinaId).eq('mes_referencia',mesRef);
+  var ehAdicional=!!(jaExiste&&jaExiste.length);
+
+  var valRepasse=calcRepasseReal(pool,assinsDesteCiclo);
+  var valLucroSP=calcLucroSPPiscina(pool,assinsDesteCiclo);
+  var obsData='';
+  if(dtCorte){
+    var dtPagar=new Date(dtCorte);
+    dtPagar.setDate(dtPagar.getDate()-5);
+    obsData=' · Pagar até '+dtPagar.toLocaleDateString('pt-BR');
+  }
+
+  var valLucroDono=assinsDesteCiclo.reduce(function(s,a){return s+getLucroDono(pool.servico,a.plano_nome);},0);
   // Regra 1º mês: se piscina foi criada neste mesmo mês, status = retido
   var statusRepasse='pendente';
   if(pool.created_at){
@@ -1518,13 +1539,17 @@ async function gerarRepassePiscina(piscinaId, e){
   if(valRepasse>0) inserts.push({
     dono_id:userId,piscina_id:piscinaId,tipo:'repasse',valor:valRepasse,
     mes_referencia:mesRef,status:statusRepasse,
-    observacao:pool.servico+' · '+assins.length+' membro(s) · Lucro dono R$ '+valLucroDono.toFixed(2).replace('.',',')+obsData
+    observacao:pool.servico+' · '+assinsDesteCiclo.length+' membro(s)'+(ehAdicional?' (repasse adicional — membros novos do ciclo)':'')+' · Lucro dono R$ '+valLucroDono.toFixed(2).replace('.',',')+obsData
   });
 
   if(inserts.length){
     var {error}=await sb.from('repasses').insert(inserts);
     if(error){var msgErr=/row-level security/i.test(error.message)?'Não foi possível gerar o repasse: permissão negada pelo sistema. Nossa equipe já foi avisada — tente novamente mais tarde.':'Erro: '+error.message;showToast(msgErr,'error');if(btn){btn.disabled=false;btn.textContent='⚡ Gerar repasse';}return;}
-    showToast('✅ Repasse de '+pool.servico+' gerado para '+formatarMes(mesRef)+'!','success');
+    // Marca os membros incluídos como já contabilizados neste mês (evita duplicar)
+    var idsInclusos=assinsDesteCiclo.map(function(a){return a.id;});
+    await sb.from('assinaturas').update({ultimo_repasse_mes:mesRef}).in('id',idsInclusos);
+    var avisoProx=assinsProximoCiclo.length?(' '+assinsProximoCiclo.length+' membro(s) que entraram após o vencimento serão incluídos no próximo ciclo.'):'';
+    showToast('✅ '+(ehAdicional?'Repasse adicional':'Repasse')+' de '+pool.servico+' gerado para '+formatarMes(mesRef)+'!'+avisoProx,'success');
     carregarExtrato();
     carregarMiniExtrato(piscinaId);
   }
@@ -1545,26 +1570,35 @@ async function gerarRepasses(){
   var inseridos=0;
   for(var i=0;i<piscinas.length;i++){
     var pool=piscinas[i];
-    var {data:jaExiste}=await sb.from('repasses').select('id').eq('piscina_id',pool.id).eq('mes_referencia',mesRef);
-    if(jaExiste&&jaExiste.length) continue;
-    var {data:assins}=await sb.from('assinaturas').select('*').eq('piscina_id',pool.id).eq('status','ativo');
-    if(!assins||!assins.length) continue;
-    var valRepasse=calcRepasseReal(pool,assins);
-    var valLucroSP=calcLucroSPPiscina(pool,assins);
+    var {data:todosAtivos2}=await sb.from('assinaturas').select('*').eq('piscina_id',pool.id).eq('status','ativo');
+    if(!todosAtivos2||!todosAtivos2.length) continue;
+    var elegiveis2=todosAtivos2.filter(function(a){return a.ultimo_repasse_mes!==mesRef;});
+    if(!elegiveis2.length) continue;
+    var venc2=pool.cartao_vencimento;
+    var hoje2=new Date();
+    var dtCorte2=venc2?new Date(hoje2.getFullYear(),hoje2.getMonth(),parseInt(venc2),23,59,59):null;
+    var assinsCiclo2=dtCorte2?elegiveis2.filter(function(a){return new Date(a.created_at)<=dtCorte2;}):elegiveis2;
+    if(!assinsCiclo2.length) continue;
+    var valRepasse=calcRepasseReal(pool,assinsCiclo2);
+    var valLucroSP=calcLucroSPPiscina(pool,assinsCiclo2);
     var inserts=[];
-    var valLucroDono2=assins.filter(function(a){return a.status==='ativo';}).reduce(function(s,a){return s+getLucroDono(pool.servico,a.plano_nome);},0);
+    var valLucroDono2=assinsCiclo2.reduce(function(s,a){return s+getLucroDono(pool.servico,a.plano_nome);},0);
     var statusRepasse2='pendente';
     if(pool.created_at){
       var criado2=new Date(pool.created_at);
       var criado_mes2=(criado2.getMonth()+1).toString().padStart(2,'0')+'/'+criado2.getFullYear();
       if(criado_mes2===mesRef) statusRepasse2='retido';
     }
-    if(valRepasse>0) inserts.push({dono_id:userId,piscina_id:pool.id,tipo:'repasse',valor:valRepasse,mes_referencia:mesRef,status:statusRepasse2,observacao:pool.servico+' · '+assins.length+' membro(s) · Lucro dono R$ '+valLucroDono2.toFixed(2).replace('.',',')});
-    if(inserts.length){await sb.from('repasses').insert(inserts);inseridos+=inserts.length;}
+    if(valRepasse>0) inserts.push({dono_id:userId,piscina_id:pool.id,tipo:'repasse',valor:valRepasse,mes_referencia:mesRef,status:statusRepasse2,observacao:pool.servico+' · '+assinsCiclo2.length+' membro(s) · Lucro dono R$ '+valLucroDono2.toFixed(2).replace('.',',')});
+    if(inserts.length){
+      await sb.from('repasses').insert(inserts);
+      inseridos+=inserts.length;
+      await sb.from('assinaturas').update({ultimo_repasse_mes:mesRef}).in('id',assinsCiclo2.map(function(a){return a.id;}));
+    }
   }
   if(btn){btn.disabled=false;btn.textContent='⚡ Gerar todos os repasses';}
   if(inseridos>0){showToast('✅ '+inseridos+' repasse(s) gerado(s)!','success');carregarExtrato();}
-  else showToast('Repasses deste mês já foram gerados ou não há membros ativos.','error');
+  else showToast('Nenhum membro novo elegível — repasses deste ciclo já foram gerados.','error');
 }
 
 async function carregarMiniExtrato(piscinaId){
