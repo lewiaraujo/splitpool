@@ -325,8 +325,8 @@ const ICONES={
 
 function fmt(v){return'R$ '+Number(v).toFixed(2).replace('.',',');}
 function poolCode(id){let h=(id*2654435761)>>>0;const ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
-function getIco(servico){
-  const url=ICONES[servico];
+function getIco(servico,icone_url){
+  const url=icone_url||ICONES[servico];
   if(url) return`<img src="${url}" alt="${servico}" class="plano-ico" onerror="this.className='';this.outerHTML='<div class=\\'plano-ico-ph\\'>${servico[0]}</div>'">`;
   return`<div class="plano-ico-ph">${servico[0]}</div>`;
 }
@@ -338,6 +338,7 @@ function getSugIco(servico){
 
 let userId=null;
 let credenciaisMap={}; // piscina_id → credenciais descriptografadas
+let piscIconeMap={}; // piscina_id → icone_url (Setup)
 let assinaturaParaConfirmar=null;
 
 function showToast(msg,tipo=''){
@@ -753,7 +754,7 @@ function renderPlano(a){
 
   return`<div class="card plano-card" id="plano-${a.id}">
     <div class="plano-header">
-      ${getIco(a.servico)}
+      ${getIco(a.servico,piscIconeMap[a.piscina_id])}
       <div style="flex:1;min-width:0;">
         <div class="plano-nome">${nomeExibir}</div>
         <div class="plano-cod">${poolCode(a.piscina_id)}</div>
@@ -842,6 +843,14 @@ async function carregarPlanos(){
     return;
   }
 
+  // Ícones das piscinas (Setup) — mesma fonte usada no dashboard do dono e no explorar
+  const todosPiscinaIds=[...new Set([...data,...cancelados].map(a=>a.piscina_id))];
+  piscIconeMap={};
+  if(todosPiscinaIds.length){
+    const {data:piscsIco}=await sb.from('piscinas').select('id,icone_url').in('id',todosPiscinaIds);
+    (piscsIco||[]).forEach(p=>{if(p.icone_url) piscIconeMap[p.id]=p.icone_url;});
+  }
+
   // Buscar credenciais do membro — inclui ativo e aguardando_acesso (para mostrar credenciais antes de confirmar)
   const ativoIds=data.filter(a=>a.status==='ativo'||a.status==='aguardando_acesso').map(a=>a.piscina_id);
   credenciaisMap={};
@@ -922,7 +931,7 @@ function renderPlanoCancelado(a){
   }
   return`<div class="card plano-card" style="opacity:.85;" id="plano-${a.id}">
     <div class="plano-header">
-      ${getIco(a.servico)}
+      ${getIco(a.servico,piscIconeMap[a.piscina_id])}
       <div style="flex:1;min-width:0;">
         <div class="plano-nome" style="opacity:.7;">${nomeExibir}</div>
         <div class="plano-cod">${poolCode(a.piscina_id)}</div>
