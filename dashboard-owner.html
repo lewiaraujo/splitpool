@@ -509,7 +509,8 @@ function decryptVault(uid,dados_enc){
 }
 
 /* ── ICON HTML ── */
-function getIco(servico){
+function getIco(servico,icone_url){
+  if(icone_url) return`<img src="${icone_url}" alt="${servico}" class="pool-ico" onerror="this.outerHTML='<div class=\\'pool-ico-ph\\'>${servico[0]}</div>'">`;
   const key=Object.keys(ICONES).find(k=>servico.toLowerCase().includes(k));
   const url=key?ICONES[key]:null;
   if(url) return`<img src="${url}" alt="${servico}" class="pool-ico" onerror="this.outerHTML='<div class=\\'pool-ico-ph\\'>${servico[0]}</div>'">`;
@@ -968,7 +969,7 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
 
     // HEADER
     +'<div class="pool-header" onclick="toggleCard('+pool.id+')">'
-    +getIco(pool.servico)
+    +getIco(pool.servico,pool.icone_url)
     +'<div class="pool-info">'
     +'<div class="pool-nome">'+pool.servico+'</div>'
     +'<div class="pool-meta-row">'+getBadge(pool.status)+vagasBar(pool.vagas_ocupadas,pool.vagas_total)+'</div>'
@@ -1487,15 +1488,19 @@ async function gerarRepassePiscina(piscinaId, e){
   }
   var mesRef=getMesAtual();
 
-  // Corte do ciclo: membros que entraram ATÉ o dia de vencimento do cartão neste mês entram
-  // no repasse deste ciclo; quem entrou depois só entra no repasse do mês seguinte.
-  var venc=pool.cartao_vencimento;
-  var hoje=new Date();
-  var dtCorte=null;
-  if(venc){
-    var diaVenc=parseInt(venc);
-    dtCorte=new Date(hoje.getFullYear(),hoje.getMonth(),diaVenc,23,59,59);
+  // Corte do ciclo: usa o dia de FECHAMENTO da fatura (não o vencimento — são datas
+  // diferentes; o fechamento é quando a fatura para de aceitar novas cobranças, o
+  // vencimento é quando ela precisa ser paga). Membros que entraram até o fechamento
+  // entram no repasse deste ciclo; quem entrou depois só entra no próximo.
+  var diaFech=pool.dia_fechamento_fatura?parseInt(pool.dia_fechamento_fatura):null;
+  if(!diaFech&&pool.cartao_vencimento){
+    // Fallback para piscinas criadas antes deste campo existir: estima vencimento-10
+    diaFech=parseInt(pool.cartao_vencimento)-10;
+    if(diaFech<1) diaFech+=28;
   }
+  var hoje=new Date();
+  var dtCorte=diaFech?new Date(hoje.getFullYear(),hoje.getMonth(),diaFech,23,59,59):null;
+  var venc=pool.cartao_vencimento;
 
   // Só considera membros que ainda não entraram em NENHUM repasse deste mês (permite
   // gerar repasses adicionais quando membros novos entram no meio do ciclo)
@@ -1510,7 +1515,7 @@ async function gerarRepassePiscina(piscinaId, e){
   var assinsProximoCiclo=dtCorte?elegiveisNovos.filter(function(a){return new Date(a.created_at)>dtCorte;}):[];
 
   if(!assinsDesteCiclo.length){
-    showToast('Os membros novos entraram após o vencimento do cartão ('+venc+') — eles entram no repasse do próximo ciclo automaticamente.','error');
+    showToast('Os membros novos entraram após o fechamento da fatura (dia '+(diaFech?String(diaFech).padStart(2,'0'):'?')+') — eles entram no repasse do próximo ciclo automaticamente.','error');
     if(btn){btn.disabled=false;btn.textContent='⚡ Gerar repasse';}
     return;
   }
@@ -1521,8 +1526,11 @@ async function gerarRepassePiscina(piscinaId, e){
   var valRepasse=calcRepasseReal(pool,assinsDesteCiclo);
   var valLucroSP=calcLucroSPPiscina(pool,assinsDesteCiclo);
   var obsData='';
-  if(dtCorte){
-    var dtPagar=new Date(dtCorte);
+  if(venc){
+    var diaVencReal=parseInt(venc);
+    var dtVencReal=new Date(hoje.getFullYear(),hoje.getMonth(),diaVencReal);
+    if(dtVencReal<=hoje) dtVencReal.setMonth(dtVencReal.getMonth()+1);
+    var dtPagar=new Date(dtVencReal);
     dtPagar.setDate(dtPagar.getDate()-5);
     obsData=' · Pagar até '+dtPagar.toLocaleDateString('pt-BR');
   }
@@ -1574,9 +1582,13 @@ async function gerarRepasses(){
     if(!todosAtivos2||!todosAtivos2.length) continue;
     var elegiveis2=todosAtivos2.filter(function(a){return a.ultimo_repasse_mes!==mesRef;});
     if(!elegiveis2.length) continue;
-    var venc2=pool.cartao_vencimento;
+    var diaFech2=pool.dia_fechamento_fatura?parseInt(pool.dia_fechamento_fatura):null;
+    if(!diaFech2&&pool.cartao_vencimento){
+      diaFech2=parseInt(pool.cartao_vencimento)-10;
+      if(diaFech2<1) diaFech2+=28;
+    }
     var hoje2=new Date();
-    var dtCorte2=venc2?new Date(hoje2.getFullYear(),hoje2.getMonth(),parseInt(venc2),23,59,59):null;
+    var dtCorte2=diaFech2?new Date(hoje2.getFullYear(),hoje2.getMonth(),diaFech2,23,59,59):null;
     var assinsCiclo2=dtCorte2?elegiveis2.filter(function(a){return new Date(a.created_at)<=dtCorte2;}):elegiveis2;
     if(!assinsCiclo2.length) continue;
     var valRepasse=calcRepasseReal(pool,assinsCiclo2);
