@@ -20,7 +20,9 @@
     'piscina_aprovada':'dashboard-owner.html',
     'piscina_recusada':'dashboard-owner.html',
     'repasse_recusado':'dashboard-owner.html',
-    'credencial_pendente':'dashboard-owner.html'
+    'credencial_pendente':'dashboard-owner.html',
+    'acesso_nao_confirmado':'meus-planos.html',
+    'saida_automatica':'dashboard-owner.html'
   };
 
   var ICONE_TIPO={
@@ -36,7 +38,9 @@
     'piscina_aprovada':'🚀',
     'piscina_recusada':'🚫',
     'repasse_recusado':'🚫',
-    'credencial_pendente':'⏰'
+    'credencial_pendente':'⏰',
+    'acesso_nao_confirmado':'⏰',
+    'saida_automatica':'🚪'
   };
 
   var cacheNotifs=[];
