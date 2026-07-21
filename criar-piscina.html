@@ -996,7 +996,7 @@ async function publicarPiscina(){
     const ext=comprovanteFile.name.split('.').pop()
     const path=`comprovantes/${userId}_${svc.nome.replace(/\s/g,'_')}_${Date.now()}.${ext}`
     const {data:up,error:upErr}=await sb.storage.from('comprovantes').upload(path,comprovanteFile,{upsert:true})
-    if(!upErr) comprovanteUrl=path
+    if(!upErr) comprovanteUrl=sb.storage.from('comprovantes').getPublicUrl(path).data.publicUrl
   }catch(e){}
 
   // Capturar link de convite (planos família)
