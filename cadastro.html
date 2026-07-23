@@ -233,7 +233,7 @@ input::placeholder{color:#8BAAC8;}
     const email = document.getElementById('forgot-email').value.trim()
     if (!email) { showMsg('Digite seu e-mail.', 'error'); return }
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://lewiaraujo.github.io/splitpool/cadastro.html'
+      redirectTo: new URL('cadastro.html', window.location.href).href
     })
     if (error) showMsg(error.message, 'error')
     else showMsg('✅ Link enviado! Verifique seu e-mail.', 'success')
@@ -293,15 +293,15 @@ input::placeholder{color:#8BAAC8;}
   async function handleGoogle() {
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/splitpool/' + (new URLSearchParams(window.location.search).get('next')==='criar-piscina' ? 'criar-piscina.html' : 'explorar.html') }
+      options: { redirectTo: new URL(getNextUrl(), window.location.href).href }
     })
     if (error) showMsg(error.message, 'error')
   }
 
   function getNextUrl() {
     var next = new URLSearchParams(window.location.search).get('next')
-    if (next === 'criar-piscina') return '/splitpool/criar-piscina.html'
-    return '/splitpool/explorar.html'
+    if (next === 'criar-piscina') return 'criar-piscina.html'
+    return 'explorar.html'
   }
 
   sb.auth.getSession().then(({ data }) => {
