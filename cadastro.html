@@ -363,6 +363,9 @@ input::placeholder{color:#8BAAC8;}
 
   if (erroLink) showMsg('Não foi possível validar o link: ' + erroLink + '. Peça um novo link de recuperação.', 'error')
 
+  // ?modo=login abre direto na tela de entrar (usado pelo botao "Entrar" do index)
+  if (!modoRedefinir && _qs.get('modo') === 'login') toggleMode()
+
   if (modoRedefinir) {
     telaRedefinirSenha()
   } else {
