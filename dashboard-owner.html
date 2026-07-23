@@ -605,11 +605,16 @@ async function salvarEEnviarAcesso(piscinaId,membroId,assinaturaId,btn){
   if(eAss){showToast('Credenciais salvas, mas erro ao marcar envio: '+eAss.message,'error');return;}
   // Notificar o membro
   if(assEnv&&assEnv.membro_id){
-    await sb.from('notificacoes').insert({
+   await sb.from('notificacoes').insert({
       user_id:assEnv.membro_id,tipo:'acesso_enviado',
       mensagem:'Seu acesso ao '+assEnv.servico+' foi enviado! Confirme em Meus Planos.',
       link:'meus-planos.html'
     });
+    // E-mail transacional via Resend — NUNCA leva a credencial, só avisa e linka meus-planos
+    try{
+      var {error:eMail}=await sb.functions.invoke('enviar-email-acesso',{body:{assinatura_id:assinaturaId}});
+      if(eMail)console.warn('E-mail de acesso nao enviado:',eMail);
+    }catch(exMail){console.warn('E-mail de acesso falhou:',exMail);}
   }
   showToast('Acesso salvo e enviado ao membro! 🎉','success');
   setTimeout(function(){carregarDashboard();},900);
