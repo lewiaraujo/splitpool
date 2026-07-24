@@ -785,10 +785,13 @@ function toggleCard(id){
   document.getElementById('pc-'+id).classList.toggle('open');
 }
 
+/* ── CODIGO PUBLICO DA PISCINA (mesma funcao de explorar/checkout/meus-planos/admin) ── */
+function poolCode(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var s='';for(var i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
+
 /* ── COPIAR CODIGO DA PISCINA ── */
 function copiarCodigo(ev,id){
   ev.stopPropagation(); // impede que o clique abra/feche o card
-  var texto='#'+id;
+  var texto=poolCode(id);
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(texto).then(function(){showToast('Código '+texto+' copiado!','success');})
       .catch(function(){showToast('Código da piscina: '+texto,'success');});
@@ -990,7 +993,7 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
     +'<div class="pool-header" onclick="toggleCard('+pool.id+')">'
     +getIco(pool.servico,pool.icone_url)
     +'<div class="pool-info">'
-    +'<div class="pool-nome">'+pool.servico+'<span class="pool-codigo" onclick="copiarCodigo(event,'+pool.id+')" title="Clique para copiar">#'+pool.id+'</span></div>'
+    +'<div class="pool-nome">'+pool.servico+'<span class="pool-codigo" onclick="copiarCodigo(event,'+pool.id+')" title="Clique para copiar">'+poolCode(pool.id)+'</span></div>'
     +'<div class="pool-meta-row">'+getBadge(pool.status)+vagasBar(pool.vagas_ocupadas,pool.vagas_total)+'</div>'
     +gerarBarraMeta(pool,ativos,aguardando)
     +'</div>'
