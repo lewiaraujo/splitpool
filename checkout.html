@@ -473,7 +473,7 @@ async function load(){
 
   // Verifica sessão
   const {data:sess}=await sb.auth.getSession()
-  if(!sess.session){window.location.href='cadastro.html';return}
+  if(!sess.session){window.location.href='cadastro.html?modo=login&next_url='+encodeURIComponent(location.pathname+location.search);return}
 
   // Pré-preencher email do serviço com email do perfil
   const {data:profile}=await sb.from('profiles').select('email,telefone,cpf').eq('id',sess.session.user.id).single()
