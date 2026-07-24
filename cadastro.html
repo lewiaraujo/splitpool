@@ -303,7 +303,17 @@ input::placeholder{color:#8BAAC8;}
   }
 
   function getNextUrl() {
-    var next = new URLSearchParams(window.location.search).get('next')
+    var qs = new URLSearchParams(window.location.search)
+    // next_url: caminho completo (usado pelo checkout para preservar piscina/plano/valor).
+    // Validacao anti open-redirect: aceita apenas caminho relativo comecando com uma
+    // pagina .html conhecida, nunca URL absoluta (//, http:, etc).
+    var nextUrl = qs.get('next_url')
+    if (nextUrl) {
+      try { nextUrl = decodeURIComponent(nextUrl) } catch (e) { nextUrl = '' }
+      var paginasOk = /^(explorar|checkout|criar-piscina|meus-planos|dashboard-owner|perfil|detalhe-piscina)\.html([?#].*)?$/
+      if (paginasOk.test(nextUrl.replace(/^\/+/, ''))) return nextUrl.replace(/^\/+/, '')
+    }
+    var next = qs.get('next')
     // Whitelist: evita redirecionar para destino arbitrario vindo da URL
     var destinos = {
       'criar-piscina': 'criar-piscina.html',
