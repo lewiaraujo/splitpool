@@ -88,7 +88,7 @@ body{font-family:'Inter',sans-serif;color:var(--bluedark);min-height:100vh;displ
     </div>
     <div class="dots" id="dots"></div>
     <div class="nav-passos" id="nav-passos">
-      <button class="btn-sec" id="btn-voltar" onclick="voltar()" style="visibility:hidden;">Voltar</button>
+      <button class="btn-sec" id="btn-voltar" onclick="voltar()" style="display:none;">Voltar</button>
       <button class="btn-primary btn-avancar" id="btn-avancar" onclick="avancar()">Próximo</button>
     </div>
     <div class="final-acoes" id="final-acoes">
@@ -142,7 +142,7 @@ function render(){
   document.getElementById('p-texto').textContent=p.texto
   document.getElementById('dots').innerHTML=PASSOS.map((_,n)=>'<span class="dot'+(n===idx?' on':'')+'"></span>').join('')
   const ultimo = idx===PASSOS.length-1
-  document.getElementById('btn-voltar').style.visibility = idx===0 ? 'hidden' : 'visible'
+  document.getElementById('btn-voltar').style.display = idx===0 ? 'none' : 'block'
   document.getElementById('nav-passos').style.display = ultimo ? 'none' : 'flex'
   document.getElementById('final-acoes').classList.toggle('on', ultimo)
   document.getElementById('skip').style.display = ultimo ? 'none' : 'block'
