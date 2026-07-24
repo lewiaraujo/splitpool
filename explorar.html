@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Splitpool — Explorar Piscinas</title>
+<title>Splitpool — Criar Piscina</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 
 
@@ -11,19 +11,15 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;--border:rgba(0,160,200,0.22);}
+:root{--teal:#00C8D7;--blue:#1255CC;--bluedark:#0A3080;}
 html{scroll-behavior:smooth;}
 body{font-family:'Inter',sans-serif;color:var(--bluedark);overflow-x:hidden;background:#3acde8;}
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--teal);border-radius:5px;}
-
-/* Background igual ao index */
 .pool-bg{position:fixed;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1572331165267-854da2b021d4?w=1920&q=85') center/cover no-repeat;filter:brightness(1.05) saturate(1.1);}
 .pool-overlay{position:fixed;inset:0;z-index:1;background:rgba(160,225,245,0.12);}
 .shimmer{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
 .shimmer canvas{position:absolute;inset:0;width:100%;height:100%;}
 .page{position:relative;z-index:10;}
-
-/* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);background:rgba(255,255,255,0.72);border-bottom:1px solid rgba(0,180,210,0.18);padding:0 5%;}
 .nav-in{max-width:1240px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
 .nav-logo{height:52px;object-fit:contain;flex-shrink:0;}
@@ -33,178 +29,127 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .nav-btn:hover{background:rgba(18,85,204,0.06);}
 .nav-btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
 .nav-btn.primary:hover{background:var(--bluedark);}
-
-/* MAIN */
-main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
-
-/* HEADER */
+main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
 .page-header{margin-bottom:2rem;}
-.page-header h1{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:900;color:var(--bluedark);letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.5);}
+.page-header h1{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;color:var(--bluedark);letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.5);}
 .page-header p{font-size:15px;color:var(--bluedark);opacity:.65;margin-top:6px;font-weight:500;}
+.steps-nav{display:flex;margin-bottom:2rem;background:rgba(255,255,255,0.7);border-radius:12px;padding:6px;backdrop-filter:blur(8px);border:1px solid rgba(0,180,210,0.2);}
+.step-btn{flex:1;padding:10px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--bluedark);opacity:.5;cursor:default;font-family:inherit;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.step-btn.act{background:rgba(255,255,255,0.95);opacity:1;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.step-btn.done{opacity:.7;color:var(--teal);}
+.step-num{width:22px;height:22px;border-radius:50%;background:rgba(18,85,204,0.1);color:var(--blue);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-btn.act .step-num{background:var(--blue);color:#fff;}
+.step-btn.done .step-num{background:var(--teal);color:#fff;}
+.form-card{background:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.6);border-radius:20px;padding:2rem;box-shadow:0 8px 40px rgba(0,30,80,0.15);backdrop-filter:blur(16px);}
+.panel{display:none;}
+.panel.act{display:block;}
+.tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem;}
+@media(max-width:600px){.tipo-grid{grid-template-columns:1fr;}}
+.tipo-card{border:2px solid rgba(0,180,210,0.2);border-radius:14px;padding:1.5rem;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.6);}
+.tipo-card:hover{border-color:rgba(18,85,204,0.3);background:rgba(255,255,255,0.85);}
+.tipo-card.sel{border-color:var(--blue);background:#EEF4FF;}
+.tipo-ico{font-size:2rem;margin-bottom:10px;}
+.tipo-title{font-size:16px;font-weight:800;color:var(--bluedark);margin-bottom:4px;}
+.tipo-desc{font-size:13px;color:var(--bluedark);opacity:.6;line-height:1.5;font-weight:500;}
+.tipo-badge{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.badge-green{background:rgba(0,200,100,0.12);color:#00875A;border:1px solid rgba(0,200,100,0.2);}
+.badge-blue{background:rgba(18,85,204,0.1);color:var(--blue);border:1px solid rgba(18,85,204,0.2);}
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem;}
+.svc-item{border:2px solid rgba(0,180,210,0.2);border-radius:12px;padding:.9rem;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.6);text-align:center;}
+.svc-item:hover{border-color:rgba(18,85,204,0.3);background:rgba(255,255,255,0.85);}
+.svc-item.sel{border-color:var(--blue);background:#EEF4FF;}
+.svc-item img{width:40px;height:40px;border-radius:8px;object-fit:cover;margin:0 auto 6px;display:block;}
+.svc-item-name{font-size:12px;font-weight:700;color:var(--bluedark);}
+.svc-item-sub{font-size:11px;color:var(--bluedark);opacity:.5;margin-top:2px;font-weight:500;}
+.field{margin-bottom:1.25rem;}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:6px;opacity:.8;}
+.field select,.field input[type=number]{width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;transition:.2s;cursor:pointer;}
+.field select:focus,.field input:focus{border-color:var(--blue);background:#fff;}
+.field-hint{font-size:12px;color:var(--bluedark);opacity:.45;margin-top:5px;font-weight:500;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:500px){.field-row{grid-template-columns:1fr;}}
 
-/* FILTROS + BUSCA */
-.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2rem;}
-.search-wrap{position:relative;flex:1;min-width:220px;max-width:380px;}
-.search-wrap input{width:100%;padding:11px 16px 11px 42px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;transition:.2s;backdrop-filter:blur(8px);}
-.search-wrap input:focus{border-color:var(--blue);background:#fff;}
-.search-wrap input::placeholder{color:var(--bluedark);opacity:.4;}
-.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none;}
-.filtros{display:flex;gap:8px;flex-wrap:wrap;}
-.fbtn{padding:8px 16px;border-radius:8px;border:1.5px solid rgba(0,180,210,0.25);background:rgba(255,255,255,0.75);color:var(--bluedark);font-size:13px;font-weight:600;cursor:pointer;transition:.2s;font-family:inherit;backdrop-filter:blur(8px);}
-.fbtn:hover{background:rgba(255,255,255,0.95);}
-.fbtn.act{background:rgba(18,85,204,0.12);border-color:var(--blue);color:var(--blue);}
-.total-badge{margin-left:auto;font-size:13px;color:var(--bluedark);opacity:.55;font-weight:600;white-space:nowrap;}
-.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;}
-.svc-card{background:rgba(255,255,255,0.93);border:1px solid rgba(0,180,210,0.18);border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:.2s;box-shadow:0 3px 16px rgba(0,20,80,0.06);}
-.svc-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,20,80,0.13);border-color:rgba(18,85,204,0.35);}
-.svc-ico{width:52px;height:52px;border-radius:12px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f4f8fc;font-weight:800;font-size:20px;color:var(--blue);}
-.svc-ico img{width:100%;height:100%;object-fit:contain;}
-.svc-nome{font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;color:var(--bluedark);line-height:1.2;}
-.svc-sub{font-size:11.5px;color:var(--bluedark);opacity:.55;font-weight:600;margin-top:3px;}
-.svc-preco{margin-left:auto;text-align:right;flex-shrink:0;}
-.svc-preco-val{font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;color:var(--blue);white-space:nowrap;}
-.svc-preco-sub{font-size:10px;color:var(--bluedark);opacity:.5;font-weight:600;}
-.svc-apartir{font-size:10px;color:var(--blue);font-weight:800;display:block;}
-.voltar-planos{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--blue);background:rgba(255,255,255,0.85);border:1.5px solid rgba(18,85,204,0.25);border-radius:10px;padding:9px 16px;cursor:pointer;text-decoration:none;margin-bottom:18px;transition:.2s;}
-.voltar-planos:hover{background:rgba(18,85,204,0.06);}
-@media(max-width:680px){.svc-grid{grid-template-columns:1fr;gap:12px;}.svc-card{padding:14px;}}
+/* Descrição auto */
+.desc-auto{background:rgba(0,180,210,0.06);border:1.5px solid rgba(0,180,210,0.2);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:14px;color:var(--bluedark);line-height:1.7;font-weight:500;font-style:italic;}
+.desc-label{font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:8px;opacity:.8;display:flex;align-items:center;gap:6px;}
 
-/* GRID */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+/* WELLHUB */
+.wellhub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:1.5rem;}
+.wh-card{border:2px solid rgba(0,180,210,0.2);border-radius:12px;padding:1rem;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.6);position:relative;}
+.wh-card:hover{border-color:rgba(18,85,204,0.3);background:rgba(255,255,255,0.85);}
+.wh-card.sel{border-color:var(--blue);background:#EEF4FF;}
+.wh-card.popular::before{content:'Popular';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:20px;}
+.wh-plan{font-size:15px;font-weight:800;color:var(--bluedark);}
+.wh-price-official{font-size:12px;color:var(--bluedark);opacity:.5;margin-top:2px;font-weight:500;text-decoration:line-through;}
+.wh-price-final{font-size:18px;font-weight:900;color:var(--blue);margin-top:4px;}
+.wh-repasse{font-size:12px;font-weight:700;color:#00875A;margin-top:6px;background:rgba(0,200,100,0.1);border-radius:6px;padding:3px 8px;display:inline-block;}
+.wh-academias{font-size:11px;color:var(--bluedark);opacity:.55;margin-top:6px;font-weight:500;}
 
-/* CARD */
-.card{background:rgba(255,255,255,0.88);border:1px solid rgba(0,180,210,0.18);border-radius:16px;padding:1.5rem;transition:.3s;cursor:pointer;box-shadow:0 2px 16px rgba(0,0,0,0.07);position:relative;overflow:hidden;}
-.card:hover{transform:translateY(-5px);box-shadow:0 12px 36px rgba(0,0,0,0.13);border-color:rgba(18,85,204,0.3);}
-.card-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:1rem;}
-.card-ico{width:56px;height:56px;border-radius:14px;overflow:hidden;flex-shrink:0;background:#f0f6ff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--blue);}
-.card-ico img{width:56px;height:56px;object-fit:cover;display:block;}
-.card-info{flex:1;}
-.card-servico{font-size:17px;font-weight:800;color:var(--bluedark);line-height:1.2;}
-.card-dono{font-size:12px;color:var(--bluedark);opacity:.45;margin-top:3px;font-weight:500;}
-.card-code{display:inline-flex;align-items:center;gap:4px;background:#f0f6ff;border:1px solid rgba(18,85,204,0.18);border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--blue);margin-top:4px;}
-/* Selos de nível (estilo verificado) */
-.selo-ic{display:inline-flex;align-items:center;margin-left:4px;cursor:help;vertical-align:middle;flex-shrink:0;}
-.selo-ic svg{display:block;}
-/* Linha do dono no card (rótulo + pílula avatar+nome) — layout mockup */
-.card-owner-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,180,210,0.12);}
-.card-owner-label{font-size:14px;font-weight:800;color:var(--blue);line-height:1.2;flex-shrink:0;}
-.card-owner{display:inline-flex;align-items:center;gap:8px;background:#f5f9ff;border:1px solid rgba(18,85,204,0.14);border-radius:22px;padding:4px 14px 4px 4px;min-width:0;}
-.card-owner-av{width:28px;height:28px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;flex-shrink:0;}
-.card-owner-av img{width:28px;height:28px;object-fit:cover;display:block;}
-.card-owner-name{font-size:13px;font-weight:800;color:var(--bluedark);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* Dois blocos grandes lado a lado: vagas livres + meses restantes */
-.card-stats{display:flex;gap:8px;margin-top:12px;}
-.card-stat{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;border-radius:12px;padding:12px 8px;font-size:13px;font-weight:800;line-height:1.25;}
-.card-stat.vagas{background:rgba(0,200,100,0.10);color:#00875A;border:1px solid rgba(0,200,100,0.22);}
-.card-stat.vagas.esgotado{background:rgba(200,0,0,0.07);color:#991B1B;border:1px solid rgba(200,0,0,0.18);}
-.card-stat.prazo{background:rgba(0,20,80,0.05);color:var(--bluedark);border:1px solid rgba(0,20,80,0.10);}
-.card-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:6px;}
-.badge-aberta{background:rgba(0,200,100,0.12);color:#00875A;border:1px solid rgba(0,200,100,0.25);}
-.badge-fechada{background:rgba(200,0,0,0.08);color:#991B1B;border:1px solid rgba(200,0,0,0.15);}
-.card-desc{font-size:13px;color:var(--bluedark);opacity:.6;line-height:1.6;margin-bottom:1rem;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.card-footer{display:flex;align-items:center;justify-content:space-between;}
-.card-vagas{font-size:12px;color:var(--bluedark);opacity:.55;font-weight:600;}
-.vagas-bar{width:100%;height:4px;background:rgba(0,180,210,0.15);border-radius:2px;margin-top:4px;}
-.vagas-fill{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--blue));transition:.4s;}
-.card-preco{text-align:right;}
-.preco-val{font-size:22px;font-weight:900;color:var(--blue);letter-spacing:-0.5px;line-height:1;}
-.preco-val.small{font-size:14px;line-height:1.3;}
-.preco-label{font-size:11px;color:var(--bluedark);opacity:.4;font-weight:500;}
-.card-btn{width:100%;margin-top:1rem;padding:11px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;}
-.card-btn:hover{box-shadow:0 4px 18px rgba(18,85,204,0.4);}
-.card-btn:disabled{background:#93C5FD;cursor:not-allowed;}
+/* CALC */
+.calc-box{background:rgba(18,85,204,0.06);border:1.5px solid rgba(18,85,204,0.15);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;}
+.calc-title{font-size:14px;font-weight:800;color:var(--blue);margin-bottom:1rem;}
+.calc-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(18,85,204,0.1);font-size:14px;color:var(--bluedark);}
+.calc-row:last-child{border:none;font-weight:800;font-size:15px;}
+.val{font-weight:700;}
+.val.green{color:#00875A;}
+.val.blue{color:var(--blue);}
+.val.red{color:#991B1B;}
+.motivacao{text-align:center;padding:1rem;border-radius:10px;font-size:14px;font-weight:700;margin-bottom:1.25rem;transition:.3s;}
+.mot-0{background:rgba(0,180,210,0.08);color:var(--blue);}
+.mot-50{background:rgba(255,170,0,0.1);color:#B45309;}
+.mot-80{background:rgba(0,180,210,0.12);color:var(--blue);}
+.mot-100{background:rgba(0,200,100,0.12);color:#00875A;}
+.progress-wrap{margin-bottom:1rem;}
+.progress-label{display:flex;justify-content:space-between;font-size:13px;color:var(--bluedark);opacity:.7;margin-bottom:6px;font-weight:600;}
+.progress-bar{height:8px;background:rgba(0,180,210,0.15);border-radius:4px;overflow:hidden;}
+.progress-fill{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .5s ease;}
+.vagas-visual{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.vaga-bubble{width:34px;height:34px;border-radius:50%;border:2px solid rgba(0,180,210,0.3);display:flex;align-items:center;justify-content:center;font-size:13px;transition:.3s;background:rgba(255,255,255,0.6);}
+.vaga-bubble.ocupada{background:linear-gradient(135deg,var(--blue),var(--bluedark));border-color:var(--blue);}
+.info-box{background:rgba(0,180,210,0.06);border:1px solid rgba(0,180,210,0.2);border-radius:10px;padding:1rem;margin-bottom:1rem;font-size:13px;color:var(--bluedark);line-height:1.7;font-weight:500;}
+.info-box strong{color:var(--blue);}
+.btn-primary{width:100%;padding:14px;border-radius:10px;font-weight:700;color:#fff;font-size:15px;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--blue),var(--bluedark));box-shadow:0 4px 18px rgba(18,85,204,0.4);transition:.2s;}
+.btn-primary:hover{transform:translateY(-1px);}
+.btn-primary:disabled{background:#93C5FD;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-secondary{width:100%;padding:13px;border-radius:10px;font-weight:700;font-size:14px;border:1.5px solid rgba(18,85,204,0.25);background:transparent;color:var(--blue);cursor:pointer;font-family:inherit;transition:.2s;}
+.btn-secondary:hover{background:rgba(18,85,204,0.06);}
+.btn-row{display:flex;gap:10px;}
+.btn-row .btn-primary,.btn-row .btn-secondary{flex:1;margin:0;}
+.msg{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;text-align:center;display:none;font-weight:600;}
+.msg.success{background:#D1FAE5;color:#065F46;}
+.msg.error{background:#FEE2E2;color:#991B1B;}
+.resumo{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem;}
+@media(max-width:500px){.resumo{grid-template-columns:1fr;}}
+.resumo-item{background:rgba(18,85,204,0.06);border-radius:10px;padding:1rem;}
+.resumo-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);opacity:.7;margin-bottom:4px;}
+.resumo-val{font-size:15px;font-weight:800;color:var(--bluedark);}
+/* upload comprovante */
+.upload-area{border:2px dashed rgba(0,180,210,0.35);border-radius:12px;padding:1.5rem;text-align:center;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.5);}
+.upload-area:hover{border-color:var(--blue);background:rgba(18,85,204,0.04);}
+.upload-area.ok{border-color:#00A878;border-style:solid;background:rgba(0,168,120,0.06);}
+.upload-ico{font-size:2rem;margin-bottom:8px;}
+.upload-txt{font-size:13px;font-weight:700;color:var(--bluedark);opacity:.7;}
+.upload-sub{font-size:11px;color:var(--bluedark);opacity:.45;margin-top:4px;font-weight:500;}
+.upload-ok{font-size:13px;font-weight:700;color:#00875A;margin-top:6px;}
+/* campo cartão */
+.card-input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field input[type=text]{width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;transition:.2s;}
+.field input[type=text]:focus{border-color:var(--blue);background:#fff;}
+/* aviso final */
+.aviso-final{border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;}
+.aviso-final .av-title{font-size:14px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+.aviso-final .av-item{font-size:13px;line-height:1.8;font-weight:500;opacity:.8;}
+.av-pending{background:rgba(255,170,0,0.08);border:1.5px solid rgba(255,170,0,0.25);}
+.av-pending .av-title{color:#B45309;}
+.av-money{background:rgba(18,85,204,0.06);border:1.5px solid rgba(18,85,204,0.15);}
+.av-money .av-title{color:var(--blue);}
+/* bloqueio serviço já existente */
+.svc-item.bloqueado{opacity:.4;cursor:not-allowed;position:relative;}
+.svc-item.bloqueado::after{content:'Já criada';position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:#991B1B;background:rgba(255,220,220,0.95);padding:2px 6px;border-radius:4px;white-space:nowrap;}
+@media(max-width:700px){main{padding:80px 4% 40px;}.step-btn .step-label{display:none;}.card-input-row{grid-template-columns:1fr;}}
 
-/* ESTADOS */
-.loading{text-align:center;padding:4rem;color:var(--bluedark);opacity:.5;}
-.loading-spinner{width:40px;height:40px;border:3px solid rgba(0,180,210,0.2);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.empty{text-align:center;padding:4rem;background:rgba(255,255,255,0.6);border-radius:16px;backdrop-filter:blur(8px);}
-.empty-ico{font-size:3rem;margin-bottom:1rem;}
-.empty h3{font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:8px;}
-.empty p{font-size:14px;color:var(--bluedark);opacity:.55;font-weight:500;}
 
-/* MODAL DETALHE — compacto mobile-first, sem scroll */
-.modal-overlay{position:fixed;inset:0;background:rgba(5,20,70,0.6);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:flex-end;justify-content:center;padding:0;}
-.modal-overlay.open{display:flex;}
-@keyframes mIn{from{transform:translateY(60px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.modal{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:540px;position:relative;animation:mIn .25s cubic-bezier(.22,1,.36,1);box-shadow:0 -6px 32px rgba(0,20,80,.15);display:flex;flex-direction:column;}
-.modal-handle{width:36px;height:4px;background:rgba(0,0,0,.1);border-radius:2px;margin:10px auto 0;flex-shrink:0;}
-.modal-header{display:flex;align-items:center;gap:12px;padding:12px 16px 0;flex-shrink:0;}
-.modal-ico{width:48px;height:48px;border-radius:12px;overflow:hidden;background:#f0f6ff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--blue);flex-shrink:0;}
-.modal-ico img{width:48px;height:48px;object-fit:cover;}
-.modal-title{font-size:17px;font-weight:900;color:var(--bluedark);line-height:1.2;}
-.modal-sub{font-size:11px;color:var(--bluedark);opacity:.4;margin-top:2px;font-weight:500;}
-.modal-close{margin-left:auto;background:rgba(0,0,0,.06);border:none;color:var(--bluedark);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.modal-body{padding:10px 16px 8px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;flex:1;}
-/* código + vagas */
-.modal-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
-.m-code{display:inline-flex;align-items:center;gap:4px;background:#f0f6ff;border:1px solid rgba(18,85,204,0.2);border-radius:5px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--blue);}
-.m-code span{font-weight:500;opacity:.5;color:var(--bluedark);}
-.m-vagas-pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
-.m-vagas-pill.ok{background:#e6fff8;color:#00875A;border:1px solid rgba(0,168,120,0.25);}
-.m-vagas-pill.last{background:#fff8e0;color:#b07000;border:1px solid rgba(180,120,0,0.2);}
-.m-vagas-pill.full{background:#fff0f0;color:#c0392b;border:1px solid rgba(192,57,43,0.2);}
-/* comparativo preço */
-.m-price-block{background:#f5f9ff;border-radius:12px;padding:12px 14px;}
-.m-price-label{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-bottom:8px;}
-.m-price-row{display:grid;grid-template-columns:1fr 18px 1fr;align-items:center;gap:4px;}
-.m-pcol{display:flex;flex-direction:column;gap:1px;}
-.m-plbl{font-size:10px;font-weight:600;color:var(--bluedark);opacity:.5;}
-.m-pval{font-size:22px;font-weight:900;color:var(--bluedark);line-height:1;}
-.m-pcol.them .m-pval{text-decoration:line-through;opacity:.3;font-size:17px;}
-.m-pcol.us .m-pval{color:var(--blue);}
-.m-pmo{font-size:10px;color:var(--bluedark);opacity:.4;font-weight:500;}
-.m-parrow{font-size:13px;color:var(--bluedark);opacity:.2;text-align:center;}
-.m-anual-row{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,180,210,0.2);display:none;grid-template-columns:1fr 18px 1fr;align-items:center;gap:4px;}
-.m-anual-row.show{display:grid;}
-.m-anual-val{font-size:12px;font-weight:700;color:var(--bluedark);opacity:.35;text-decoration:line-through;}
-.m-anual-note{font-size:10px;color:var(--bluedark);opacity:.35;font-weight:500;}
-/* wellhub — selecionável */
-.m-wh-title{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--bluedark);opacity:.4;margin-bottom:7px;}
-.m-wh-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
-.m-wh-item{border:1.5px solid rgba(0,180,210,0.18);border-radius:9px;padding:8px 10px;background:#fff;cursor:pointer;transition:.15s;}
-.m-wh-item:hover{border-color:var(--blue);}
-.m-wh-item.selected{border-color:var(--blue);background:#f0f6ff;box-shadow:0 0 0 2px rgba(18,85,204,0.15);}
-.m-wh-name{font-size:11px;font-weight:800;color:var(--bluedark);margin-bottom:2px;}
-.m-wh-them{font-size:9px;color:var(--bluedark);opacity:.35;text-decoration:line-through;font-weight:500;}
-.m-wh-us{font-size:14px;font-weight:900;color:var(--blue);}
-.m-wh-mo{font-size:9px;color:var(--bluedark);opacity:.35;font-weight:500;}
-.m-wh-access{font-size:9px;font-weight:700;color:var(--green);margin-top:3px;}
-/* descrição */
-.m-owner{display:flex;align-items:center;gap:10px;background:#f5f9ff;border-radius:10px;padding:9px 12px;}
-.m-owner-av{width:32px;height:32px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;}
-.m-owner-av img{width:32px;height:32px;object-fit:cover;display:block;}
-.m-owner-name{font-size:13px;font-weight:800;color:var(--bluedark);}
-.m-owner-lv{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:2px;}
-.m-owner-lv.iniciante{background:rgba(18,85,204,0.07);color:var(--blue);}
-.m-owner-lv.verificado{background:#e6fff8;color:#00875A;}
-.m-owner-lv.elite{background:#fff8e0;color:#b07000;}
-.m-owner-right{margin-left:auto;font-size:9px;color:var(--bluedark);opacity:.35;font-weight:600;text-align:right;line-height:1.4;}
-/* trust compacto — 1 linha */
-.m-trust{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;}
-.m-trust-item{display:flex;align-items:center;gap:5px;background:#f5f9ff;border:1px solid rgba(0,180,210,0.12);border-radius:7px;padding:5px 8px;font-size:10px;font-weight:600;color:var(--bluedark);white-space:nowrap;flex-shrink:0;}
-.m-trust-item svg{width:11px;height:11px;color:var(--blue);flex-shrink:0;}
-/* cta fixo */
-.m-cta{padding:8px 16px 20px;flex-shrink:0;}
-.modal-btn{width:100%;padding:14px;border-radius:11px;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(18,85,204,0.3);transition:.2s;}
-.modal-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(18,85,204,0.45);}
-.modal-btn:disabled{background:#93C5FD;box-shadow:none;cursor:not-allowed;transform:none;}
-.m-wh-hint{font-size:10px;color:var(--bluedark);opacity:.4;text-align:center;margin-top:4px;font-weight:500;}
-@media(min-width:600px){
-  .modal-overlay{align-items:center;padding:1rem;}
-  .modal{border-radius:20px;max-height:86vh;}
-  @keyframes mIn{from{transform:scale(.95) translateY(16px);opacity:0;}to{transform:none;opacity:1;}}
-}
 
-/* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--bluedark);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:2000;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none;}
-.toast.show{opacity:1;transform:none;}
-
-@media(max-width:700px){
-  main{padding:80px 4% 40px;}
-  .toolbar{gap:8px;}
-  .total-badge{display:none;}
-}
 /* ── MOBILE NAV FINAL ── */
 @media(max-width:680px){
   nav{position:fixed;top:0;left:0;right:0;z-index:300;}
@@ -278,695 +223,904 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
 </style>
 </head>
 <body>
-
 <div class="pool-bg"></div>
 <div class="pool-overlay"></div>
 <div class="shimmer"><canvas id="wc"></canvas></div>
-
 <div class="page">
 <nav>
   <div class="nav-in">
     <a href="index.html"><img src="https://raw.githubusercontent.com/lewiaraujo/splitpool/main/SplitPool_nome%20completo.png" alt="SplitPool" class="nav-logo"></a>
     <div class="nav-right">
       <span class="nav-user" id="nav-user"></span>
-      <button class="nav-btn" onclick="window.location.href='meus-planos.html'">Meus planos</button>
-      <button class="nav-btn" onclick="window.location.href='dashboard-owner.html'">Minhas piscinas</button>
-      <a href="perfil.html" class="nav-btn">Perfil</a>
+      <button class="nav-btn" onclick="window.location.href='explorar.html'">← Explorar</button>
       <button class="nav-btn" onclick="logout()">Sair</button>
-      <button class="nav-btn primary" onclick="window.location.href='criar-piscina.html'">+ Criar piscina</button>
     </div>
   </div>
-</nav>
 
+</nav>
 <main>
   <div class="page-header">
-    <h1>🏊 Explorar Piscinas</h1>
-    <p>Encontre vagas abertas e comece a economizar agora mesmo</p>
+    <h1>🤿 Criar uma piscina</h1>
+    <p>Configure sua piscina em 3 passos e comece a ofertar vagas</p>
   </div>
-
-  <div class="toolbar">
-    <div class="search-wrap">
-      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="busca" placeholder="Buscar serviço..." oninput="filtrar()">
-    </div>
-    <div class="filtros">
-      <button class="fbtn act" onclick="setCategoria('todos',this)">Todos</button>
-      <button class="fbtn" onclick="setCategoria('streaming',this)">Streaming</button>
-      <button class="fbtn" onclick="setCategoria('ia',this)">IA & Produt.</button>
-      <button class="fbtn" onclick="setCategoria('wellness',this)">Wellness</button>
-      <button class="fbtn" onclick="setCategoria('musica',this)">Música</button>
-    </div>
-    <span class="total-badge" id="total-badge"></span>
+  <div class="steps-nav">
+    <button class="step-btn act" id="step-btn-1"><span class="step-num">1</span><span class="step-label">Tipo e serviço</span></button>
+    <button class="step-btn" id="step-btn-2"><span class="step-num">2</span><span class="step-label">Detalhes</span></button>
+    <button class="step-btn" id="step-btn-3"><span class="step-num">3</span><span class="step-label">Revisar e publicar</span></button>
   </div>
+  <div class="form-card">
+    <div class="msg" id="msg"></div>
 
-  <div id="conteudo">
-    <div class="loading">
-      <div class="loading-spinner"></div>
-      <p>Carregando piscinas...</p>
+    <!-- PASSO 1 -->
+    <div class="panel act" id="panel-1">
+      <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Qual tipo de piscina você quer criar?</h2>
+      <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Escolha como você tem acesso ao serviço que vai compartilhar.</p>
+      <div class="tipo-grid">
+        <div class="tipo-card" id="tipo-familia" onclick="selecionarTipo('familia')">
+          <div class="tipo-ico">🏊</div>
+          <div class="tipo-title">Plano família</div>
+          <div class="tipo-desc">Você assina e paga um plano família. Divide as vagas e pode recuperar o custo com os membros.</div>
+          <span class="tipo-badge badge-blue">Microsoft 365, Duolingo, Canva</span>
+        </div>
+        <div class="tipo-card" id="tipo-corporativo" onclick="selecionarTipo('corporativo')">
+          <div class="tipo-ico">🏢</div>
+          <div class="tipo-title">Benefício corporativo</div>
+          <div class="tipo-desc">Sua empresa paga. Você tem vagas sobrando e quer ofertar — custo zero pra você.</div>
+          <span class="tipo-badge badge-green">Wellhub, TotalPass, Alura</span>
+        </div>
+      </div>
+      <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Qual serviço você vai compartilhar?</h2>
+      <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1rem;font-weight:500;">Selecione o serviço disponível.</p>
+      <div class="svc-grid" id="svc-grid"></div>
+      <button class="btn-primary" onclick="irPasso2()">Continuar →</button>
+    </div>
+
+    <!-- PASSO 2 -->
+    <div class="panel" id="panel-2">
+      <!-- FAMÍLIA -->
+      <div id="panel-2-familia">
+        <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Detalhes da piscina</h2>
+        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Configure as vagas e confira quanto você pode receber.</p>
+        <div class="info-box" id="info-preco-svc"></div>
+        <div class="field-row">
+          <div class="field">
+            <label>Total de vagas disponíveis</label>
+            <select id="vagas-total" onchange="recalcularCalc();gerarDescricao()">
+            </select>
+            <div class="field-hint" id="vagas-hint"></div>
+          </div>
+          <div class="field">
+            <label>Plano que você assina</label>
+            <select id="plano-select" onchange="selecionarPlano()">
+            </select>
+            <div class="field-hint" id="plano-hint"></div>
+          </div>
+        </div>
+        <!-- Descrição automática -->
+        <div>
+          <div class="desc-label">📋 Descrição gerada automaticamente <span style="font-size:11px;color:var(--teal);font-weight:600;">✨</span></div>
+          <div class="desc-auto" id="desc-auto">Selecione o serviço e as vagas para gerar a descrição.</div>
+        </div>
+        <div class="calc-box">
+          <div class="calc-title">🧮 Sua projeção de recebimentos</div>
+          <div class="motivacao mot-0" id="motivacao">Configure as vagas para ver sua projeção</div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Simulação de vagas preenchidas</span><span id="prog-label">0 de 5</span></div>
+            <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+          </div>
+          <div class="vagas-visual" id="vagas-visual"></div>
+          <div style="margin-top:1rem;">
+            <div class="calc-row"><span>Você recebe por vaga preenchida</span><span class="val blue" id="calc-repasse-vaga">—</span></div>
+            <div class="calc-row" id="row-custo"><span>Custo do seu plano família</span><span class="val red" id="calc-custo">—</span></div>
+            <div class="calc-row"><span id="calc-label-resultado">Com todas as vagas preenchidas</span><span class="val green" id="calc-resultado">—</span></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Simular vagas preenchidas</label>
+          <input type="range" id="sim-vagas" min="0" max="5" value="0" step="1" oninput="simularVagas(this.value)" style="width:100%;margin-top:6px;">
+          <div class="field-hint" id="sim-label">Arraste para simular seu recebimento mês a mês</div>
+        </div>
+      </div>
+
+      <!-- WELLHUB -->
+      <div id="panel-2-wellhub" style="display:none;">
+        <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Wellhub — Configure sua piscina</h2>
+        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:.75rem;font-weight:500;">Sua empresa paga. Você oferta vagas de dependente.</p>
+        <div class="info-box">
+          <strong>Como funciona:</strong> o membro escolhe qual plano Wellhub quer ao entrar. O Splitpool cuida do pagamento e do acesso. Você recebe por cada vaga ativada, independente do plano escolhido pelo membro.
+        </div>
+        <p style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:10px;opacity:.8;">Selecione quais planos você permite:</p>
+        <div class="wellhub-grid" id="wellhub-grid"></div>
+        <div class="field">
+          <label>Número de vagas disponíveis</label>
+          <select id="wh-vagas" onchange="atualizarCalcWH();gerarDescricaoWH()">
+            <option value="1">1 vaga</option>
+            <option value="2" selected>2 vagas</option>
+            <option value="3">3 vagas</option>
+            <option value="4">4 vagas</option>
+            <option value="5">5 vagas</option>
+          </select>
+          <div class="field-hint">Quantas vagas de dependente você tem disponíveis</div>
+        </div>
+        <div>
+          <div class="desc-label">📋 Descrição gerada automaticamente <span style="font-size:11px;color:var(--teal);font-weight:600;">✨</span></div>
+          <div class="desc-auto" id="wh-desc-auto">Selecione os planos e vagas para gerar a descrição.</div>
+        </div>
+        <div class="calc-box">
+          <div class="calc-title">🧮 Sua projeção de recebimentos — Wellhub</div>
+          <div class="motivacao mot-100">Custo zero para você — todo recebimento é renda adicional 💰</div>
+          <div class="calc-row"><span>Vagas disponíveis</span><span class="val blue" id="wh-calc-vagas">2</span></div>
+          <div class="calc-row"><span>Recebimento mínimo (planos básicos)</span><span class="val blue" id="wh-calc-min">R$19,20/mês</span></div>
+          <div class="calc-row"><span>Recebimento máximo (planos premium)</span><span class="val blue" id="wh-calc-max">R$80,00/mês</span></div>
+          <div class="calc-row"><span>Seu custo mensal</span><span class="val green">R$0,00 — empresa paga ✓</span></div>
+          <div class="calc-row"><span>Recebimento líquido estimado</span><span class="val green" id="wh-calc-lucro">R$19–80/mês</span></div>
+        </div>
+      </div>
+
+      <!-- TOTALPASS — mesmo modelo Wellhub -->
+      <div id="panel-2-totalpass" style="display:none;">
+        <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">TotalPass — Configure sua piscina</h2>
+        <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:.75rem;font-weight:500;">Sua empresa paga. Você oferta vagas de dependente.</p>
+        <div class="info-box">
+          <strong>Como funciona:</strong> o membro escolhe qual plano TotalPass quer ao entrar. O Splitpool cuida do pagamento e do acesso. Você recebe por cada vaga ativada, independente do plano escolhido pelo membro.
+        </div>
+        <p style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:10px;opacity:.8;">Selecione quais planos você permite:</p>
+        <div class="wellhub-grid" id="totalpass-grid"></div>
+        <div class="field">
+          <label>Número de vagas disponíveis</label>
+          <select id="tp-vagas" onchange="atualizarCalcTP();gerarDescricaoTP()">
+            <option value="1">1 vaga</option>
+            <option value="2" selected>2 vagas</option>
+            <option value="3">3 vagas</option>
+            <option value="4">4 vagas</option>
+            <option value="5">5 vagas</option>
+          </select>
+          <div class="field-hint">Quantas vagas de dependente você tem disponíveis</div>
+        </div>
+        <div>
+          <div class="desc-label">📋 Descrição gerada automaticamente <span style="font-size:11px;color:var(--teal);font-weight:600;">✨</span></div>
+          <div class="desc-auto" id="tp-desc-auto">Selecione os planos e vagas para gerar a descrição.</div>
+        </div>
+        <div class="calc-box">
+          <div class="calc-title">🧮 Sua projeção de recebimentos — TotalPass</div>
+          <div class="motivacao mot-100">Custo zero para você — todo recebimento é renda adicional 💰</div>
+          <div class="calc-row"><span>Vagas disponíveis</span><span class="val blue" id="tp-calc-vagas">2</span></div>
+          <div class="calc-row"><span>Recebimento mínimo (TP GO)</span><span class="val blue" id="tp-calc-min">R$19,20/mês</span></div>
+          <div class="calc-row"><span>Recebimento máximo (TP7)</span><span class="val blue" id="tp-calc-max">R$112,00/mês</span></div>
+          <div class="calc-row"><span>Seu custo mensal</span><span class="val green">R$0,00 — empresa paga ✓</span></div>
+          <div class="calc-row"><span>Recebimento líquido estimado</span><span class="val green" id="tp-calc-lucro">R$19–112/mês</span></div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:1.5rem;">
+        <button class="btn-secondary" onclick="goStep(1)">← Voltar</button>
+        <button class="btn-primary" onclick="irPasso3()">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- PASSO 3 -->
+    <div class="panel" id="panel-3">
+      <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Revise e publique</h2>
+      <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:1.5rem;font-weight:500;">Confirme os dados e envie o comprovante antes de publicar.</p>
+      <div class="resumo" id="resumo-grid"></div>
+
+      <!-- COMPROVANTE DO PLANO -->
+      <div class="field" style="margin-bottom:1.5rem;">
+        <label>📎 Comprovante do plano ativo</label>
+        <div class="field-hint" style="margin-bottom:10px;">Envie um print ou PDF mostrando que você tem o plano ativo (tela da assinatura, e-mail de confirmação, etc.).</div>
+        <div class="upload-area" id="upload-area" onclick="document.getElementById('comprovante-input').click()">
+          <input type="file" id="comprovante-input" accept="image/*,.pdf" style="display:none;" onchange="onComprovanteSelected(this)">
+          <div class="upload-ico">📄</div>
+          <div class="upload-txt">Clique para selecionar o arquivo</div>
+          <div class="upload-sub">PNG, JPG ou PDF · Máx. 5MB</div>
+          <div class="upload-ok" id="upload-ok" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- LINK DE CONVITE (só para planos família — opcional) -->
+      <div class="field" id="campo-link-convite" style="margin-bottom:1.5rem;display:none;">
+        <label>🔗 Link de convite do plano família <span style="font-size:11px;font-weight:500;opacity:.5;">(opcional — para verificação)</span></label>
+        <div class="field-hint" style="margin-bottom:10px;">Se quiser, cole o link que o serviço gera para convidar membros. Usamos apenas para verificar que o plano está ativo. Não é obrigatório.</div>
+        <div style="background:rgba(0,180,210,0.06);border:1px solid rgba(0,180,210,0.2);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--bluedark);opacity:.8;line-height:1.6;">
+          <strong>Onde encontrar:</strong><br>
+          <span id="link-instrucao">Varia por serviço — veja as instruções abaixo.</span>
+        </div>
+        <input type="text" id="link-convite-input" placeholder="https://..." style="width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;">
+        <div class="field-hint" style="margin-top:6px;color:#00875A;font-weight:600;" id="link-hint"></div>
+      </div>
+
+      <!-- VENCIMENTO DO CARTÃO -->
+      <div class="field" style="margin-bottom:1.5rem;">
+        <label>💳 Dia de vencimento do seu cartão</label>
+        <div class="field-hint" style="margin-bottom:10px;">O dia em que a fatura precisa ser PAGA. Usamos para avisar você com antecedência antes de cada renovação.</div>
+        <select id="cartao-dia" onchange="autoFecharDia()" style="max-width:200px;">
+          <option value="">Selecione o dia</option>
+        </select>
+        <div style="font-size:11px;color:var(--bluedark);opacity:.55;margin-top:5px;line-height:1.5;">Vencimento nos dias 29, 30 ou 31? Selecione 28 — assim o aviso vale para todos os meses.</div>
+      </div>
+
+      <!-- FECHAMENTO DA FATURA -->
+      <div class="field" style="margin-bottom:1.5rem;">
+        <label>📅 Dia de fechamento da fatura</label>
+        <div class="field-hint" style="margin-bottom:10px;">O dia em que a fatura FECHA (diferente do vencimento — geralmente ~10 dias antes). É o que decide se um membro novo entra no repasse deste mês ou do próximo. Preenchemos uma estimativa; ajuste se souber o valor exato no seu banco.</div>
+        <select id="fechamento-dia" style="max-width:200px;">
+          <option value="">Selecione o dia</option>
+        </select>
+      </div>
+
+      <!-- DATA DE COMPRA DO PLANO -->
+      <div class="field" style="margin-bottom:1.5rem;">
+        <label>📅 Quando você comprou esse plano?</label>
+        <div class="field-hint" style="margin-bottom:10px;">Usamos essa data para calcular quanto tempo de plano ainda resta, especialmente importante em planos anuais.</div>
+        <input type="date" id="data-compra-plano" max="" style="max-width:200px;padding:13px 16px;border-radius:10px;border:1.5px solid rgba(0,180,210,0.3);background:rgba(255,255,255,0.85);font-size:14px;font-family:inherit;color:var(--bluedark);outline:none;">
+      </div>
+
+      <!-- O QUE ACONTECE APÓS PUBLICAR -->
+      <div style="background:rgba(0,200,100,0.08);border:1.5px solid rgba(0,200,100,0.2);border-radius:12px;padding:1.25rem;margin-bottom:1rem;">
+        <div style="font-size:14px;font-weight:800;color:#00875A;margin-bottom:8px;">✅ O que acontece após publicar</div>
+        <div style="font-size:13px;color:var(--bluedark);opacity:.7;line-height:1.8;font-weight:500;">
+          • Membros entram, pagam e recebem acesso via Splitpool<br>
+          • Você recebe via PIX quando houver membros ativos<br>
+          • O Splitpool gerencia pagamentos, credenciais e suporte
+        </div>
+      </div>
+
+      <!-- AVISO: VALIDAÇÃO PENDENTE -->
+      <div class="aviso-final av-pending">
+        <div class="av-title">⏳ Sua piscina ficará visível após validação</div>
+        <div class="av-item">Vamos conferir o comprovante enviado e ativar sua piscina em até <strong>24h úteis</strong>. Você receberá um e-mail assim que estiver no ar.</div>
+      </div>
+
+      <!-- AVISO: REPASSE MENSAL -->
+      <div class="aviso-final av-money">
+        <div class="av-title">💰 Repasses ao fim de cada ciclo mensal</div>
+        <div class="av-item">Os valores são liberados via PIX ao fim de cada mês, após a confirmação de acesso pelos membros. O primeiro mês fica retido como garantia.</div>
+      </div>
+
+      <!-- DADOS DE RECEBIMENTO -->
+      <div style="background:#f0f9ff;border:1.5px solid rgba(0,180,210,0.3);border-radius:12px;padding:16px;margin-bottom:1.25rem;">
+        <div style="font-size:14px;font-weight:800;color:var(--bluedark);margin-bottom:4px;">📲 Seus dados para receber</div>
+        <div style="font-size:12px;color:var(--bluedark);opacity:.6;margin-bottom:12px;line-height:1.5;">Usamos o WhatsApp para avisos importantes sobre sua piscina e a chave PIX para enviar seus repasses.</div>
+        <label style="font-size:12px;font-weight:700;color:var(--bluedark);display:block;margin-bottom:5px;">WhatsApp (com DDD) <span style="color:#dc2626;">*</span></label>
+        <input type="tel" id="dono-telefone" placeholder="(85) 99999-9999" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid rgba(0,180,210,0.3);font-family:inherit;font-size:14px;color:var(--bluedark);background:#fff;outline:none;margin-bottom:12px;box-sizing:border-box;">
+        <label style="font-size:12px;font-weight:700;color:var(--bluedark);display:block;margin-bottom:5px;">Chave PIX para os repasses <span style="color:#dc2626;">*</span></label>
+        <input type="text" id="dono-pix" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid rgba(0,180,210,0.3);font-family:inherit;font-size:14px;color:var(--bluedark);background:#fff;outline:none;margin-bottom:12px;box-sizing:border-box;">
+        <label style="font-size:12px;font-weight:700;color:var(--bluedark);display:block;margin-bottom:5px;">CPF do titular <span style="color:#dc2626;">*</span></label>
+        <input type="text" id="dono-cpf" placeholder="000.000.000-00" maxlength="14" style="width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid rgba(0,180,210,0.3);font-family:inherit;font-size:14px;color:var(--bluedark);background:#fff;outline:none;box-sizing:border-box;">
+        <div style="font-size:11px;color:var(--bluedark);opacity:.5;margin-top:5px;line-height:1.5;">O CPF garante que os repasses sejam feitos apenas ao titular da conta.</div>
+      </div>
+
+      <!-- AVISO TERMOS -->
+      <div style="background:rgba(255,170,0,0.08);border:1.5px solid rgba(255,170,0,0.2);border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:13px;color:var(--bluedark);opacity:.8;line-height:1.7;font-weight:500;">
+        ⚠️ Ao publicar, você se compromete a manter o serviço ativo. Encerramento sem aviso de 7 dias gera reembolso proporcional aos membros e suspensão temporária do selo verificado.
+      </div>
+
+      <div class="field" style="display:flex;align-items:flex-start;gap:10px;margin-bottom:1.5rem;">
+        <input type="checkbox" id="aceite" style="width:auto;margin-top:3px;flex-shrink:0;">
+        <label for="aceite" style="font-size:14px;font-weight:500;color:var(--bluedark);opacity:.8;cursor:pointer;">Li e aceito: meu plano está ativo, tenho as vagas disponíveis, me comprometo a enviar o acesso ao membro em até 24h após a confirmação do pagamento, e só encerrarei a piscina com aviso prévio de 30 dias.</label>
+      </div>
+      <div class="msg" id="msg-pub" style="margin-bottom:12px;"></div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="goStep(2)">← Voltar</button>
+        <button class="btn-primary" id="btn-publicar" onclick="publicarPiscina()">🚀 Enviar para validação</button>
+      </div>
     </div>
   </div>
 </main>
 </div>
 
-<!-- MODAL DETALHE -->
-<div class="modal-overlay" id="modal-detalhe">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-header">
-      <div class="modal-ico" id="m-ico"></div>
-      <div style="flex:1;">
-        <div class="modal-title" id="m-titulo"></div>
-        <div class="modal-sub">Piscina verificada pelo Splitpool</div>
-      </div>
-      <button class="modal-close" onclick="fecharModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-meta">
-        <div class="m-code"><span>Cód.</span> <strong id="m-code">SP-????</strong></div>
-        <div class="m-vagas-pill ok" id="m-vagas-pill"><span id="m-vagas-txt">? vagas</span></div>
-      </div>
-      <!-- preço comparativo (não-Wellhub) -->
-      <div class="m-price-block" id="m-price-block">
-        <div class="m-price-label">Comparativo de preço</div>
-        <div class="m-price-row">
-          <div class="m-pcol them">
-            <div class="m-plbl">Sem Splitpool</div>
-            <div class="m-pval" id="m-psem">—</div>
-            <div class="m-pmo">por mês</div>
-          </div>
-          <div class="m-parrow">→</div>
-          <div class="m-pcol us">
-            <div class="m-plbl">Na Splitpool</div>
-            <div class="m-pval" id="m-psp">—</div>
-            <div class="m-pmo">por mês</div>
-          </div>
-        </div>
-        <div class="m-anual-row" id="m-anual-row">
-          <div><div class="m-plbl">Plano anual (÷12)</div><div class="m-anual-val" id="m-anual-val">—</div></div>
-          <div></div>
-          <div><div class="m-anual-note">Mesmo preço Splitpool</div></div>
-        </div>
-      </div>
-      <!-- wellhub selecionável -->
-      <div id="m-wh-block" style="display:none;">
-        <div class="m-wh-title">Escolha seu plano — acesso aberto a qualquer pessoa</div>
-        <div class="m-wh-grid" id="m-wh-grid"></div>
-        <div class="m-wh-hint" id="m-wh-hint">Selecione um plano para continuar</div>
-      </div>
-      <!-- benefício corporativo (TotalPass grid) -->
-      <div id="m-tp-block" style="display:none;">
-        <div class="m-wh-title">Escolha seu plano TotalPass — acesso aberto a qualquer pessoa</div>
-        <div class="m-wh-grid" id="m-tp-grid"></div>
-        <div class="m-wh-hint" id="m-tp-hint">Selecione um plano para continuar</div>
-      </div>
-      <!-- benefício corporativo genérico — sem comparativo -->
-      <div id="m-beneficio-block" style="display:none;" class="m-price-block">
-        <div class="m-price-label">Benefício corporativo — acesso aberto</div>
-        <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
-          <div>
-            <div class="m-pval" id="m-beneficio-preco" style="color:var(--blue);">—</div>
-            <div class="m-pmo">por mês</div>
-          </div>
-          <div style="flex:1;background:#e6fff8;border-radius:8px;padding:8px 10px;border:1px solid rgba(0,168,120,0.2);">
-            <div style="font-size:11px;font-weight:800;color:#00875A;margin-bottom:2px;">✓ Acesso livre, sem vínculo</div>
-            <div style="font-size:10px;color:var(--bluedark);opacity:.55;font-weight:500;line-height:1.4;">Normalmente restrito a funcionários de empresas parceiras. Aqui, qualquer pessoa pode entrar.</div>
-          </div>
-        </div>
-      </div>
-      <!-- dono -->
-      <div class="m-owner">
-        <div class="m-owner-av" id="m-owner-av">?</div>
-        <div>
-          <div class="m-owner-name" id="m-owner-name">Dono verificado</div>
-          <div class="m-owner-lv iniciante" id="m-owner-lv">Iniciante</div>
-        </div>
-        <div class="m-owner-right">Verificado<br>pelo Splitpool</div>
-      </div>
-      <!-- trust -->
-      <div class="m-trust">
-        <div class="m-trust-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Pagamento protegido
-        </div>
-        <div class="m-trust-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          72h para confirmar
-        </div>
-        <div class="m-trust-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-          Reembolso garantido
-        </div>
-      </div>
-    </div>
-    <div class="m-cta">
-      <button class="modal-btn" id="m-btn" onclick="entrarPiscina()">Entrar nesta piscina 🏊</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
 <script>
-const SUPABASE_URL = 'https://eawfweuamtwlsilrkgoo.supabase.co'
-const SUPABASE_KEY = 'sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
-const { createClient } = supabase
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
-
-// Mapa de categorias por serviço
-const CATEGORIAS = {
-  'Netflix':'streaming','YouTube':'streaming','Disney+':'streaming','HBO':'streaming','Prime Video':'streaming',
-  'Spotify':'musica','Apple Music':'musica','Deezer':'musica','Tidal':'musica',
-  'Claude':'ia','ChatGPT':'ia','Notion':'ia','Microsoft 365':'ia','Duolingo':'ia','Canva':'ia',
-  'Wellhub':'wellness','Gympass':'wellness','Headspace':'wellness',
-  'iCloud':'streaming','Dropbox':'ia','Adobe':'ia'
-}
-
-// Ícones do repositório
-const ICONES = {
-  'Spotify':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Spotify_icon.png',
-  'YouTube':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/youtube_icon.png',
-  'Claude':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/claude-ai_icon.jpg',
-  'Claude Pro':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/claude-ai_icon.jpg',
-  'iCloud':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/icloud%20icon.jpg',
-  'Apple Music':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Apple_Music_icon.png',
-  'Microsoft 365':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/microsoft_icon.png',
-  'Microsoft 365 Family':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/microsoft_icon.png',
-  'Duolingo':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/duolingo_icon.png',
-  'Duolingo Super':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/duolingo_icon.png',
-  'Duolingo Super Família':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/duolingo_icon.png',
-  'Notion':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Notion_icon.png',
-  'Notion Team':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Notion_icon.png',
-  'Wellhub':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/wellhub_gympass_icon.png',
-  'Canva':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Logo-Canva.png',
-  'Canva Teams':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/Logo-Canva.png',
-  'TotalPass':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/logo_totalpass_icon_fundo%20transparente.png',
-  'Alura':'https://raw.githubusercontent.com/lewiaraujo/splitpool/main/logo_alura.png',
-}
-
-let todasPiscinas = []
-let CATALOGO_EX = []
-let OCULTOS_EX = []
-function catalogoInfoEx(nome){
-  const n=String(nome||'').toLowerCase()
-  return (CATALOGO_EX||[]).find(s=>String(s.nome||'').toLowerCase()===n)
-}
-function temPlanosDin(nome){
-  const s=catalogoInfoEx(nome)
-  return !!(s&&s.planos_financeiros&&s.planos_financeiros.length)
-}
-function minPlanoDin(nome){
-  const s=catalogoInfoEx(nome)
-  const ps=(s&&s.planos_financeiros)||[]
-  if(!ps.length) return null
-  const m=Math.min(...ps.map(p=>Number(p.preco||0)))
-  return m.toFixed(2).replace('.',',')
-}
-function servicoOcultoEx(nome){
+const SUPABASE_URL='https://eawfweuamtwlsilrkgoo.supabase.co'
+const SUPABASE_KEY='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'
+const {createClient}=supabase
+const sb=createClient(SUPABASE_URL,SUPABASE_KEY)
+let OCULTOS_CP=[]
+function servicoOcultoCP(nome){
   const n=(nome||'').toLowerCase()
-  return OCULTOS_EX.some(o=>{o=(o||'').toLowerCase();return n.includes(o)||o.includes(n)})
+  return OCULTOS_CP.some(o=>{o=(o||'').toLowerCase();return n.includes(o)||o.includes(n)})
 }
-let categoriaAtual = 'todos'
-let piscinaAtual = null
-let isWH_atual = false
-let isTP_atual = false
-
-// Verifica autenticação
-sb.auth.getSession().then(({ data }) => {
-  if (!data.session) {
-    window.location.href = 'cadastro.html?modo=login&next=explorar'
-    return
-  }
-  const email = data.session.user.email
-  document.getElementById('nav-user').textContent = email.split('@')[0]
-  var mn=document.getElementById('mob-name');if(mn)mn.textContent=email.split('@')[0];
-  carregarPiscinas()
+sb.from('site_config').select('valor').eq('chave','servicos_ocultos').maybeSingle().then(({data:cfg})=>{
+  OCULTOS_CP=(cfg&&cfg.valor&&cfg.valor.lista)||[]
 })
 
-async function carregarPiscinas() {
-  const { data, error } = await sb
-    .from('piscinas')
-    .select('*')
-    .eq('status', 'aberta')
-    .order('created_at', { ascending: false })
+let userId=null,nomeUsuario='',tipoSelecionado=null,svcSelecionado=null,planoAtual=null
+let piscinasExistentes=[] // serviços que o dono já tem piscina ativa
+let comprovanteFile=null
 
-  if (error) {
-    mostrarVazio('Erro ao carregar piscinas', 'Tente recarregar a página.')
-    return
-  }
+const BASE='https://raw.githubusercontent.com/lewiaraujo/splitpool/main/'
 
-  todasPiscinas = data || []
-  // Setup Fase 2: serviços do catálogo sem nenhuma piscina ainda ("Seja o primeiro")
-  try{
-    const {data:cat}=await sb.from('servicos_catalogo').select('*').eq('ativo',true)
-    CATALOGO_EX=cat||[]
-  }catch(e){CATALOGO_EX=[]}
-  // Serviços ocultos pelo admin
-  try{
-    const {data:cfgOc}=await sb.from('site_config').select('valor').eq('chave','servicos_ocultos').maybeSingle()
-    OCULTOS_EX=(cfgOc&&cfgOc.valor&&cfgOc.valor.lista)||[]
-  }catch(e){OCULTOS_EX=[]}
-  renderizar()
-}
+// Base de dados completa dos serviços com planos oficiais
+const SVCS_FAMILIA=[
+  {
+    nome:'Microsoft 365',sub:'Family · até 6 pessoas',img:BASE+'microsoft_icon.png',
+    precoVenda:25.50,repasse:7.28,
+    planos:[
+      {nome:'Family Mensal',custo:0,vagas:5,desc:'Word, Excel, PowerPoint, Teams, OneDrive 1TB/pessoa'},
+      {nome:'Family Anual',custo:0,vagas:5,desc:'Mesmo conteúdo com desconto anual (R$599/ano)'},
+    ]
+  },
+  {
+    nome:'Duolingo Super',sub:'Família · até 6 pessoas',img:BASE+'duolingo_icon.png',
+    precoVenda:19.90,repasse:3.12,
+    planos:[
+      {nome:'Super Família Anual',custo:0,vagas:5,desc:'Sem anúncios, vidas ilimitadas, modo offline (R$649,90/ano)'},
+    ]
+  },
+  {
+    nome:'Canva Teams',sub:'Teams · até 4 pessoas',img:BASE+'Logo-Canva.png',
+    precoVenda:15.90,repasse:1.83,
+    planos:[
+      {nome:'Teams Anual',custo:0,vagas:4,desc:'Pro completo + Brand Kit + colaboração em equipe (R$470/ano)'},
+    ]
+  },
+  {
+    nome:'Notion Team',sub:'Seats avulsos',img:BASE+'Notion_icon.png',
+    precoVenda:25.00,repasse:16.70,
+    planos:[
+      {nome:'Team (por seat)',custo:0,vagas:3,desc:'Páginas ilimitadas, histórico de versões, convidados ilimitados'},
+    ]
+  },
+]
+const TP_PLANS=[
+  {n:'TP GO',of:39.90,sp:51.90,rep:8.05,desc:'2.000+ academias e parceiros'},
+  {n:'TP1',of:59.90,sp:74.90,rep:9.90,desc:'6.000+ academias e parceiros'},
+  {n:'TP1+',of:89.90,sp:109.90,rep:13.06,desc:'13.000+ academias + Smart Fit'},
+  {n:'TP2',of:119.90,sp:144.90,rep:16.22,desc:'20.000+ academias + Smart Fit + terapia'},
+  {n:'TP3',of:199.90,sp:234.90,rep:22.07,desc:'28.000+ academias + saude integrada'},
+  {n:'TP4',of:299.90,sp:344.90,rep:27.44,desc:'30.000+ academias + espacos premium'},
+  {n:'TP5',of:399.90,sp:449.90,rep:28.93,desc:'32.000+ academias + premium'},
+  {n:'TP5+',of:499.90,sp:554.90,rep:30.41,desc:'33.000+ academias + premium'},
+  {n:'TP6',of:599.90,sp:659.90,rep:31.90,desc:'34.500+ academias + premium'},
+  {n:'TP7',of:699.90,sp:769.90,rep:37.27,desc:'35.000+ academias + premium'}
+]
+const SVCS_CORP=[
+  {nome:'Wellhub',sub:'Benefício corporativo',img:BASE+'wellhub_gympass_icon.png',especial:'wellhub'},
+  {
+    nome:'TotalPass',sub:'Beneficio corporativo',img:BASE+'logo_totalpass_icon_fundo%20transparente.png',
+    precoVenda:51.90,repasse:8.00,especial:'totalpass',
+    planos:[{nome:'TP GO',custo:0,vagas:2,desc:'Membro escolhe o plano no checkout — acesso livre sem vinculo'}]
+  },
+  {
+    nome:'Alura',sub:'Educação corporativa',img:BASE+'logo_alura.png',
+    precoVenda:39.90,repasse:25.00,
+    planos:[{nome:'Corporativo (vaga de dependente)',custo:0,vagas:2,desc:'1.500+ cursos de tecnologia, certificados e formações'}]
+  },
+]
 
-function getIcone(servico, icone_url) {
-  if (icone_url) return `<img src="${icone_url}" alt="${servico}" onerror="this.parentElement.textContent='${servico[0]}'"/>`
-  const url = ICONES[servico]
-  if (url) return `<img src="${url}" alt="${servico}" onerror="this.parentElement.textContent='${servico[0]}'"/>`
-  return servico[0]
-}
-
-// Avatar do dono para o card: usa foto (avatar_url) se existir, senão inicial do nome
-function getOwnerAvatar(nome, avatar) {
-  const inicial = (nome && nome[0] ? nome[0] : '?').toUpperCase()
-  if (avatar) {
-    return `<img src="${avatar}" alt="${nome||''}" onerror="this.parentElement.textContent='${inicial}'"/>`
-  }
-  return inicial
-}
-
-function getCategoria(servico) {
-  for (const [k, v] of Object.entries(CATEGORIAS)) {
-    if (servico.toLowerCase().includes(k.toLowerCase())) return v
-  }
-  return 'outros'
-}
-
-function filtrar() {
-  renderizar()
-}
-
-function setCategoria(cat, el) {
-  categoriaAtual = cat
-  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('act'))
-  el.classList.add('act')
-  renderizar()
-}
-
-const BLOCKLIST = ['spotify','youtube','apple one','netflix','claude pro']
-
-async function renderizar() {
-  const busca = document.getElementById('busca').value.toLowerCase()
-  let lista = todasPiscinas.filter(p => {
-    const matchBusca = !busca || p.servico.toLowerCase().includes(busca) || (p.descricao||'').toLowerCase().includes(busca)
-    const matchCat = categoriaAtual === 'todos' || getCategoria(p.servico) === categoriaAtual
-    const bloqueado = BLOCKLIST.some(b => p.servico.toLowerCase().includes(b))
-    const oculto = servicoOcultoEx(p.servico)
-    return matchBusca && matchCat && !bloqueado && !oculto
-  })
-
-  // ETAPA 1: sem serviço na URL → grade de planos
-  if(!servicoSelecionado){
-    renderServicos(lista)
-    return
-  }
-  // ETAPA 2: só as piscinas do serviço escolhido
-  lista = lista.filter(p => p.servico === servicoSelecionado)
-
-  // Buscar dados dos donos (nome + avatar) em paralelo
-  await Promise.all(lista.map(async p => {
-    if(p.dono_info === undefined) p.dono_info = await buscarDono(p.dono_id)
-  }))
-
-  // Ordenação por nível do dono: topo Elite/Splitmaster intercalado semanalmente,
-  // meio Experiente/Pro por vagas disponíveis, fim por data de criação
-  const TIER={'Splitmaster':6,'Elite':5,'Experiente':4,'Pro':3,'Verificado':2,'Iniciante':1}
-  const semanaPar=(function(){const d=new Date();const j1=new Date(d.getFullYear(),0,1);const w=Math.ceil((((d-j1)/86400000)+j1.getDay()+1)/7);return w%2===0})()
-  lista.sort((a,b)=>{
-    let ta=TIER[(a.dono_info&&a.dono_info.nivel)||'']||1
-    let tb=TIER[(b.dono_info&&b.dono_info.nivel)||'']||1
-    if(semanaPar){ if(ta===5)ta=6.5; if(tb===5)tb=6.5 }
-    if(tb!==ta) return tb-ta
-    if(ta>=3&&ta<5){
-      const da=(a.vagas_total-a.vagas_ocupadas), db=(b.vagas_total-b.vagas_ocupadas)
-      if(db!==da) return db-da
+// Setup Fase 2: serviços cadastrados dinamicamente pelo admin (Setup) que ainda não têm
+// lógica hardcoded aqui. Só ENTRAM se o nome não existir nas listas acima (nunca sobrescrevem).
+// Atenção: repasses gerados no dashboard-owner/admin ainda dependem dos mapas hardcoded
+// (LUCRO_SP_MAP/REPASSE_MAP/LUCRO_DONO_MAP) — ao promover um serviço do catálogo pra produção
+// real, adicionar as mesmas chaves nesses mapas para o cálculo de repasse funcionar.
+sb.from('servicos_catalogo').select('*').eq('ativo',true).then(({data:catalogo})=>{
+  (catalogo||[]).forEach(function(s){
+    var jaExisteFamilia=SVCS_FAMILIA.some(function(x){return x.nome===s.nome})
+    var jaExisteCorp=SVCS_CORP.some(function(x){return x.nome===s.nome})
+    if(jaExisteFamilia||jaExisteCorp) return
+    var novoItem={
+      nome:s.nome,
+      sub:s.descricao||(s.tipo==='wellness'?'Benefício corporativo':'Plano família'),
+      img:s.icone_url||(BASE+'SplitPool_Icon.png'),
+      precoVenda:Number(s.preco_por_vaga||0),
+      repasse:Number(s.repasse_dono||0),
+      planos:[{nome:s.nome,custo:0,vagas:Number(s.vagas_max||4),desc:s.descricao||''}]
     }
-    return new Date(b.created_at)-new Date(a.created_at)
+    if(s.tipo==='wellness') SVCS_CORP.push(novoItem)
+    else SVCS_FAMILIA.push(novoItem)
   })
+  if(tipoSelecionado) renderSvcs()
+}).catch(function(){})
 
-  document.getElementById('total-badge').textContent = `${lista.length} piscina${lista.length !== 1 ? 's' : ''} encontrada${lista.length !== 1 ? 's' : ''}`
+const WH_PLANOS=[
+  {nome:'Starter',preco:39.99,repasse:8.04,academias:'6.000+ academias parceiras',popular:false},
+  {nome:'Basic',preco:69.99,repasse:7.33,academias:'SmartFit, CrossFit e parceiros',popular:false},
+  {nome:'Basic+',preco:99.99,repasse:7.39,academias:'Pratique Fitness e mais academias',popular:true},
+  {nome:'Silver',preco:149.99,repasse:11.62,academias:'Pure Pilates, TemBici e parceiros',popular:false},
+  {nome:'Silver+',preco:199.99,repasse:15.08,academias:'Bluefit, Selfit e academias premium',popular:false},
+  {nome:'Gold',preco:319.99,repasse:24.63,academias:"Spin'n Soul e academias top",popular:false},
+  {nome:'Gold+',preco:439.99,repasse:27.97,academias:'Cia Athletica, Bodytech',popular:false},
+  {nome:'Platinum',preco:599.99,repasse:24.14,academias:'Competition e clubes premium',popular:false},
+  {nome:'Diamond',preco:699.99,repasse:21.75,academias:'Buddha Spha, Care Club',popular:false},
+  {nome:'Diamond+',preco:779.99,repasse:19.83,academias:'Reebok, Tennis & Beach Club',popular:false},
+]
+let whPlanosSel=new Set(['Starter','Basic','Basic+','Silver'])
 
-  if (lista.length === 0) {
-    if (todasPiscinas.length === 0) {
-      mostrarVazio('Nenhuma piscina aberta ainda', 'Seja o primeiro a criar uma piscina e comece a ganhar!')
-    } else {
-      mostrarVazio('Nenhuma piscina encontrada', 'Tente outro filtro ou busca.')
-    }
-    return
-  }
-
-  const grid = document.createElement('div')
-  grid.className = 'grid'
-  grid.innerHTML = lista.map(p => {
-    const disponiveis = p.vagas_total - p.vagas_ocupadas
-    const pct = Math.round((p.vagas_ocupadas / p.vagas_total) * 100)
-    const esgotado = disponiveis <= 0
-    const codigo = poolCode(p.id)
-    // Nome do dono com fallback robusto (nunca deixa a linha quebrada)
-    const donoNome = (p.dono_info && p.dono_info.nome) ? p.dono_info.nome : 'Dono verificado'
-    const donoAvatar = (p.dono_info && p.dono_info.avatar) ? p.dono_info.avatar : ''
-    // Texto de prazo restante (planos anuais com data_compra_ciclo preenchida)
-    var prazoTexto = ''
-    if (p.data_compra_ciclo) {
-      var compra = new Date(p.data_compra_ciclo)
-      var hoje = new Date()
-      var mesesPassados = (hoje.getFullYear() - compra.getFullYear()) * 12 + (hoje.getMonth() - compra.getMonth())
-      var mesesRestantes = 12 - (mesesPassados % 12)
-      if (mesesRestantes < 12) {
-        prazoTexto = mesesRestantes + ' ' + (mesesRestantes===1 ? 'mês restante' : 'meses restantes')
+sb.auth.getSession().then(({data})=>{
+  if(!data.session){window.location.href='cadastro.html?modo=login&next=criar-piscina';return}
+  userId=data.session.user.id
+  const email=data.session.user.email
+  nomeUsuario=email.split('@')[0].charAt(0).toUpperCase()+email.split('@')[0].slice(1)
+  document.getElementById('nav-user').textContent=email.split('@')[0]
+  var mn=document.getElementById('mob-name');if(mn)mn.textContent=email.split('@')[0];
+  // Pré-preencher dados de recebimento se já cadastrados
+  sb.from('profiles').select('telefone,pix_chave,cpf').eq('id',userId).single().then(({data:pf})=>{
+    if(pf){
+      if(pf.telefone) document.getElementById('dono-telefone').value=pf.telefone
+      if(pf.pix_chave) document.getElementById('dono-pix').value=pf.pix_chave
+      if(pf.cpf){
+        const cpfEl=document.getElementById('dono-cpf')
+        cpfEl.value=pf.cpf
+        cpfEl.readOnly=true
+        cpfEl.style.background='#f3f6fa'
+        cpfEl.style.color='#8a94a6'
+        cpfEl.title='CPF não pode ser alterado por política de segurança.'
       }
     }
-    return `
-    <div class="card" onclick="abrirModal(${p.id})">
-      <div class="card-top">
-        <div class="card-ico">${getIcone(p.servico, p.icone_url)}</div>
-        <div class="card-info">
-          <div class="card-servico">${p.servico}</div>
-          <div class="card-dono">Piscina verificada</div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;">
-            <div class="card-code">${codigo}</div>
-          </div>
-        </div>
-        <div class="card-preco">
-          <div class="preco-val${(isWellness(p.servico)||temPlanosDin(p.servico))?' small':''}">${isWellness(p.servico) ? 'A partir de<br>R$' + getWellnessMin(p.servico) : (temPlanosDin(p.servico) ? 'A partir de<br>R$' + minPlanoDin(p.servico) : 'R$' + Number(p.preco_por_vaga).toFixed(2).replace('.',','))}</div>
-          <div class="preco-label">/mês</div>
-        </div>
-      </div>
-      <div class="card-owner-row">
-        <span class="card-owner-label">Dono(a) da piscina:</span>
-        <div class="card-owner"><div class="card-owner-av">${getOwnerAvatar(donoNome, donoAvatar)}</div><span class="card-owner-name">${donoNome}</span>${seloDono(p.dono_info&&p.dono_info.nivel)}</div>
-      </div>
-      <div class="card-stats">
-        <div class="card-stat vagas${esgotado ? ' esgotado' : ''}">${esgotado ? 'Sem vagas' : `${disponiveis} vaga${disponiveis > 1 ? 's' : ''} livre${disponiveis > 1 ? 's' : ''}`}</div>
-        ${prazoTexto ? `<div class="card-stat prazo">⏱ ${prazoTexto}</div>` : ''}
-      </div>
-      <div style="margin-top:12px;">
-        <div class="card-vagas">${p.vagas_ocupadas}/${p.vagas_total} vagas ocupadas</div>
-        <div class="vagas-bar"><div class="vagas-fill" style="width:${pct}%"></div></div>
-      </div>
-      <button class="card-btn" ${esgotado ? 'disabled' : ''} onclick="event.stopPropagation();abrirModal(${p.id})">${esgotado ? 'Sem vagas disponíveis' : 'Ver detalhes e entrar →'}</button>
-    </div>`
-  }).join('')
-
-  document.getElementById('conteudo').innerHTML = servicoSelecionado?'<a href="explorar.html" class="voltar-planos">← Todos os planos</a>':''
-  document.getElementById('conteudo').appendChild(grid)
-}
-
-function mostrarVazio(titulo, texto) {
-  document.getElementById('conteudo').innerHTML = `
-    <div class="empty">
-      <div class="empty-ico">🏊</div>
-      <h3>${titulo}</h3>
-      <p>${texto}</p>
-    </div>`
-}
-
-let whPlanoSelecionado = null
-
-const CAT_MODAL = {
-  'Microsoft 365 Family':{mensal:51.00,anual:49.92,sp:25.50},
-  'Microsoft 365':{mensal:51.00,anual:49.92,sp:25.50},
-  'Duolingo Super Família':{mensal:69.90,anual:37.49,sp:19.90},
-    'Duolingo':{mensal:69.90,anual:37.49,sp:19.90},
-  'Canva Teams':{mensal:24.17,anual:24.17,sp:15.90},
-  'Canva':{mensal:24.17,anual:24.17,sp:15.90},
-  'Notion Team':{mensal:50.00,anual:null,sp:25.00},
-  'Notion':{mensal:50.00,anual:null,sp:25.00},
-  'TotalPass':{mensal:115.00,anual:null,sp:59.90},
-  'Alura':{mensal:99.90,anual:79.92,sp:39.90},
-}
-const TP_PLANS=[
-  {n:'TP GO',of:39.90,sp:51.90,rep:8.00,desc:'2.000+ academias e parceiros'},
-  {n:'TP1',of:59.90,sp:74.90,rep:10.00,desc:'6.000+ academias e parceiros'},
-  {n:'TP1+',of:89.90,sp:109.90,rep:13.00,desc:'13.000+ academias + Smart Fit'},
-  {n:'TP2',of:119.90,sp:144.90,rep:17.00,desc:'20.000+ academias + Smart Fit + terapia'},
-  {n:'TP3',of:199.90,sp:234.90,rep:23.00,desc:'28.000+ academias + saude integrada'},
-  {n:'TP4',of:299.90,sp:344.90,rep:30.00,desc:'30.000+ academias + espacos premium'},
-  {n:'TP5',of:399.90,sp:449.90,rep:33.00,desc:'32.000+ academias + premium'},
-  {n:'TP5+',of:499.90,sp:554.90,rep:37.00,desc:'33.000+ academias + premium'},
-  {n:'TP6',of:599.90,sp:659.90,rep:40.00,desc:'34.500+ academias + premium'},
-  {n:'TP7',of:699.90,sp:769.90,rep:46.00,desc:'35.000+ academias + premium'}
-]
-const WH_PLANS = [
-  {n:'Starter',of:39.99,sp:51.99},{n:'Basic',of:69.99,sp:81.99},{n:'Basic+',of:99.99,sp:112.99},
-  {n:'Silver',of:149.99,sp:169.99},{n:'Silver+',of:199.99,sp:225.99},{n:'Gold',of:319.99,sp:361.99},
-  {n:'Gold+',of:439.99,sp:489.99},{n:'Platinum',of:599.99,sp:649.99},
-  {n:'Diamond',of:699.99,sp:749.99},{n:'Diamond+',of:779.99,sp:829.99}
-]
-function fmtR(v){return'R$'+Number(v).toFixed(2).replace('.',',');}
-function poolCode(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var s='';for(var i=0;i<4;i++){s+=ch[h%ch.length];h=Math.floor(h/ch.length);}return'SP-'+s;}
-function isWellness(servico){return['wellhub','totalpass'].some(s=>servico.toLowerCase().includes(s))}
-function getWellnessMin(servico){
-  if(servico.toLowerCase().includes('wellhub')) return '51,99'
-  if(servico.toLowerCase().includes('totalpass')) return '51,90'
-  return '—'
-}
-const SELO_SEAL='M23 12l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.69 3.1 5.5l.34 3.7L1 12l2.44 2.79-.34 3.7 3.61.82L8.6 22.5l3.4-1.47 3.4 1.46 1.89-3.19 3.61-.82-.34-3.69L23 12zm-12.91 4.72l-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35z'
-function renderServicos(lista){
-  const porServico={}
-  lista.forEach(p=>{
-    if(!porServico[p.servico]) porServico[p.servico]={servico:p.servico,pools:0,vagas:0,precos:[],icone_url:p.icone_url||''}
-    const s=porServico[p.servico]
-    s.pools++
-    s.vagas+=Math.max(0,(p.vagas_total||0)-(p.vagas_ocupadas||0))
-    s.precos.push(Number(p.preco_por_vaga||0))
-    if(!s.icone_url&&p.icone_url) s.icone_url=p.icone_url
   })
-  // Serviços do catálogo (Setup) que ainda não têm nenhuma piscina aberta
-  const semPiscina=(CATALOGO_EX||[]).filter(s=>!porServico[s.nome]&&!servicoOcultoEx(s.nome))
-  const servicos=Object.values(porServico).sort((a,b)=>b.vagas-a.vagas)
-  const totalCards=servicos.length+semPiscina.length
-  document.getElementById('total-badge').textContent=`${totalCards} plano${totalCards!==1?'s':''} disponíve${totalCards!==1?'is':'l'}`
-  if(!totalCards){
-    mostrarVazio('Nenhum plano disponível','Tente outro filtro ou volte mais tarde.')
-    return
-  }
-  const fmtP=v=>'R$'+v.toFixed(2).replace('.',',')
-  let html='<div class="svc-grid">'+servicos.map(s=>{
-    const minP=Math.min(...s.precos), maxP=Math.max(...s.precos)
-    const variado=minP!==maxP
-    return `<div class="svc-card" onclick="location.href='explorar.html?servico=${encodeURIComponent(s.servico)}'">
-      <div class="svc-ico">${getIcone(s.servico,s.icone_url)}</div>
-      <div style="min-width:0;">
-        <div class="svc-nome">${s.servico}</div>
-        <div class="svc-sub">${s.pools} piscina${s.pools!==1?'s':''} · ${s.vagas} vaga${s.vagas!==1?'s':''} livre${s.vagas!==1?'s':''}</div>
-      </div>
-      <div class="svc-preco">
-        ${(isWellness(s.servico)||temPlanosDin(s.servico)||variado)?'<span class="svc-apartir">A partir de</span>':''}
-        <div class="svc-preco-val">${isWellness(s.servico)?('R$'+getWellnessMin(s.servico)):(temPlanosDin(s.servico)?('R$'+minPlanoDin(s.servico)):fmtP(minP))}</div>
-        <div class="svc-preco-sub">/mês por vaga</div>
-      </div>
-    </div>`
-  }).join('')
-  html+=semPiscina.map(s=>{
-    return `<div class="svc-card" style="opacity:.88;border-style:dashed;" onclick="location.href='criar-piscina.html'">
-      <div class="svc-ico">${getIcone(s.nome,s.icone_url)}</div>
-      <div style="min-width:0;">
-        <div class="svc-nome">${s.nome}</div>
-        <div class="svc-sub">${s.descricao||'Novo no catálogo'}</div>
-      </div>
-      <div class="svc-preco">
-        <span class="svc-apartir" style="color:var(--green);">Seja o primeiro!</span>
-        <div class="svc-preco-val" style="font-size:14px;">Criar piscina →</div>
-      </div>
-    </div>`
-  }).join('')
-  html+='</div>'
-  document.getElementById('conteudo').innerHTML=html
-}
-
-function seloDono(nivel){
-  const cfg={
-    'Experiente':{cor:'#1877F2',txt:'Dono Experiente — 9+ meses de operação sem problemas'},
-    'Elite':{cor:'#8B5CF6',txt:'Dono Elite — mais de 1 ano de operação sem problemas'},
-    'Splitmaster':{cor:'#E9A509',txt:'Dono Splitmaster — 1 ano e meio ou mais de operação impecável'}
-  }[nivel]
-  if(!cfg) return ''
-  return '<span class="selo-ic" title="'+cfg.txt+'" onclick="event.stopPropagation();alert(\''+cfg.txt+'\')">'
-    +'<svg width="16" height="16" viewBox="0 0 24 24" aria-label="'+nivel+'"><path d="'+SELO_SEAL+'" fill="'+cfg.cor+'"/></svg></span>'
-}
-
-const servicoSelecionado=new URLSearchParams(location.search).get('servico')
-
-let donosCache={}
-async function buscarDono(donoId){
-  if(donosCache[donoId] !== undefined) return donosCache[donoId]
-  try{
-    // Tenta tabela profiles primeiro (nome + email). avatar_url é opcional: se a coluna existir, o Supabase retorna; senão, campo fica undefined.
-    const r=await fetch(SUPABASE_URL+'/rest/v1/profiles?id=eq.'+donoId+'&select=nome,email,nivel',
-      {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}})
-    const d=await r.json()
-    if(d&&d.length&&(d[0].nome||d[0].email)){
-      const raw=d[0].nome||d[0].email||''
-      const nomeCurto=raw.split(' ')[0].split('@')[0]
-      donosCache[donoId]={nome:nomeCurto, avatar:(d[0].avatar_url||''), nivel:(d[0].nivel||'')}
-      return donosCache[donoId]
-    }
-    donosCache[donoId]={nome:'', avatar:''}
-    return donosCache[donoId]
-  }catch(e){
-    donosCache[donoId]={nome:'', avatar:''}
-    return donosCache[donoId]
-  }
-}
-
-
-
-function selecionarWhPlano(el, plano) {
-  whPlanoSelecionado = plano
-  document.querySelectorAll('.m-wh-item').forEach(i => i.classList.remove('selected'))
-  el.classList.add('selected')
-  const btn = document.getElementById('m-btn')
-  btn.disabled = false
-  btn.textContent = `Entrar com plano ${plano.n} — ${fmtR(plano.sp)}/mês 🏊`
-  document.getElementById('m-wh-hint').textContent = ''
-}
-
-function abrirModal(id) {
-  const p = todasPiscinas.find(x => x.id === id)
-  if (!p) return
-  piscinaAtual = p
-  whPlanoSelecionado = null
-  const livre = p.vagas_total - p.vagas_ocupadas
-  const isWH = p.servico.toLowerCase().includes('wellhub')
-  const isTP = p.servico.toLowerCase().includes('totalpass')
-  isWH_atual = isWH
-  isTP_atual = isTP
-
-  // Reset completo — garante que não sobra cache de modal anterior
-  document.getElementById('m-price-block').style.display='none'
-  document.getElementById('m-wh-block').style.display='none'
-  document.getElementById('m-tp-block').style.display='none'
-  document.getElementById('m-beneficio-block').style.display='none'
-  document.getElementById('m-wh-grid').innerHTML=''
-  document.getElementById('m-tp-grid').innerHTML=''
-  document.getElementById('m-anual-row').classList.remove('show')
-
-  document.getElementById('m-ico').innerHTML = getIcone(p.servico, p.icone_url)
-  document.getElementById('m-titulo').textContent = p.servico
-  document.getElementById('m-code').textContent = poolCode(p.id)
-
-  const pill = document.getElementById('m-vagas-pill')
-  const vtxt = document.getElementById('m-vagas-txt')
-  if(livre===0){pill.className='m-vagas-pill full';vtxt.textContent='Piscina lotada';}
-  else if(livre===1){pill.className='m-vagas-pill last';vtxt.textContent='Última vaga';}
-  else{pill.className='m-vagas-pill ok';vtxt.textContent=livre+' vagas livres';}
-
-  const cat = CAT_MODAL[p.servico] || null
-  if(isWH){
-    document.getElementById('m-price-block').style.display='none'
-    document.getElementById('m-wh-block').style.display='block'
-    document.getElementById('m-wh-hint').textContent = 'Selecione um plano para continuar'
-    const g = document.getElementById('m-wh-grid')
-    g.innerHTML = WH_PLANS.map((pl,i) => `
-      <div class="m-wh-item" onclick="selecionarWhPlano(this,WH_PLANS[${i}])">
-        <div class="m-wh-name">${pl.n}</div>
-        <div class="m-wh-us">${fmtR(pl.sp)}<span class="m-wh-mo">/mês</span></div>
-        <div class="m-wh-access">✓ Acesso livre, sem vínculo</div>
-      </div>`).join('')
-  } else {
-    document.getElementById('m-price-block').style.display='block'
-    document.getElementById('m-wh-block').style.display='none'
-    const isBeneficio = ['TotalPass'].some(s => p.servico.toLowerCase().includes(s.toLowerCase()))
-    if(isTP){
-      document.getElementById('m-price-block').style.display='none'
-      document.getElementById('m-beneficio-block').style.display='block'
-      document.getElementById('m-wh-block').style.display='none'
-      // Mostrar grid TotalPass
-      document.getElementById('m-tp-block').style.display='block'
-      document.getElementById('m-tp-hint').textContent='Selecione um plano para continuar'
-      const g=document.getElementById('m-tp-grid')
-      g.innerHTML=TP_PLANS.map(function(pl,i){return(
-        '<div class="m-wh-item" onclick="selecionarWhPlano(this,TP_PLANS['+i+'])">'+
-        '<div class="m-wh-name">'+pl.n+'</div>'+
-        '<div class="m-wh-access">✓ Acesso livre, sem vinculo</div>'+
-        '<div class="m-wh-us">'+fmtR(pl.sp)+'<span class="m-wh-mo">/mes</span></div>'+
-        '</div>'
-      )}).join('')
-    } else if(isBeneficio){
-      document.getElementById('m-price-block').style.display='none'
-      document.getElementById('m-beneficio-block').style.display='block'
-      document.getElementById('m-tp-block').style.display='none'
-      const spv = cat ? cat.sp : p.preco_por_vaga
-      document.getElementById('m-beneficio-preco').textContent = fmtR(spv)
-    } else {
-      document.getElementById('m-beneficio-block').style.display='none'
-      const sv = cat ? cat.mensal : p.preco_por_vaga
-      const spv = cat ? cat.sp : p.preco_por_vaga
-      const av = cat ? cat.anual : null
-      document.getElementById('m-psem').textContent = fmtR(sv)
-      document.getElementById('m-psp').textContent = fmtR(spv)
-      const anualRow = document.getElementById('m-anual-row')
-      if(av && av !== sv){ anualRow.classList.add('show'); document.getElementById('m-anual-val').textContent = fmtR(av); }
-      else { anualRow.classList.remove('show') }
-    }
-  }
-
-  // Dono no modal: avatar (foto se houver, senão inicial do nome) + nome real
-  const dono = piscinaAtual.dono_info || {nome:'', avatar:''}
-  const donoNomeModal = dono.nome || 'Dono verificado'
-  const avEl = document.getElementById('m-owner-av')
-  if(dono.avatar){
-    avEl.innerHTML = `<img src="${dono.avatar}" alt="${donoNomeModal}" onerror="this.parentElement.textContent='${(donoNomeModal[0]||'?').toUpperCase()}'"/>`
-  } else {
-    avEl.textContent = (donoNomeModal[0] || '?').toUpperCase()
-  }
-  document.getElementById('m-owner-name').textContent = donoNomeModal
-  document.getElementById('m-owner-lv').className = 'm-owner-lv iniciante'
-  document.getElementById('m-owner-lv').textContent = 'Iniciante'
-
-  const btn = document.getElementById('m-btn')
-  if(livre <= 0){
-    btn.disabled = true
-    btn.textContent = 'Sem vagas disponíveis'
-  } else if(isWH || isTP){
-    btn.disabled = true
-    btn.textContent = 'Selecione um plano acima 👆'
-  } else {
-    btn.disabled = false
-    btn.textContent = 'Entrar nesta piscina 🏊'
-  }
-
-  document.getElementById('modal-detalhe').classList.add('open')
-}
-
-function fecharModal() {
-  document.getElementById('modal-detalhe').classList.remove('open')
-  piscinaAtual = null
-  whPlanoSelecionado = null
-  isWH_atual = false
-  isTP_atual = false
-}
-
-function entrarPiscina() {
-  if (!piscinaAtual) return
-  if((isWH_atual || isTP_atual) && !whPlanoSelecionado) {
-    const hint = isTP_atual ? document.getElementById('m-tp-hint') : document.getElementById('m-wh-hint')
-    if(hint) hint.textContent = '⚠️ Escolha um plano antes de continuar'
-    return
-  }
-  let url = `checkout.html?piscina=${piscinaAtual.id}`
-  if((isWH_atual || isTP_atual) && whPlanoSelecionado) url += `&plano=${encodeURIComponent(whPlanoSelecionado.n)}&valor=${whPlanoSelecionado.sp}`
-  window.location.href = url
-}
-
-async function logout() {
-  await sb.auth.signOut()
-  window.location.href = 'index.html'
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast')
-  t.textContent = msg
-  t.classList.add('show')
-  setTimeout(() => t.classList.remove('show'), 3000)
-}
-
-// Fecha modal clicando fora
-document.getElementById('modal-detalhe').addEventListener('click', e => {
-  if (e.target === document.getElementById('modal-detalhe')) fecharModal()
+  // Renderiza grid vazio logo (sem bloqueios ainda)
+  renderSvcs()
+  // Carrega piscinas existentes para bloquear duplicatas
+  sb.from('piscinas').select('servico').eq('dono_id',userId).neq('status','encerrada').then(({data:d})=>{
+    piscinasExistentes=(d||[]).map(p=>p.servico.toLowerCase())
+    renderSvcs() // re-renderiza com bloqueios
+  }).catch(()=>{ /* mantém grid sem bloqueios */ })
 })
 
-// Ondas canvas
+function renderSvcs(){
+  const tipo=tipoSelecionado
+  const listaBase=tipo==='corporativo'?SVCS_CORP:tipo==='familia'?SVCS_FAMILIA:[...SVCS_FAMILIA,...SVCS_CORP]
+  const lista=listaBase.filter(s=>!servicoOcultoCP(s.nome))
+  document.getElementById('svc-grid').innerHTML=lista.map(s=>{
+    const jaTem=piscinasExistentes.includes(s.nome.toLowerCase())
+    return`<div class="svc-item ${svcSelecionado?.nome===s.nome?'sel':''} ${jaTem?'bloqueado':''}" onclick="${jaTem?'showMsg(\'Você já tem uma piscina ativa de '+s.nome+'. No MVP só é permitida 1 piscina por serviço.\',\'error\')':'selecionarSvc(\''+s.nome+'\')'}">
+      <img src="${s.img}" alt="${s.nome}" onerror="this.style.display='none'">
+      <div class="svc-item-name">${s.nome}</div>
+      <div class="svc-item-sub">${s.sub}</div>
+    </div>`
+  }).join('')
+}
+
+function onComprovanteSelected(input){
+  const file=input.files[0]
+  if(!file) return
+  if(file.size>5*1024*1024){showMsg('Arquivo muito grande. Máximo 5MB.','error');return}
+  comprovanteFile=file
+  const area=document.getElementById('upload-area')
+  area.classList.add('ok')
+  document.getElementById('upload-ok').style.display='block'
+  document.getElementById('upload-ok').textContent='✓ '+file.name+' selecionado'
+}
+
+let tpPlanosSel=new Set()
+
+function renderTotalPassGrid(){
+  document.getElementById('totalpass-grid').innerHTML=TP_PLANS.map(p=>`
+    <div class="wh-card ${tpPlanosSel.has(p.n)?'sel':''}" onclick="toggleTPPlano('${p.n}',this)">
+      <div class="wh-plan">${p.n}</div>
+      <div class="wh-price-official">R$${p.of.toFixed(2).replace('.',',')} /mês (TotalPass)</div>
+      <div class="wh-price-final">R$${p.sp.toFixed(2).replace('.',',')}<span style="font-size:11px;font-weight:500;opacity:.6">/mês</span></div>
+      <div class="wh-repasse">Você recebe R$${p.rep.toFixed(2).replace('.',',')}/vaga</div>
+      <div class="wh-academias">${p.desc}</div>
+    </div>`).join('')
+}
+
+function toggleTPPlano(nome,el){
+  tpPlanosSel.has(nome)?tpPlanosSel.delete(nome):tpPlanosSel.add(nome)
+  el.classList.toggle('sel')
+  atualizarCalcTP()
+  gerarDescricaoTP()
+}
+
+function atualizarCalcTP(){
+  const vagas=parseInt(document.getElementById('tp-vagas')?.value||2)
+  const sel=TP_PLANS.filter(p=>tpPlanosSel.has(p.n))
+  if(!sel.length) return
+  const minR=Math.min(...sel.map(p=>p.rep))*vagas
+  const maxR=Math.max(...sel.map(p=>p.rep))*vagas
+  if(document.getElementById('tp-calc-vagas')){
+    document.getElementById('tp-calc-vagas').textContent=vagas
+    document.getElementById('tp-calc-min').textContent=`R$${minR.toFixed(2).replace('.',',')}/mês`
+    document.getElementById('tp-calc-max').textContent=`R$${maxR.toFixed(2).replace('.',',')}/mês`
+    document.getElementById('tp-calc-lucro').textContent=`R$${minR.toFixed(0)}–R$${maxR.toFixed(0)}/mês`
+  }
+}
+
+function gerarDescricaoTP(){
+  const vagas=document.getElementById('tp-vagas')?.value||2
+  const planos=Array.from(tpPlanosSel)
+  const planosStr=planos.length>0?planos.join(', '):'TP GO ao TP7'
+  const el=document.getElementById('tp-desc-auto')
+  if(el) el.textContent=`${nomeUsuario}, dono desta piscina TotalPass, oferece ${vagas} vaga${vagas>1?'s':''} de dependente via benefício corporativo. O membro pode escolher entre os planos ${planosStr}. Acesso liberado em até 24h após confirmação do pagamento. 🏋️`
+}
+
+function renderWellhubGrid(){
+  document.getElementById('wellhub-grid').innerHTML=WH_PLANOS.map(p=>`
+    <div class="wh-card ${whPlanosSel.has(p.nome)?'sel':''} ${p.popular?'popular':''}" onclick="toggleWHPlano('${p.nome}',this)">
+      <div class="wh-plan">${p.nome}</div>
+      <div class="wh-price-official">R$${p.preco.toFixed(2).replace('.',',')} /mês (Wellhub)</div>
+      <div class="wh-price-final">R$${(p.preco+(p.repasse*1.3)).toFixed(2).replace('.',',')}<span style="font-size:11px;font-weight:500;opacity:.6">/mês</span></div>
+      <div class="wh-repasse">Você recebe R$${p.repasse.toFixed(2).replace('.',',')}/vaga</div>
+      <div class="wh-academias">${p.academias}</div>
+    </div>`).join('')
+}
+
+function toggleWHPlano(nome,el){
+  whPlanosSel.has(nome)?whPlanosSel.delete(nome):whPlanosSel.add(nome)
+  el.classList.toggle('sel')
+  atualizarCalcWH()
+  gerarDescricaoWH()
+}
+
+function atualizarCalcWH(){
+  const vagas=parseInt(document.getElementById('wh-vagas')?.value||2)
+  const sel=WH_PLANOS.filter(p=>whPlanosSel.has(p.nome))
+  if(!sel.length) return
+  const minR=Math.min(...sel.map(p=>p.repasse))*vagas
+  const maxR=Math.max(...sel.map(p=>p.repasse))*vagas
+  if(document.getElementById('wh-calc-vagas')){
+    document.getElementById('wh-calc-vagas').textContent=vagas
+    document.getElementById('wh-calc-min').textContent=`R$${minR.toFixed(2).replace('.',',')}/mês`
+    document.getElementById('wh-calc-max').textContent=`R$${maxR.toFixed(2).replace('.',',')}/mês`
+    document.getElementById('wh-calc-lucro').textContent=`R$${minR.toFixed(0)}–R$${maxR.toFixed(0)}/mês`
+  }
+}
+
+function gerarDescricaoWH(){
+  const vagas=document.getElementById('wh-vagas')?.value||2
+  const planos=Array.from(whPlanosSel)
+  const planosStr=planos.length>0?planos.join(', '):'Starter ao Diamond+'
+  const el=document.getElementById('wh-desc-auto')
+  if(el) el.textContent=`${nomeUsuario}, dono desta piscina Wellhub, oferece ${vagas} vaga${vagas>1?'s':''} de dependente via benefício corporativo. O membro pode escolher entre os planos ${planosStr}. Acesso liberado em até 24h após confirmação do pagamento.`
+}
+
+function selecionarTipo(tipo){
+  tipoSelecionado=tipo
+  document.getElementById('tipo-familia').classList.toggle('sel',tipo==='familia')
+  document.getElementById('tipo-corporativo').classList.toggle('sel',tipo==='corporativo')
+  renderSvcs()
+  // Garantir visibilidade do grid
+  const grid=document.getElementById('svc-grid')
+  if(grid) grid.style.display='grid'
+  // Scroll suave para a seção de serviços
+  setTimeout(()=>{
+    const h2=document.querySelector('#panel-1 h2:nth-of-type(2)')
+    if(h2) h2.scrollIntoView({behavior:'smooth',block:'start'})
+  },50)
+}
+
+function selecionarSvc(nome){
+  const todos=[...SVCS_FAMILIA,...SVCS_CORP]
+  svcSelecionado=todos.find(s=>s.nome===nome)
+  renderSvcs()
+}
+
+function getSvc(){return svcSelecionado}
+
+function popularSelects(){
+  const svc=getSvc()
+  if(!svc||!svc.planos) return
+
+  // Select de planos
+  const planoSel=document.getElementById('plano-select')
+  planoSel.innerHTML=svc.planos.map((p,i)=>`<option value="${i}">${p.nome} — R$${p.custo>0?p.custo.toFixed(2).replace('.',','):'0,00'}/mês — ${p.desc}</option>`).join('')
+  planoAtual=svc.planos[0]
+  document.getElementById('plano-hint').textContent=planoAtual.desc
+
+  // Select de vagas
+  const vagasSel=document.getElementById('vagas-total')
+  const maxVagas=planoAtual.vagas
+  vagasSel.innerHTML=Array.from({length:maxVagas},(_,i)=>`<option value="${i+1}" ${i+1===maxVagas?'selected':''}>${i+1} vaga${i+1>1?'s':''}</option>`).join('')
+  document.getElementById('vagas-hint').textContent=`Máximo de ${maxVagas} vagas para este plano`
+
+  // Slider
+  document.getElementById('sim-vagas').max=maxVagas
+  document.getElementById('sim-vagas').value=0
+
+  // Info box
+  const vagasMax=planoAtual?.vagas||3
+  const lucroCheia=tipoSelecionado==='corporativo'?svc.repasse*vagasMax:(svc.repasse*vagasMax)-(planoAtual?.custo||0)
+  document.getElementById('info-preco-svc').innerHTML=`<strong>${svc.nome}</strong> — Você recebe <strong style="color:#00875A">R$${Math.max(0,lucroCheia).toFixed(2).replace('.',',')}/mês</strong> quando a piscina estiver cheia.`
+
+  recalcularCalc()
+  gerarDescricao()
+}
+
+function selecionarPlano(){
+  const svc=getSvc()
+  if(!svc) return
+  const idx=parseInt(document.getElementById('plano-select').value)
+  planoAtual=svc.planos[idx]
+  document.getElementById('plano-hint').textContent=planoAtual.desc
+  // Atualiza vagas
+  const maxVagas=planoAtual.vagas
+  const vagasSel=document.getElementById('vagas-total')
+  vagasSel.innerHTML=Array.from({length:maxVagas},(_,i)=>`<option value="${i+1}" ${i+1===maxVagas?'selected':''}>${i+1} vaga${i+1>1?'s':''}</option>`).join('')
+  document.getElementById('vagas-hint').textContent=`Máximo de ${maxVagas} vagas para este plano`
+  document.getElementById('sim-vagas').max=maxVagas
+  recalcularCalc()
+  gerarDescricao()
+}
+
+function gerarDescricao(){
+  const svc=getSvc()
+  if(!svc) return
+  const vagas=document.getElementById('vagas-total')?.value||svc.planos?.[0]?.vagas||3
+  const plano=planoAtual||svc.planos?.[0]
+  const el=document.getElementById('desc-auto')
+  if(!el) return
+  const descPlano=plano?.desc||''
+  const tipo=tipoSelecionado==='corporativo'?'via benefício corporativo':'no plano família'
+  el.textContent=`${nomeUsuario}, dono desta piscina, oferece ${vagas} vaga${vagas>1?'s':''} ${tipo} do ${svc.nome}. ${descPlano}. Acesso liberado em até 24h após a confirmação do pagamento. Vem mergulhar! 🏊`
+}
+
+function recalcularCalc(){
+  const svc=getSvc()
+  if(!svc) return
+  const vagas=parseInt(document.getElementById('vagas-total')?.value||3)
+  const custo=planoAtual?.custo||0
+  const simVagas=parseInt(document.getElementById('sim-vagas')?.value||0)
+  if(document.getElementById('sim-vagas')) document.getElementById('sim-vagas').max=vagas
+  const vv=document.getElementById('vagas-visual')
+  if(vv) vv.innerHTML=Array.from({length:vagas},(_,i)=>`<div class="vaga-bubble ${i<simVagas?'ocupada':''}">🏊</div>`).join('')
+  const pct=vagas>0?Math.round((simVagas/vagas)*100):0
+  if(document.getElementById('prog-fill')) document.getElementById('prog-fill').style.width=pct+'%'
+  if(document.getElementById('prog-label')) document.getElementById('prog-label').textContent=`${simVagas} de ${vagas}`
+  const repasse=svc.repasse*simVagas
+  const lucro=tipoSelecionado==='corporativo'?repasse:repasse-custo
+  const lucroFull=tipoSelecionado==='corporativo'?svc.repasse*vagas:(svc.repasse*vagas)-custo
+  if(document.getElementById('calc-repasse-vaga')){
+    document.getElementById('calc-repasse-vaga').textContent=`R$${svc.repasse.toFixed(2).replace('.',',')}/vaga`
+    document.getElementById('row-custo').style.display=(tipoSelecionado==='corporativo'||custo===0)?'none':'flex'
+    document.getElementById('calc-custo').textContent=`- R$${custo.toFixed(2).replace('.',',')}`
+    document.getElementById('calc-label-resultado').textContent=simVagas===vagas?'Piscina cheia — seu recebimento':`Com ${simVagas} de ${vagas} vagas`
+    const res=document.getElementById('calc-resultado')
+    res.textContent=`R$${Math.max(0,lucro).toFixed(2).replace('.',',')}/mês`
+    res.className='val '+(lucro>=0?'green':'red')
+  }
+  const mot=document.getElementById('motivacao')
+  if(mot){
+    const faltam=vagas-simVagas
+    if(simVagas===0){mot.textContent='Publique e comece a ofertar vagas! 🚀';mot.className='motivacao mot-0'}
+    else if(lucro<0){mot.textContent=`Faltam ${faltam} membro${faltam>1?'s':''} para cobrir o custo do plano 🎯`;mot.className='motivacao mot-50'}
+    else if(simVagas<vagas){mot.textContent=`Cada nova vaga preenchida = +R$${svc.repasse.toFixed(2).replace('.',',')} 🔥`;mot.className='motivacao mot-80'}
+    else{mot.textContent=`Piscina cheia! Recebimento estimado: R$${Math.max(0,lucroFull).toFixed(2).replace('.',',')}/mês 🎉`;mot.className='motivacao mot-100'}
+  }
+}
+
+function simularVagas(val){
+  document.getElementById('sim-label').textContent=`Simulando ${val} membro${val>1?'s':''} preenchidos`
+  recalcularCalc()
+}
+
+function goStep(n){
+  for(let i=1;i<=3;i++){
+    document.getElementById(`panel-${i}`).classList.toggle('act',i===n)
+    const btn=document.getElementById(`step-btn-${i}`)
+    btn.classList.remove('act','done')
+    if(i===n) btn.classList.add('act')
+    else if(i<n) btn.classList.add('done')
+  }
+  window.scrollTo({top:0,behavior:'smooth'})
+}
+
+function irPasso2(){
+  const svc=getSvc()
+  if(!svc){showMsg('Selecione o serviço.','error');return}
+  if(!tipoSelecionado){showMsg('Selecione o tipo de piscina.','error');return}
+  hideMsg()
+  const isWH=svc.especial==='wellhub'
+  const isTP=svc.especial==='totalpass'
+  document.getElementById('panel-2-familia').style.display=(isWH||isTP)?'none':'block'
+  document.getElementById('panel-2-wellhub').style.display=isWH?'block':'none'
+  document.getElementById('panel-2-totalpass').style.display=isTP?'block':'none'
+  if(isWH){renderWellhubGrid();atualizarCalcWH();gerarDescricaoWH()}
+  else if(isTP){renderTotalPassGrid();atualizarCalcTP();gerarDescricaoTP()}
+  else{popularSelects()}
+  goStep(2)
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  var inp = document.getElementById('data-compra-plano');
+  if(inp) inp.max = new Date().toISOString().slice(0,10);
+});
+
+function popularSelectsCartao(){
+  const dia=document.getElementById('cartao-dia')
+  if(dia.options.length>1) return
+  for(let i=1;i<=28;i++){const v=String(i).padStart(2,'0');dia.innerHTML+=`<option value="${v}">Dia ${v}</option>`}
+  const fech=document.getElementById('fechamento-dia')
+  if(fech&&fech.options.length<=1){
+    for(let i=1;i<=28;i++){const v=String(i).padStart(2,'0');fech.innerHTML+=`<option value="${v}">Dia ${v}</option>`}
+  }
+}
+
+function autoFecharDia(){
+  const diaVenc=parseInt(document.getElementById('cartao-dia').value)
+  const fech=document.getElementById('fechamento-dia')
+  if(!diaVenc||!fech||fech.value) return // não sobrescreve se o dono já ajustou manualmente
+  let diaFech=diaVenc-10
+  if(diaFech<1) diaFech+=28
+  fech.value=String(diaFech).padStart(2,'0')
+}
+
+function irPasso3(){
+  const svc=getSvc()
+  const isWH=svc?.especial==='wellhub'
+  const isTP=svc?.especial==='totalpass'
+  if(isWH&&whPlanosSel.size===0){showMsg('Selecione pelo menos um plano Wellhub.','error');return}
+  if(isTP&&tpPlanosSel.size===0){showMsg('Selecione pelo menos um plano TotalPass.','error');return}
+  hideMsg()
+
+  // Mostrar campo link de convite só para planos família
+  const isCorp=isWH||isTP||tipoSelecionado==='corporativo'
+  const campoLink=document.getElementById('campo-link-convite')
+  campoLink.style.display=isCorp?'none':'block'
+
+  // Instruções por serviço
+  const instrucoes={
+    'Microsoft 365':'No site microsoft365.com → Minha conta → Família → "Convidar alguém" → copie o link gerado.',
+    'Duolingo Super':'No app Duolingo → Perfil → Super Família → "Convidar membros" → copie o link.',
+    'Canva Teams':'No Canva → Configurações do time → "Convidar membros" → copie o link.',
+    'Notion Team':'No Notion → Configurações → Membros → "Convidar" → copie o link.',
+    'Alura':'No painel Alura For Business → Gestão de membros → "Convidar" → copie o link.',
+  }
+  const nome=svc?.nome||''
+  document.getElementById('link-instrucao').textContent=instrucoes[nome]||'Acesse as configurações do plano e copie o link de convite para membros.'
+  document.getElementById('link-hint').textContent=isCorp?'':'✓ Vamos acessar este link para confirmar que seu plano está ativo antes de publicar a piscina.'
+
+  renderResumo()
+  popularSelectsCartao()
+  goStep(3)
+}
+
+function renderResumo(){
+  const svc=getSvc()
+  const isWH=svc?.especial==='wellhub'
+  const isTP=svc?.especial==='totalpass'
+  const vagas=isWH?document.getElementById('wh-vagas').value:isTP?document.getElementById('tp-vagas').value:document.getElementById('vagas-total').value
+  const custo=planoAtual?.custo||0
+  const ganho=isWH?`R$${(parseInt(vagas)*8).toFixed(0)}–R$${(parseInt(vagas)*35).toFixed(0)}/mês`:
+    isTP?`R$${(parseInt(vagas)*8).toFixed(0)}–R$${(parseInt(vagas)*46).toFixed(0)}/mês`:
+    (()=>{const v=parseInt(vagas);const l=tipoSelecionado==='corporativo'?svc.repasse*v:(svc.repasse*v)-custo;return`R$${Math.max(0,l).toFixed(2).replace('.',',')}/mês (estimado)`})()
+  const planoNome=planoAtual?.nome||'—'
+  document.getElementById('resumo-grid').innerHTML=`
+    <div class="resumo-item"><div class="resumo-label">Serviço</div><div class="resumo-val">${svc.nome}</div></div>
+    <div class="resumo-item"><div class="resumo-label">Tipo</div><div class="resumo-val">${tipoSelecionado==='corporativo'?'Benefício corporativo':'Plano família'}</div></div>
+    ${!isWH&&!isTP?`<div class="resumo-item"><div class="resumo-label">Plano</div><div class="resumo-val" style="font-size:13px;">${planoNome}</div></div>`:''}
+    <div class="resumo-item"><div class="resumo-label">Vagas ofertadas</div><div class="resumo-val">${vagas} vaga${vagas>1?'s':''}</div></div>
+    ${isWH?`<div class="resumo-item"><div class="resumo-label">Planos permitidos</div><div class="resumo-val" style="font-size:12px;">${Array.from(whPlanosSel).join(', ')}</div></div>`:''}
+    ${isTP?`<div class="resumo-item"><div class="resumo-label">Planos permitidos</div><div class="resumo-val" style="font-size:12px;">${Array.from(tpPlanosSel).join(', ')}</div></div>`:''}
+    <div class="resumo-item" style="border:1.5px solid rgba(0,200,100,0.3);background:rgba(0,200,100,0.08);"><div class="resumo-label" style="color:#00875A;">Recebimento estimado</div><div class="resumo-val" style="color:#00875A;">${ganho}</div></div>`
+}
+
+async function publicarPiscina(){
+  if(!document.getElementById('aceite').checked){showMsgPub('Aceite os termos para publicar.','aceite');return}
+  if(!comprovanteFile){showMsgPub('Envie o comprovante do plano ativo antes de publicar.','comprovante-input');return}
+  const dia=document.getElementById('cartao-dia').value
+  if(!dia){showMsgPub('Informe o dia de vencimento do seu cartão.','cartao-dia');return}
+  let diaFechamento=document.getElementById('fechamento-dia').value
+  if(!diaFechamento){
+    // Fallback automático: vencimento - 10 dias, caso o dono não tenha ajustado o select
+    let df=parseInt(dia)-10
+    if(df<1) df+=28
+    diaFechamento=String(df).padStart(2,'0')
+  }
+  const dataCompra=document.getElementById('data-compra-plano').value
+  if(!dataCompra){showMsgPub('Informe quando você comprou esse plano.','data-compra-plano');return}
+  if(dataCompra > new Date().toISOString().slice(0,10)){showMsgPub('A data de aquisição não pode ser no futuro.','data-compra-plano');return}
+
+  const telDono=document.getElementById('dono-telefone').value.trim()
+  const pixDono=document.getElementById('dono-pix').value.trim()
+  if(!telDono){showMsgPub('Informe seu WhatsApp para contato.','dono-telefone');return}
+  if(!validarTelefoneBR(telDono)){showMsgPub('WhatsApp inválido — use DDD + número, ex: (85) 99999-9999.','dono-telefone');return}
+  if(!pixDono){showMsgPub('Informe sua chave PIX para receber os repasses.','dono-pix');return}
+  if(!validarChavePix(pixDono)){showMsgPub('Chave PIX inválida — use CPF, e-mail, telefone ou chave aleatória válidos.','dono-pix');return}
+  const cpfDono=document.getElementById('dono-cpf').value.trim()
+  if(!cpfDono){showMsgPub('Informe seu CPF.','dono-cpf');return}
+  if(!validarCPF(cpfDono)){showMsgPub('CPF inválido — confira os dígitos.','dono-cpf');return}
+
+  const btn=document.getElementById('btn-publicar')
+  btn.disabled=true;btn.textContent='Enviando...'
+  hideMsg()
+
+  const svc=getSvc()
+  const isWH=svc?.especial==='wellhub'
+  const isTP=svc?.especial==='totalpass'
+  const vagas=parseInt(isWH?document.getElementById('wh-vagas').value:isTP?document.getElementById('tp-vagas').value:document.getElementById('vagas-total').value)
+  const desc=isWH?document.getElementById('wh-desc-auto').textContent:isTP?document.getElementById('tp-desc-auto').textContent:document.getElementById('desc-auto').textContent
+
+  // Upload do comprovante no Supabase Storage
+  let comprovanteUrl=null
+  try{
+    const ext=comprovanteFile.name.split('.').pop()
+    const path=`comprovantes/${userId}_${svc.nome.replace(/\s/g,'_')}_${Date.now()}.${ext}`
+    const {data:up,error:upErr}=await sb.storage.from('comprovantes').upload(path,comprovanteFile,{upsert:true})
+    if(!upErr) comprovanteUrl=sb.storage.from('comprovantes').getPublicUrl(path).data.publicUrl
+  }catch(e){}
+
+  // Capturar link de convite (planos família)
+  const linkConvite=document.getElementById('link-convite-input')?.value?.trim()||null
+
+  // Salvar dados de recebimento no perfil
+  await sb.from('profiles').update({telefone:telDono,pix_chave:pixDono,cpf:cpfDono.replace(/\D/g,'')}).eq('id',userId)
+
+  // Salva piscina com status pendente e dados do cartão
+  const {error}=await sb.from('piscinas').insert({
+    dono_id:userId,
+    servico:svc.nome,
+    descricao:desc,
+    vagas_total:vagas,
+    vagas_ocupadas:0,
+    preco_por_vaga:isWH?0:isTP?0:svc.precoVenda,
+    status:'pendente',
+    icone_url:(svcSelecionado&&svcSelecionado.img)||null,
+    cartao_vencimento:dia,
+    dia_fechamento_fatura:diaFechamento,
+    data_compra_ciclo:dataCompra,
+    comprovante_url:comprovanteUrl,
+    link_convite:linkConvite
+  })
+
+  if(error){
+    showMsg('Erro ao publicar: '+error.message,'error')
+    btn.disabled=false
+    btn.textContent='🚀 Enviar para validação'
+    return
+  }
+
+  // Tela de sucesso: expectativa clara de análise antes da publicação
+  var p3=document.getElementById('panel-3');
+  if(p3){
+    p3.innerHTML='<div style="text-align:center;padding:40px 18px;background:rgba(255,255,255,0.92);border-radius:16px;">'
+      +'<div style="font-size:52px;margin-bottom:10px;">🔍</div>'
+      +'<div style="font-family:\'Nunito\',sans-serif;font-size:22px;font-weight:900;color:var(--bluedark);margin-bottom:8px;">Piscina enviada para análise!</div>'
+      +'<div style="font-size:14px;color:var(--bluedark);opacity:.72;line-height:1.75;max-width:440px;margin:0 auto 20px;">A Splitpool valida os dados e o comprovante em até <strong>24h úteis</strong>. Você recebe uma notificação no sino 🔔 assim que ela for aprovada — só então ela aparece no Explorar para receber membros.</div>'
+      +'<a href="dashboard-owner.html" style="display:inline-block;background:linear-gradient(135deg,var(--blue),var(--bluedark));color:#fff;font-weight:800;font-size:14px;padding:13px 26px;border-radius:10px;text-decoration:none;box-shadow:0 4px 16px rgba(18,85,204,0.3);">Ir para Minhas Piscinas →</a>'
+      +'</div>';
+    p3.scrollIntoView({behavior:'smooth',block:'center'});
+  } else {
+    showMsg('✅ Piscina enviada para análise! A Splitpool valida em até 24h úteis e te avisa no sino.','success')
+    setTimeout(()=>window.location.href='dashboard-owner.html',3500)
+  }
+}
+
+function showMsg(t,tipo){const e=document.getElementById('msg');e.textContent=t;e.className='msg '+tipo;e.style.display='block';}
+
+function validarTelefoneBR(t){
+  const d=(t||'').replace(/\D/g,'')
+  return d.length>=10&&d.length<=11&&Number(d.substring(0,2))>=11
+}
+function validarCPF(cpf){
+  const d=(cpf||'').replace(/\D/g,'')
+  if(d.length!==11||/^(\d)\1{10}$/.test(d)) return false
+  let s=0;for(let i=0;i<9;i++)s+=Number(d[i])*(10-i)
+  let r=(s*10)%11;if(r===10)r=0;if(r!==Number(d[9]))return false
+  s=0;for(let i=0;i<10;i++)s+=Number(d[i])*(11-i)
+  r=(s*10)%11;if(r===10)r=0;return r===Number(d[10])
+}
+function validarChavePix(p){
+  const t=(p||'').trim()
+  if(!t) return false
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return true
+  const d=t.replace(/\D/g,'')
+  if(d.length===11&&validarCPF(t)) return true
+  if(d.length>=10&&d.length<=11&&validarTelefoneBR(t)) return true
+  if(d.length===14) return true
+  if(/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(t)) return true
+  return false
+}
+
+function showMsgPub(t,campoId){
+  const e=document.getElementById('msg-pub')
+  e.textContent=t;e.className='msg error';e.style.display='block'
+  e.scrollIntoView({behavior:'smooth',block:'center'})
+  if(campoId) destacarCampo(campoId)
+}
+
+function destacarCampo(campoId){
+  const el=document.getElementById(campoId)
+  if(!el) return
+  const alvo=(el.type==='file'||el.type==='checkbox')?el.parentElement:el
+  const bordaOriginal=alvo.style.border
+  alvo.style.border='2px solid #dc2626'
+  alvo.style.borderRadius=alvo.style.borderRadius||'10px'
+  const limpar=()=>{alvo.style.border=bordaOriginal;el.removeEventListener('input',limpar);el.removeEventListener('change',limpar);}
+  el.addEventListener('input',limpar)
+  el.addEventListener('change',limpar)
+}
+function hideMsg(){document.getElementById('msg').style.display='none';}
+async function logout(){await sb.auth.signOut();window.location.href='index.html';}
+
 ;(function(){
   const c=document.getElementById('wc'),ctx=c.getContext('2d');
   let W,H,t=0,lines=[];
@@ -981,11 +1135,8 @@ document.getElementById('modal-detalhe').addEventListener('click', e => {
 <div id="mob-name"></div>
 <button id="ham-btn" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
 <div id="mob-menu">
-  <a class="mob-lnk" href="meus-planos.html">Meus planos</a>
-  <a class="mob-lnk" href="dashboard-owner.html">Minhas piscinas</a>
-  <a class="mob-lnk" href="perfil.html">Perfil</a>
+  <a class="mob-lnk" href="explorar.html">← Explorar</a>
   <button class="mob-lnk" onclick="logout();toggleMenu()">Sair</button>
-  <a class="mob-lnk cta" href="criar-piscina.html">+ Criar piscina</a>
 </div>
 <script>
 /* ── MOB NAV JS ── */
@@ -1012,10 +1163,3 @@ document.addEventListener('click',function(e){
 <script src="notif.js"></script>
 </body>
 </html>
-<!-- redeploy -->
-<!-- redeploy -->
- <!-- redeploy -->
-   <!-- redeploy -->
-<!-- redeploy -->
-   <!-- redeploy -->
-    <!-- redeploy alteracoes sup-->
