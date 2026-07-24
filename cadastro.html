@@ -278,7 +278,11 @@ input::placeholder{color:#8BAAC8;}
         btn.textContent = 'Criar conta'
         return
       }
-      const { error } = await sb.auth.signUp({ email, password })
+      const { error } = await sb.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: new URL('bem-vindo.html', window.location.href).href }
+      })
       if (error) {
         if (error.message.includes('already registered')) showMsg('Este e-mail já está cadastrado. Clique em "Entrar".', 'error')
         else showMsg(error.message, 'error')
