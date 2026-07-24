@@ -493,7 +493,7 @@ let isTP_atual = false
 // Verifica autenticação
 sb.auth.getSession().then(({ data }) => {
   if (!data.session) {
-    window.location.href = 'cadastro.html'
+    window.location.href = 'cadastro.html?modo=login&next=explorar'
     return
   }
   const email = data.session.user.email
