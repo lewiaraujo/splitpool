@@ -957,7 +957,7 @@ function copiarCred(elId, label){
 
 async function init(){
   const {data:sess}=await sb.auth.getSession();
-  if(!sess.session){window.location.href='cadastro.html';return;}
+  if(!sess.session){window.location.href='cadastro.html?modo=login&next=meus-planos';return;}
   userId=sess.session.user.id;
   const email=sess.session.user.email;
   document.getElementById('nav-user').textContent=email.split('@')[0];
