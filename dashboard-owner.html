@@ -67,7 +67,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 .pool-ico{width:52px;height:52px;border-radius:12px;object-fit:cover;flex-shrink:0;background:#f0f6ff;}
 .pool-ico-ph{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;}
 .pool-info{flex:1;min-width:0;}
-.pool-nome{font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;color:var(--bluedark);}
+.pool-nome{font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;color:var(--bluedark);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.pool-codigo{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:var(--bluedark);opacity:.45;background:rgba(0,180,210,0.10);border:1px solid rgba(0,180,210,0.20);padding:2px 8px;border-radius:6px;letter-spacing:.3px;white-space:nowrap;cursor:pointer;transition:.15s;}
+.pool-codigo:hover{opacity:.9;background:rgba(0,180,210,0.18);}
 .pool-meta-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px;}
 .pool-meta-txt{font-size:12px;color:var(--bluedark);opacity:.5;font-weight:500;}
 .pool-right{display:flex;align-items:center;gap:14px;flex-shrink:0;}
@@ -783,6 +785,18 @@ function toggleCard(id){
   document.getElementById('pc-'+id).classList.toggle('open');
 }
 
+/* ── COPIAR CODIGO DA PISCINA ── */
+function copiarCodigo(ev,id){
+  ev.stopPropagation(); // impede que o clique abra/feche o card
+  var texto='#'+id;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texto).then(function(){showToast('Código '+texto+' copiado!','success');})
+      .catch(function(){showToast('Código da piscina: '+texto,'success');});
+  } else {
+    showToast('Código da piscina: '+texto,'success');
+  }
+}
+
 /* ── SWITCH TAB ── */
 function switchTab(btn,paneId){
   var card=btn.closest('.pool-card');
@@ -976,7 +990,7 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
     +'<div class="pool-header" onclick="toggleCard('+pool.id+')">'
     +getIco(pool.servico,pool.icone_url)
     +'<div class="pool-info">'
-    +'<div class="pool-nome">'+pool.servico+'</div>'
+    +'<div class="pool-nome">'+pool.servico+'<span class="pool-codigo" onclick="copiarCodigo(event,'+pool.id+')" title="Clique para copiar">#'+pool.id+'</span></div>'
     +'<div class="pool-meta-row">'+getBadge(pool.status)+vagasBar(pool.vagas_ocupadas,pool.vagas_total)+'</div>'
     +gerarBarraMeta(pool,ativos,aguardando)
     +'</div>'
@@ -1344,7 +1358,7 @@ async function carregarDashboard(){
 /* ── INIT ── */
 async function init(){
   var {data:sess}=await sb.auth.getSession();
-  if(!sess.session){window.location.href='cadastro.html';return;}
+  if(!sess.session){window.location.href='cadastro.html?modo=login&next=dashboard-owner';return;}
   userId=sess.session.user.id;
   var email=sess.session.user.email;
 
