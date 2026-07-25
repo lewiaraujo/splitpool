@@ -626,7 +626,7 @@ const WH_PLANOS=[
 let whPlanosSel=new Set(['Starter','Basic','Basic+','Silver'])
 
 sb.auth.getSession().then(({data})=>{
-  if(!data.session){window.location.href='cadastro.html';return}
+  if(!data.session){window.location.href='cadastro.html?modo=login&next=criar-piscina';return}
   userId=data.session.user.id
   const email=data.session.user.email
   nomeUsuario=email.split('@')[0].charAt(0).toUpperCase()+email.split('@')[0].slice(1)
