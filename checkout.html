@@ -660,7 +660,7 @@ async function confirmarPagamento(){
     const planoNome=ps.get('plano')||null
     const proxPag=new Date()
     proxPag.setDate(proxPag.getDate()+30)
-    await sb.from('assinaturas').insert({
+    const {data:novaAssin}=await sb.from('assinaturas').insert({
       membro_id:sess.session.user.id,
       piscina_id:piscinaData.id,
       servico:piscinaData.servico,
@@ -669,7 +669,7 @@ async function confirmarPagamento(){
       status:'aguardando_acesso',
       email_servico:emailServico,
       proximo_pagamento:proxPag.toISOString()
-    })
+    }).select('id').single()
     // Notificar dono que um membro entrou
     const {data:perfilMembro}=await sb.from('profiles').select('nome').eq('id',sess.session.user.id).single()
     const nomeMembroNot=perfilMembro?.nome||emailServico||'Um membro'
@@ -679,6 +679,13 @@ async function confirmarPagamento(){
       mensagem:nomeMembroNot+' entrou na sua piscina de '+piscinaData.servico+'.',
       link:'dashboard-owner.html'
     })
+    // E-mail ao dono avisando da nova entrada (a funcao busca dados server-side)
+    try{
+      if(novaAssin&&novaAssin.id){
+        const {error:eMailDono}=await sb.functions.invoke('enviar-email-membro-novo',{body:{assinatura_id:novaAssin.id}})
+        if(eMailDono)console.warn('E-mail ao dono nao enviado:',eMailDono)
+      }
+    }catch(exMailDono){console.warn('E-mail ao dono falhou:',exMailDono)}
     // Piscina cheia? Notificar o dono (trigger já sincronizou vagas_ocupadas)
     const {data:piscAtual}=await sb.from('piscinas').select('vagas_ocupadas,vagas_total').eq('id',piscinaData.id).single()
     if(piscAtual&&piscAtual.vagas_ocupadas>=piscAtual.vagas_total){
