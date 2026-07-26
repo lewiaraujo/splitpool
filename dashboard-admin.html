@@ -467,6 +467,18 @@ function comprovanteHref(v){
 const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
 const sb=supabase.createClient(SBU,SBK);
 
+// Sanitiza dado de usuario antes de injetar via innerHTML (previne XSS).
+// Aplicar em TODO texto vindo de profiles/piscinas/ocorrencias inserido em HTML.
+function escapeHtml(v){
+  if(v===null||v===undefined) return '';
+  return String(v)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
 var dados={repasses:[],piscinas:[],usuarios:[],assinaturas:null,perfisMap:{},piscMap:{}};
 var filtros={repasses:'todos',piscinas:'todas',usuarios:'todos'};
 var adminSess=null;
@@ -640,7 +652,7 @@ async function toggleUserAssins(userId,nome,trEl){
       var svc=piscNomes[a.piscina_id]||a.servico||'—';
       inner+='<tr>'
         +'<td style="padding:5px 12px;font-size:12px;font-weight:600;">'+svc+'</td>'
-        +'<td style="padding:5px 12px;font-size:12px;">'+(dono.nome||'—')+'<div style="font-size:10px;opacity:.6;">'+(dono.email||'')+'</div></td>'
+        +'<td style="padding:5px 12px;font-size:12px;">'+escapeHtml(dono.nome||'—')+'<div style="font-size:10px;opacity:.6;">'+escapeHtml(dono.email||'')+'</div></td>'
         +'<td style="padding:5px 12px;font-size:12px;">'+fmt(Number(a.valor||0))+'</td>'
         +'<td style="padding:5px 12px;font-size:11px;">'+a.status+'</td>'
         +'</tr>';
@@ -741,11 +753,11 @@ function renderOcorrencias(){
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">'
       +'<div style="flex:1;min-width:200px;">'
       +'<div style="font-size:14px;font-weight:800;color:#0A3080;">'+labelTipoOcorr(o.tipo)+'</div>'
-      +'<div style="font-size:12px;color:#777;margin-top:3px;">'+(o.servico?o.servico+(o.piscina_id?' '+poolCode(Number(o.piscina_id)):''):'—')+' · <strong>'+(o.aberto_por_nome||'—')+'</strong>'+(o.aberto_por_email?' · <span style="user-select:all;">'+o.aberto_por_email+'</span>':'')+' · '+dt+'</div>'
+      +'<div style="font-size:12px;color:#777;margin-top:3px;">'+(o.servico?escapeHtml(o.servico)+(o.piscina_id?' '+poolCode(Number(o.piscina_id)):''):'—')+' · <strong>'+escapeHtml(o.aberto_por_nome||'—')+'</strong>'+(o.aberto_por_email?' · <span style="user-select:all;">'+escapeHtml(o.aberto_por_email)+'</span>':'')+' · '+dt+'</div>'
       +'</div>'
       +badgeStatusOcorr(o.status)
       +'</div>'
-      +(o.descricao?'<div style="font-size:13px;color:#444;margin-top:10px;line-height:1.55;">'+o.descricao+'</div>':'')
+      +(o.descricao?'<div style="font-size:13px;color:#444;margin-top:10px;line-height:1.55;">'+escapeHtml(o.descricao)+'</div>':'')
       +reembHTML
       +(o.evidencia_url?'<div style="margin-top:10px;"><a href="'+o.evidencia_url+'" target="_blank" style="font-size:12px;font-weight:700;color:#1255CC;text-decoration:none;background:#eff6ff;border:1px solid rgba(18,85,204,0.2);padding:5px 12px;border-radius:7px;display:inline-flex;align-items:center;gap:5px;">📎 Ver evidência anexada</a></div>':'')
       +(o.comprovante_reembolso_url?'<div style="margin-top:8px;"><a href="'+o.comprovante_reembolso_url+'" target="_blank" style="font-size:12px;font-weight:700;color:#00875A;text-decoration:none;background:#e6fff8;border:1px solid rgba(0,135,90,0.25);padding:5px 12px;border-radius:7px;display:inline-flex;align-items:center;gap:5px;">🧾 Ver comprovante do reembolso pago</a></div>':'')
@@ -817,7 +829,7 @@ function recusarReembolso(id){
   document.getElementById('recusa-contexto').innerHTML=
     '<strong>'+(o.servico||'—')+'</strong> · '+(o.aberto_por_nome||o.aberto_por_email||'membro')+'<br>'
     +'Valor pedido: <strong>'+fmt(o.valor_reembolso)+'</strong><br>'
-    +(o.descricao?'<div style="margin-top:6px;">"'+o.descricao+'"</div>':'')
+    +(o.descricao?'<div style="margin-top:6px;">"'+escapeHtml(o.descricao)+'"</div>':'')
     +(o.evidencia_url?'<div style="margin-top:8px;"><a href="'+o.evidencia_url+'" target="_blank" style="color:#1255CC;font-weight:700;">📎 Ver evidência anexada</a></div>':'<div style="margin-top:8px;color:#b45309;">⚠️ Nenhuma evidência anexada pelo membro.</div>');
   document.getElementById('recusa-overlay').style.display='flex';
 }
@@ -905,8 +917,8 @@ async function toggleMembrosPisc(piscId,btn){
 
       inner+='<div style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px 14px;margin:6px 8px;">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">'
-        +'<div><span style="font-size:13px;font-weight:800;color:#0A3080;">'+(pf.nome||'—')+'</span>'
-        +' <span style="font-size:11px;opacity:.55;user-select:all;">'+(pf.email||'')+'</span>'
+        +'<div><span style="font-size:13px;font-weight:800;color:#0A3080;">'+escapeHtml(pf.nome||'—')+'</span>'
+        +' <span style="font-size:11px;opacity:.55;user-select:all;">'+escapeHtml(pf.email||'')+'</span>'
         +(pf.telefone?' <span style="font-size:11px;opacity:.55;">📱 <span style="user-select:all;">'+pf.telefone+'</span></span>':'')
         +'</div>'
         +'<span style="font-size:12px;font-weight:800;">'+fmt(Number(a.valor||0))+'/mês</span>'
@@ -966,7 +978,7 @@ function renderPainelPendencias(){
     var chave=chavePendencia(p);
     return '<div onclick="irParaPendencia(\''+p.categoria+'\',\''+(p.dono_ref||'')+'\')" style="position:relative;padding:11px 34px 11px 14px;border-bottom:1px solid rgba(0,0,0,0.05);cursor:pointer;transition:.15s;" onmouseover="this.style.background=\'rgba(18,85,204,0.05)\'" onmouseout="this.style.background=\'\'">'
       +'<div style="font-size:11px;font-weight:800;color:#1255CC;">'+(LBL[p.categoria]||p.categoria)+' <span style="font-weight:600;color:#889;">→ ir para aba</span></div>'
-      +'<div style="font-size:12px;color:#333;margin-top:2px;line-height:1.45;">'+p.descricao+'</div>'
+      +'<div style="font-size:12px;color:#333;margin-top:2px;line-height:1.45;">'+escapeHtml(p.descricao)+'</div>'
       +'<div style="font-size:10px;color:#999;margin-top:2px;">'+dt+'</div>'
       +'<button onclick="dispensarPendencia(\''+chave+'\',event)" title="Dispensar aviso" style="position:absolute;top:8px;right:8px;background:transparent;border:none;color:#999;font-size:15px;cursor:pointer;padding:2px 5px;line-height:1;">×</button>'
       +'</div>';
@@ -1075,7 +1087,7 @@ function renderCatalogo(){
     +'</tr></thead><tbody>'
     +catalogoData.map(function(s){
       return '<tr style="border-top:1px solid rgba(0,0,0,0.05);'+(s.ativo?'':'opacity:.45;')+'">'
-        +'<td style="padding:8px 10px;font-size:12px;font-weight:700;">'+s.nome+((s.planos_financeiros&&s.planos_financeiros.length)?' <span style="font-size:9px;background:#eef2ff;color:#3730a3;padding:1px 6px;border-radius:8px;font-weight:800;">'+s.planos_financeiros.length+' planos</span>':'')+(s.descricao?'<div style="font-size:10px;opacity:.55;font-weight:500;">'+s.descricao+'</div>':'')+'</td>'
+        +'<td style="padding:8px 10px;font-size:12px;font-weight:700;">'+escapeHtml(s.nome)+((s.planos_financeiros&&s.planos_financeiros.length)?' <span style="font-size:9px;background:#eef2ff;color:#3730a3;padding:1px 6px;border-radius:8px;font-weight:800;">'+s.planos_financeiros.length+' planos</span>':'')+(s.descricao?'<div style="font-size:10px;opacity:.55;font-weight:500;">'+escapeHtml(s.descricao)+'</div>':'')+'</td>'
         +'<td style="padding:8px 10px;font-size:11px;">'+s.categoria+'</td>'
         +'<td style="padding:8px 10px;font-size:11px;">'+s.tipo+'</td>'
         +'<td style="padding:8px 10px;font-size:12px;">'+s.vagas_max+'</td>'
@@ -1652,7 +1664,7 @@ function renderPiscinas(){
         :'<span style="opacity:.3;">—</span>';
       var trBgPisc=p.status==='pausada'?'background:#fff1f2;':(p.status==='recusada'?'background:#f4f4f5;opacity:.7;':'');
       html+='<tr style="border-bottom:1px solid rgba(18,85,204,0.06);'+trBgPisc+'">';
-      html+='<td style="padding:10px 12px;font-size:13px;font-weight:800;color:var(--bluedark);white-space:nowrap;">🏊 '+p.servico+'</td>';
+      html+='<td style="padding:10px 12px;font-size:13px;font-weight:800;color:var(--bluedark);white-space:nowrap;">🏊 '+escapeHtml(p.servico)+'</td>';
       html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;color:var(--blue);font-family:monospace;white-space:nowrap;">'+poolCode(p.id)+'</td>';
       html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;">'+p.vagas_ocupadas+'/'+p.vagas_total+'</td>';
       html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;text-align:right;white-space:nowrap;">'+fmt(p.preco_por_vaga)+'</td>';
@@ -1800,8 +1812,8 @@ function renderUsuarios(){
     var contato='';
     if(u._telefone) contato+='<span style="font-size:10px;background:rgba(0,180,210,0.08);padding:1px 6px;border-radius:4px;margin-right:3px;">📱 <span style="user-select:all;">'+u._telefone+'</span></span>';
     if(u._pix) contato+='<span style="font-size:10px;background:rgba(18,85,204,0.07);padding:1px 6px;border-radius:4px;">💳 <span style="user-select:all;">'+u._pix+'</span></span>';
-    return '<tr id="user-row-'+u.id+'">'+'<td data-label="Nome" style="font-weight:600;">'+u.nome+(contato?'<div style="margin-top:4px;flex-wrap:wrap;display:flex;gap:3px;">'+contato+'</div>':'')+'</td>'+
-      '<td data-label="Email" style="font-size:12px;opacity:.7;">'+u.email+'</td>'+
+    return '<tr id="user-row-'+u.id+'">'+'<td data-label="Nome" style="font-weight:600;">'+escapeHtml(u.nome)+(contato?'<div style="margin-top:4px;flex-wrap:wrap;display:flex;gap:3px;">'+contato+'</div>':'')+'</td>'+
+      '<td data-label="Email" style="font-size:12px;opacity:.7;">'+escapeHtml(u.email)+'</td>'+
       '<td data-label="Cadastro" style="font-size:12px;opacity:.7;">'+(u._criadoEm?new Date(u._criadoEm).toLocaleDateString('pt-BR'):'—')+'</td>'+
       '<td data-label="Piscinas">'+u._nPisc+'</td>'+
       '<td data-label="Assinaturas">'+u._nAssins+'</td>'+
