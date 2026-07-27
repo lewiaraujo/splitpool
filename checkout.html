@@ -673,12 +673,14 @@ async function confirmarPagamento(){
     // Notificar dono que um membro entrou
     const {data:perfilMembro}=await sb.from('profiles').select('nome').eq('id',sess.session.user.id).single()
     const nomeMembroNot=perfilMembro?.nome||emailServico||'Um membro'
-    await sb.from('notificacoes').insert({
-      user_id:piscinaData.dono_id,
-      tipo:'membro_entrou',
-      mensagem:nomeMembroNot+' entrou na sua piscina de '+piscinaData.servico+'.',
-      link:'dashboard-owner.html'
-    })
+    if(novaAssin&&novaAssin.id){
+      await sb.rpc('notificar_contraparte',{
+        p_assinatura_id:novaAssin.id,
+        p_tipo:'membro_entrou',
+        p_mensagem:nomeMembroNot+' entrou na sua piscina de '+piscinaData.servico+'.',
+        p_link:'dashboard-owner.html'
+      })
+    }
     // E-mail ao dono avisando da nova entrada (a funcao busca dados server-side)
     try{
       if(novaAssin&&novaAssin.id){
@@ -688,12 +690,12 @@ async function confirmarPagamento(){
     }catch(exMailDono){console.warn('E-mail ao dono falhou:',exMailDono)}
     // Piscina cheia? Notificar o dono (trigger já sincronizou vagas_ocupadas)
     const {data:piscAtual}=await sb.from('piscinas').select('vagas_ocupadas,vagas_total').eq('id',piscinaData.id).single()
-    if(piscAtual&&piscAtual.vagas_ocupadas>=piscAtual.vagas_total){
-      await sb.from('notificacoes').insert({
-        user_id:piscinaData.dono_id,
-        tipo:'piscina_cheia',
-        mensagem:'Sua piscina de '+piscinaData.servico+' está cheia! Todas as vagas foram preenchidas.',
-        link:'dashboard-owner.html'
+    if(piscAtual&&piscAtual.vagas_ocupadas>=piscAtual.vagas_total&&novaAssin&&novaAssin.id){
+      await sb.rpc('notificar_contraparte',{
+        p_assinatura_id:novaAssin.id,
+        p_tipo:'piscina_cheia',
+        p_mensagem:'Sua piscina de '+piscinaData.servico+' está cheia! Todas as vagas foram preenchidas.',
+        p_link:'dashboard-owner.html'
       })
     }
   }
