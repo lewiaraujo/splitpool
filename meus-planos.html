@@ -372,17 +372,14 @@ async function confirmarAcesso(){
   if(error){showToast('Erro ao confirmar. Tente novamente.'); return;}
   // Notificar dono que membro confirmou
   if(assin&&assin.piscina_id){
-    const {data:pisc}=await sb.from('piscinas').select('dono_id').eq('id',assin.piscina_id).single();
-    if(pisc&&pisc.dono_id){
-      const {data:perfil}=await sb.from('profiles').select('nome').eq('id',userId).single();
-      const nomeMembro=perfil?.nome||'Um membro';
-      await sb.from('notificacoes').insert({
-        user_id:pisc.dono_id,
-        tipo:'acesso_confirmado',
-        mensagem:nomeMembro+' confirmou o acesso ao '+assin.servico+'. Repasse liberado!',
-        link:'dashboard-owner.html'
-      });
-    }
+    const {data:perfil}=await sb.from('profiles').select('nome').eq('id',userId).single();
+    const nomeMembro=perfil?.nome||'Um membro';
+    await sb.rpc('notificar_contraparte',{
+      p_assinatura_id:assinaturaParaConfirmar,
+      p_tipo:'acesso_confirmado',
+      p_mensagem:nomeMembro+' confirmou o acesso ao '+assin.servico+'. Repasse liberado!',
+      p_link:'dashboard-owner.html'
+    });
   }
   showToast('Acesso confirmado! Repasse liberado ao dono.','success');
   setTimeout(()=>carregarPlanos(),1200);
@@ -598,11 +595,11 @@ async function confirmarCancelamento(){
   var fimCiclo=a.proximo_pagamento||new Date().toISOString();
   var fimCicloStr=new Date(fimCiclo).toLocaleDateString('pt-BR');
   if(piscInfo&&piscInfo.dono_id){
-    await sb.from('notificacoes').insert({
-      user_id:piscInfo.dono_id,
-      tipo:'membro_cancelou',
-      mensagem:nomeMembro+' cancelou a assinatura de '+a.servico+'. O acesso está pago até '+fimCicloStr+' — remova esse membro do seu plano SOMENTE nessa data, NUNCA antes. Você será lembrado no dia.',
-      link:'dashboard-owner.html'
+    await sb.rpc('notificar_contraparte',{
+      p_assinatura_id:a.id,
+      p_tipo:'membro_cancelou',
+      p_mensagem:nomeMembro+' cancelou a assinatura de '+a.servico+'. O acesso está pago até '+fimCicloStr+' — remova esse membro do seu plano SOMENTE nessa data, NUNCA antes. Você será lembrado no dia.',
+      p_link:'dashboard-owner.html'
     });
   }
   // E-mail ao dono com a orientacao (a funcao busca dados server-side pelo id da assinatura)
@@ -638,11 +635,11 @@ async function desfazerCancelamento(id){
     descricao:dNome+' desfez o cancelamento agendado da assinatura de '+a.servico+' ('+poolCode(a.piscina_id)+'), do dono '+dDono+'. A vaga segue ocupada e a assinatura continua ativa normalmente.'
   });
   if(dPisc&&dPisc.dono_id){
-    await sb.from('notificacoes').insert({
-      user_id:dPisc.dono_id,
-      tipo:'membro_cancelou',
-      mensagem:dNome+' desfez o cancelamento em '+a.servico+'. A vaga segue ocupada — NÃO remova esse membro do seu plano.',
-      link:'dashboard-owner.html'
+    await sb.rpc('notificar_contraparte',{
+      p_assinatura_id:a.id,
+      p_tipo:'membro_cancelou',
+      p_mensagem:dNome+' desfez o cancelamento em '+a.servico+'. A vaga segue ocupada — NÃO remova esse membro do seu plano.',
+      p_link:'dashboard-owner.html'
     });
   }
   showToast('Cancelamento desfeito! 🎉','success');
