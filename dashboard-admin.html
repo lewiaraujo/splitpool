@@ -30,6 +30,18 @@ nav{background:#0A3080;padding:0 5%;position:sticky;top:0;z-index:200;}
   .mob-menu-btn{display:flex;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;margin-left:auto;}
 }
 @media(min-width:769px){.mob-menu-btn{display:none;}}
+/* Tabela de piscinas do admin: no desktop cabe inteira sem scroll horizontal.
+   No mobile mantem o scroll (14 colunas nao cabem numa tela estreita). */
+.pisc-wrap{overflow-x:auto;}
+.pisc-table{width:100%;border-collapse:collapse;min-width:800px;}
+@media(min-width:1100px){
+  .pisc-wrap{overflow-x:visible;}
+  .pisc-table{min-width:0;table-layout:auto;}
+  .pisc-table th{padding:7px 6px !important;font-size:10px;}
+  .pisc-table td{padding:7px 6px !important;font-size:11px !important;}
+  /* Encolhe o link de convite para nao empurrar as demais colunas */
+  .pisc-table td a[title]{max-width:90px !important;}
+}
 
 /* LAYOUT */
 .wrap{max-width:1200px;margin:0 auto;padding:28px 5% 60px;}
@@ -1685,8 +1697,8 @@ function renderPiscinas(){
     html+='<div class="dono-total"><div style="font-family:Nunito,sans-serif;font-size:16px;font-weight:900;color:rgba(255,255,255,.7);">'+piscs.length+' piscina'+(piscs.length>1?'s':'')+'</div><div class="dono-total-lbl">Total</div></div>';
     html+='</div></div>';
     html+='<div class="dono-body" id="'+bodyId+'">';
-    html+='<div style="overflow-x:auto;">';
-    html+='<table style="width:100%;border-collapse:collapse;min-width:800px;">';
+    html+='<div class="pisc-wrap">';
+    html+='<table class="pisc-table">';
     html+='<thead><tr style="background:rgba(18,85,204,0.04);">';
     html+='<th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Serviço</th>';
     html+='<th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Código</th>';
