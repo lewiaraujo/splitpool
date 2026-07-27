@@ -481,6 +481,7 @@ async function enviarReporte(){
 /* ── CANCELAMENTO ── */
 let planosCache=[];
 let ocorrenciasCancel={};
+let disputasMap={};
 let assinaturaParaCancelar=null;
 
 function fecharCancel(){
@@ -763,6 +764,39 @@ function renderPlano(a){
     }
   }
 
+  // ── Acompanhamento de disputa/problema reportado ──
+  var disputaHTML='';
+  var disp=disputasMap[a.id];
+  if(disp){
+    var tipoLabel={'disputa_sem_acesso':'Nunca recebi o acesso','disputa_acesso_parou':'Acesso parou de funcionar','disputa_diferente_anunciado':'Serviço diferente do anunciado'}[disp.tipo]||'Problema de acesso';
+    var abertoEm=disp.created_at?new Date(disp.created_at).toLocaleDateString('pt-BR'):'';
+    var resolvido=disp.status==='concluida';
+    // Timeline simples: Recebido → Em análise → Resolvido
+    var etapaAnalise=!resolvido;
+    function passoDisputa(ok,ativo,titulo,sub){
+      var cor=ok?'#166534':(ativo?'#b45309':'#94a3b8');
+      var bg=ok?'#dcfce7':(ativo?'#fff8e0':'#f1f5f9');
+      var icone=ok?'✓':(ativo?'●':'○');
+      return '<div style="display:flex;gap:10px;align-items:flex-start;">'
+        +'<div style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:'+bg+';color:'+cor+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">'+icone+'</div>'
+        +'<div style="flex:1;"><div style="font-size:12.5px;font-weight:700;color:'+(ok||ativo?'#0F2C4C':'#94a3b8')+';">'+titulo+'</div>'
+        +(sub?'<div style="font-size:11px;color:#64748b;line-height:1.5;margin-top:1px;">'+sub+'</div>':'')+'</div></div>';
+    }
+    var resolvidoEm=disp.resolvida_em?new Date(disp.resolvida_em).toLocaleDateString('pt-BR'):'';
+    disputaHTML=`
+    <div style="background:#f8fafc;border:1px solid rgba(0,160,200,0.18);border-radius:12px;padding:16px;margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:800;color:#0F2C4C;">🔎 Acompanhamento do seu caso</div>
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 9px;border-radius:6px;background:${resolvido?'#dcfce7':'#fff8e0'};color:${resolvido?'#166534':'#8a5c00'};">${resolvido?'Resolvido':'Em análise'}</span>
+      </div>
+      <div style="font-size:12px;color:#475569;margin-bottom:14px;">Motivo relatado: <strong>${tipoLabel}</strong>${disp.evidencia_url?' · <a href="'+disp.evidencia_url+'" target="_blank" style="color:#0A5CB8;font-weight:700;">ver anexo</a>':''}</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        ${passoDisputa(true,false,'Recebido',abertoEm?('Enviado em '+abertoEm):'')}
+        ${passoDisputa(resolvido,etapaAnalise,'Em análise pela Splitpool',etapaAnalise?'Nossa equipe está avaliando seu caso. Você será notificado assim que houver uma resposta.':'')}
+        ${passoDisputa(resolvido,false,'Resolvido',resolvido?((resolvidoEm?('Concluído em '+resolvidoEm+'. '):'')+(disp.decisao_admin||'Caso encerrado pela equipe.')):'')}
+      </div>
+    </div>`;
+  }
   return`<div class="card plano-card" id="plano-${a.id}">
     <div class="plano-header">
       ${getIco(a.servico,piscIconeMap[a.piscina_id])}
@@ -788,6 +822,7 @@ function renderPlano(a){
       ${confirmarBtn}
     </div>
     ${acessoHTML}
+    ${disputaHTML}
     ${cancelBadge}
     ${cancelarLink}
     ${reportarLink}
@@ -845,6 +880,18 @@ async function carregarPlanos(){
   }
 
   planosCache=data;
+
+  // Busca ocorrencias de disputa/problema (reporte de acesso) para acompanhamento no card
+  disputasMap={};
+  if(data.length){
+    const {data:disp}=await sb.from('ocorrencias')
+      .select('assinatura_id,tipo,status,descricao,decisao_admin,resolvida_em,created_at,evidencia_url')
+      .in('tipo',['disputa_sem_acesso','disputa_acesso_parou','disputa_diferente_anunciado'])
+      .in('assinatura_id',data.map(a=>a.id))
+      .order('created_at',{ascending:false});
+    // guarda a ocorrencia mais recente por assinatura
+    (disp||[]).forEach(o=>{ if(!disputasMap[o.assinatura_id]) disputasMap[o.assinatura_id]=o; });
+  }
 
   document.getElementById('loading-state').style.display='none';
 
