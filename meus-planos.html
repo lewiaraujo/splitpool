@@ -445,9 +445,24 @@ async function enviarReporte(){
       evidenciaUrl=urlData.publicUrl;
     }
   }
+  // Monta contexto rico para o admin (quem reportou, qual piscina, qual dono)
+  var rPerf=(await sb.from('profiles').select('nome,email').eq('id',userId).single()).data;
+  var rNome=(rPerf&&(rPerf.nome||rPerf.email))||'Membro';
+  var rServico='';
+  var rDono='sem nome';
+  var rPisc=(await sb.from('piscinas').select('servico,dono_id').eq('id',reportePiscinaId).single()).data;
+  if(rPisc){
+    rServico=rPisc.servico||'';
+    if(rPisc.dono_id){
+      var rPerfDono=(await sb.from('profiles').select('nome').eq('id',rPisc.dono_id).single()).data;
+      rDono=(rPerfDono&&rPerfDono.nome)||'sem nome';
+    }
+  }
+  var rotuloTipo={'disputa_sem_acesso':'Nunca recebeu o acesso','disputa_acesso_parou':'Acesso parou de funcionar','disputa_diferente_anunciado':'Serviço diferente do anunciado'}[tipo]||tipo;
+  var descRica='['+rotuloTipo+'] '+rNome+' reportou um problema na piscina de '+(rServico||'—')+' ('+poolCode(reportePiscinaId)+'), do dono '+rDono+'. Relato do membro: "'+desc+'"';
   const {error}=await sb.from('ocorrencias').insert({
     tipo:tipo, piscina_id:reportePiscinaId, assinatura_id:reporteAssinaturaId,
-    aberto_por:userId, status:'aberta', descricao:desc, evidencia_url:evidenciaUrl
+    aberto_por:userId, status:'aberta', descricao:descRica, evidencia_url:evidenciaUrl
   });
   if(error){
     if(btn){btn.disabled=false;btn.textContent='Enviar reporte';}
@@ -563,17 +578,28 @@ async function confirmarCancelamento(){
     }
   }
 
+  // Busca dados para descrição rica da ocorrência (membro que cancelou + dono da piscina)
+  var perfMembro=(await sb.from('profiles').select('nome,email').eq('id',userId).single()).data;
+  var nomeMembro=(perfMembro&&(perfMembro.nome||perfMembro.email))||'Um membro';
+  var piscInfo=(await sb.from('piscinas').select('dono_id').eq('id',a.piscina_id).single()).data;
+  var nomeDono='sem nome';
+  if(piscInfo&&piscInfo.dono_id){
+    var perfDono=(await sb.from('profiles').select('nome').eq('id',piscInfo.dono_id).single()).data;
+    nomeDono=(perfDono&&perfDono.nome)||'sem nome';
+  }
+  var codPisc=poolCode(a.piscina_id);
+
   if(wellness){
     const fim=a.proximo_pagamento||new Date().toISOString();
     const {error}=await sb.from('assinaturas').update({cancela_em:fim}).eq('id',a.id).eq('membro_id',userId);
     erro=error;
-    descr='Cancelamento agendado (wellness) — acesso até '+new Date(fim).toLocaleDateString('pt-BR')+'.';
+    descr=nomeMembro+' agendou o cancelamento da assinatura de '+a.servico+' ('+codPisc+'), do dono '+nomeDono+'. Modelo wellness: o acesso vale até '+new Date(fim).toLocaleDateString('pt-BR')+', quando a vaga é liberada.';
   } else {
     const calc=calcReembolso(a);
     reembolso=calc.valor>0?calc.valor:null;
     const {error}=await sb.from('assinaturas').update({status:'cancelado',cancela_em:new Date().toISOString()}).eq('id',a.id).eq('membro_id',userId);
     erro=error;
-    descr='Cancelamento imediato (família). '+(reembolso?('Reembolso proporcional de '+fmt(reembolso)+' referente a '+calc.dias+' dia(s) não utilizados.'):'Sem reembolso (ciclo esgotado).');
+    descr=nomeMembro+' cancelou imediatamente a assinatura de '+a.servico+' ('+codPisc+'), do dono '+nomeDono+' (plano família). '+(reembolso?('Reembolso proporcional de '+fmt(reembolso)+' referente a '+calc.dias+' dia(s) não utilizados.'):'Sem reembolso — ciclo já esgotado.');
   }
 
   if(erro){fecharCancel();showToast('Erro ao cancelar: '+erro.message);return;}
@@ -590,17 +616,14 @@ async function confirmarCancelamento(){
     pix_chave:pixChave
   });
 
-  // Notificar dono
-  const {data:pisc}=await sb.from('piscinas').select('dono_id').eq('id',a.piscina_id).single();
-  if(pisc&&pisc.dono_id){
-    const {data:perfil}=await sb.from('profiles').select('nome').eq('id',userId).single();
-    const nome=perfil?.nome||'Um membro';
+  // Notificar dono (reusa piscInfo e nomeMembro já buscados acima)
+  if(piscInfo&&piscInfo.dono_id){
     await sb.from('notificacoes').insert({
-      user_id:pisc.dono_id,
+      user_id:piscInfo.dono_id,
       tipo:'membro_cancelou',
       mensagem:wellness
-        ?(nome+' cancelou a assinatura de '+a.servico+'. O acesso vale até '+new Date(a.proximo_pagamento||Date.now()).toLocaleDateString('pt-BR')+', depois a vaga é liberada.')
-        :(nome+' cancelou a assinatura de '+a.servico+'. A vaga foi liberada.'),
+        ?(nomeMembro+' cancelou a assinatura de '+a.servico+'. O acesso vale até '+new Date(a.proximo_pagamento||Date.now()).toLocaleDateString('pt-BR')+', depois a vaga é liberada.')
+        :(nomeMembro+' cancelou a assinatura de '+a.servico+'. A vaga foi liberada.'),
       link:'dashboard-owner.html'
     });
   }
