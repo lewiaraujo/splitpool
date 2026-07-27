@@ -1528,7 +1528,16 @@ async function gerarRepassePiscina(piscinaId, e){
   // gerar repasses adicionais quando membros novos entram no meio do ciclo)
   var elegiveisNovos=todosAtivos.filter(function(a){return a.ultimo_repasse_mes!==mesRef;});
   if(!elegiveisNovos.length){
-    showToast('Todos os membros ativos já foram incluídos no repasse de '+formatarMes(mesRef)+'.','error');
+    // Checa se o repasse deste mes foi gerado automaticamente pelo sistema (5 dias antes
+    // da fatura), para dar uma mensagem clara em vez do generico "ja incluidos".
+    var msgJa='Todos os membros ativos já foram incluídos no repasse de '+formatarMes(mesRef)+'.';
+    var foiAuto=false;
+    try{
+      var {data:repsMes}=await sb.from('repasses').select('observacao').eq('piscina_id',piscinaId).eq('mes_referencia',mesRef);
+      foiAuto=!!(repsMes&&repsMes.some(function(r){return (r.observacao||'').indexOf('Gerado automaticamente')>-1;}));
+      if(foiAuto) msgJa='✅ O repasse deste mês já foi gerado automaticamente pelo sistema (5 dias antes da sua fatura). Não é preciso gerar manualmente — acompanhe o status no seu extrato.';
+    }catch(exJa){}
+    showToast(msgJa,foiAuto?'success':'error');
     if(btn){btn.disabled=false;btn.textContent='⚡ Gerar repasse';}
     return;
   }
