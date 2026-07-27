@@ -552,10 +552,11 @@ async function marcarAcessoEnviado(assinaturaId,btn){
     return;
   }
   if(assin&&assin.membro_id){
-    await sb.from('notificacoes').insert({
-      user_id:assin.membro_id,tipo:'acesso_enviado',
-      mensagem:'Seu acesso ao '+assin.servico+' foi enviado! Confirme em Meus Planos.',
-      link:'meus-planos.html'
+    await sb.rpc('notificar_contraparte',{
+      p_assinatura_id:assinaturaId,
+      p_tipo:'acesso_enviado',
+      p_mensagem:'Seu acesso ao '+assin.servico+' foi enviado! Confirme em Meus Planos.',
+      p_link:'meus-planos.html'
     });
   }
   if(btn){
@@ -607,10 +608,11 @@ async function salvarEEnviarAcesso(piscinaId,membroId,assinaturaId,btn){
   if(eAss){showToast('Credenciais salvas, mas erro ao marcar envio: '+eAss.message,'error');return;}
   // Notificar o membro
   if(assEnv&&assEnv.membro_id){
-   await sb.from('notificacoes').insert({
-      user_id:assEnv.membro_id,tipo:'acesso_enviado',
-      mensagem:'Seu acesso ao '+assEnv.servico+' foi enviado! Confirme em Meus Planos.',
-      link:'meus-planos.html'
+   await sb.rpc('notificar_contraparte',{
+      p_assinatura_id:assinaturaId,
+      p_tipo:'acesso_enviado',
+      p_mensagem:'Seu acesso ao '+assEnv.servico+' foi enviado! Confirme em Meus Planos.',
+      p_link:'meus-planos.html'
     });
     // E-mail transacional via Resend — NUNCA leva a credencial, só avisa e linka meus-planos
     try{
@@ -744,11 +746,17 @@ async function saveVaultMembro(piscinaId,membroId){
   if(error){showToast('Erro: '+error.message,'error');return;}
   // Notificar o membro sobre a atualização
   var {data:piscNot}=await sb.from('piscinas').select('servico').eq('id',piscinaId).single();
-  await sb.from('notificacoes').insert({
-    user_id:membroId,tipo:'credenciais_atualizadas',
-    mensagem:'O dono atualizou as credenciais do seu acesso ao '+(piscNot?.servico||'seu plano')+'. Confira em Meus Planos.',
-    link:'meus-planos.html'
-  });
+  var {data:assNot}=await sb.from('assinaturas').select('id')
+    .eq('piscina_id',piscinaId).eq('membro_id',membroId)
+    .in('status',['ativo','aguardando_acesso']).limit(1).maybeSingle();
+  if(assNot&&assNot.id){
+    await sb.rpc('notificar_contraparte',{
+      p_assinatura_id:assNot.id,
+      p_tipo:'credenciais_atualizadas',
+      p_mensagem:'O dono atualizou as credenciais do seu acesso ao '+(piscNot?.servico||'seu plano')+'. Confira em Meus Planos.',
+      p_link:'meus-planos.html'
+    });
+  }
   showToast('Acesso salvo para o membro! 🔒','success');
   setTimeout(function(){carregarDashboard();},900);
 }
