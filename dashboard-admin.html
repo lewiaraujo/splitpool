@@ -633,12 +633,16 @@ function filtrar(sec,val,el){
 
 // ── INIT ──
 async function init(){
+  // Autenticacao real: sessao do Supabase Auth + confirmacao de que e admin.
+  // O localStorage serve apenas para exibicao; nao e mais a barreira de acesso.
   try{
-    var sess=JSON.parse(localStorage.getItem('sp_admin_sess')||'null');
-    if(!sess||!sess.email||sess.exp<=Date.now()){window.location.replace('admin-login.html');return;}
-    adminSess=sess;
+    var {data:sessSb}=await sb.auth.getSession();
+    if(!sessSb||!sessSb.session){window.location.replace('admin-login.html');return;}
+    var {data:ehAdmin,error:admErr}=await sb.rpc('is_admin');
+    if(admErr||!ehAdmin){await sb.auth.signOut();window.location.replace('admin-login.html');return;}
+    adminSess={email:sessSb.session.user.email,nome:'Admin'};
     var n=document.getElementById('nav-admin-nome');
-    if(n) n.textContent=sess.nome||sess.email;
+    if(n) n.textContent=sessSb.session.user.email;
   }catch(e){window.location.replace('admin-login.html');return;}
   await carregarRepasses();
   // Restaurar aba que estava ativa antes do refresh
@@ -2358,7 +2362,11 @@ function renderGraficoProjecaoVsReal(assinaturas){
   if(tabelaEl) tabelaEl.innerHTML=thtml;
 }
 
-function sair(){localStorage.removeItem('sp_admin_sess');window.location.replace('admin-login.html');}
+async function sair(){
+  localStorage.removeItem('sp_admin_sess');
+  try{await sb.auth.signOut();}catch(e){}
+  window.location.replace('admin-login.html');
+}
 
 init();
 </script>
