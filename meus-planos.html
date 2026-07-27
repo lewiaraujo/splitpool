@@ -619,21 +619,28 @@ async function desfazerCancelamento(id){
   if(!a) return;
   const {error}=await sb.from('assinaturas').update({cancela_em:null}).eq('id',id).eq('membro_id',userId);
   if(error){showToast('Erro: '+error.message);return;}
+  // Dados para descrição rica
+  var dPerf=(await sb.from('profiles').select('nome,email').eq('id',userId).single()).data;
+  var dNome=(dPerf&&(dPerf.nome||dPerf.email))||'Um membro';
+  var dPisc=(await sb.from('piscinas').select('dono_id').eq('id',a.piscina_id).single()).data;
+  var dDono='sem nome';
+  if(dPisc&&dPisc.dono_id){
+    var dPerfDono=(await sb.from('profiles').select('nome').eq('id',dPisc.dono_id).single()).data;
+    dDono=(dPerfDono&&dPerfDono.nome)||'sem nome';
+  }
   await sb.from('ocorrencias').insert({
     tipo:'cancelamento_desfeito',
     piscina_id:a.piscina_id,
     assinatura_id:a.id,
     aberto_por:userId,
     status:'concluida',
-    descricao:'Membro desfez o cancelamento agendado.'
+    descricao:dNome+' desfez o cancelamento agendado da assinatura de '+a.servico+' ('+poolCode(a.piscina_id)+'), do dono '+dDono+'. A vaga segue ocupada e a assinatura continua ativa normalmente.'
   });
-  const {data:pisc}=await sb.from('piscinas').select('dono_id').eq('id',a.piscina_id).single();
-  if(pisc&&pisc.dono_id){
-    const {data:perfil}=await sb.from('profiles').select('nome').eq('id',userId).single();
+  if(dPisc&&dPisc.dono_id){
     await sb.from('notificacoes').insert({
-      user_id:pisc.dono_id,
+      user_id:dPisc.dono_id,
       tipo:'membro_cancelou',
-      mensagem:(perfil?.nome||'Um membro')+' desfez o cancelamento em '+a.servico+'. A vaga segue ocupada.',
+      mensagem:dNome+' desfez o cancelamento em '+a.servico+'. A vaga segue ocupada — NÃO remova esse membro do seu plano.',
       link:'dashboard-owner.html'
     });
   }
