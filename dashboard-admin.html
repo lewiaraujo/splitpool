@@ -44,6 +44,17 @@ nav{background:#0A3080;padding:0 5%;position:sticky;top:0;z-index:200;}
   box-shadow:-8px 0 12px -6px rgba(0,20,80,0.15);
 }
 .pisc-table th.col-acao{background:#eef3fb;}
+/* Primeira coluna (Servico) congelada a esquerda — sempre visivel ao rolar,
+   para saber de qual piscina e a linha. */
+.pisc-table th.col-servico,
+.pisc-table td.col-servico{
+  position:sticky;
+  left:0;
+  background:#fff;
+  z-index:2;
+  box-shadow:8px 0 12px -6px rgba(0,20,80,0.15);
+}
+.pisc-table th.col-servico{background:#eef3fb;}
 
 /* LAYOUT */
 .wrap{max-width:1200px;margin:0 auto;padding:28px 5% 60px;}
@@ -1707,7 +1718,7 @@ function renderPiscinas(){
     html+='<div class="pisc-wrap">';
     html+='<table class="pisc-table">';
     html+='<thead><tr style="background:rgba(18,85,204,0.04);">';
-    html+='<th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Serviço</th>';
+    html+='<th class="col-servico" style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Serviço</th>';
     html+='<th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Código</th>';
     html+='<th style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Vagas</th>';
     html+='<th style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Preço/vaga</th>';
@@ -1735,7 +1746,7 @@ function renderPiscinas(){
         :'<span style="opacity:.3;">—</span>';
       var trBgPisc=p.status==='pausada'?'background:#fff1f2;':(p.status==='recusada'?'background:#f4f4f5;opacity:.7;':'');
       html+='<tr style="border-bottom:1px solid rgba(18,85,204,0.06);'+trBgPisc+'">';
-      html+='<td style="padding:10px 12px;font-size:13px;font-weight:800;color:var(--bluedark);white-space:nowrap;">🏊 '+escapeHtml(p.servico)+'</td>';
+      html+='<td class="col-servico" style="padding:10px 12px;font-size:13px;font-weight:800;color:var(--bluedark);white-space:nowrap;'+(trBgPisc||'background:#fff;')+'">🏊 '+escapeHtml(p.servico)+'</td>';
       html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;color:var(--blue);font-family:monospace;white-space:nowrap;">'+poolCode(p.id)+'</td>';
       html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;">'+p.vagas_ocupadas+'/'+p.vagas_total+'</td>';
       html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;text-align:right;white-space:nowrap;">'+fmt(p.preco_por_vaga)+'</td>';
