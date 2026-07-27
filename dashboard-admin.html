@@ -737,6 +737,7 @@ function labelTipoOcorr(t){
 function badgeStatusOcorr(s){
   var m={
     'aberta':['#8A5C00','#FFF8E0','Aberta'],
+    'em_analise':['#1e40af','#dbeafe','Em análise'],
     'resolvida_reembolso':['#0A5C36','#D4EDDA','Reembolso pago'],
     'concluida':['#555','#eee','Concluída'],
     'improcedente':['#0A3080','#E6F1FB','Improcedente']
@@ -745,7 +746,7 @@ function badgeStatusOcorr(s){
 }
 
 function renderOcorrencias(){
-  var lista=filtroOcorr==='abertas'?ocorrenciasData.filter(function(o){return o.status==='aberta';}):ocorrenciasData.slice();
+  var lista=filtroOcorr==='abertas'?ocorrenciasData.filter(function(o){return o.status==='aberta'||o.status==='em_analise';}):ocorrenciasData.slice();
   var qO=((document.getElementById('busca-ocorr')||{}).value||'').toLowerCase().trim();
   if(qO){
     lista=lista.filter(function(o){
@@ -760,7 +761,7 @@ function renderOcorrencias(){
     return ordO==='antigas'?da-db:db-da;
   });
 
-  var abertas=ocorrenciasData.filter(function(o){return o.status==='aberta';});
+  var abertas=ocorrenciasData.filter(function(o){return o.status==='aberta'||o.status==='em_analise';});
   var pendReemb=abertas.reduce(function(s,o){return s+(Number(o.valor_reembolso)||0);},0);
   document.getElementById('resumo-ocorrencias').innerHTML=
     '<div class="rcard"><div class="rcard-val amber">'+abertas.length+'</div><div class="rcard-lbl">Abertas</div></div>'+
@@ -782,12 +783,18 @@ function renderOcorrencias(){
         +'</div>';
     }
     var acoes='';
+    var ehDisputa=/^disputa_/.test(o.tipo);
     if(o.status==='aberta'){
-      if(o.valor_reembolso){
+      if(ehDisputa){
+        acoes='<button class="btn-act btn-aprovar" onclick="acusarRecebimento('+o.id+')">📋 Acusar recebimento</button>';
+      } else if(o.valor_reembolso){
         acoes='<button class="btn-act btn-aprovar" onclick="resolverReembolso('+o.id+')">✓ Marcar reembolso pago</button> <button class="btn-act" style="background:#dc2626;color:#fff;" onclick="recusarReembolso('+o.id+')">✕ Recusar reembolso</button>';
       } else {
         acoes='<button class="btn-act btn-aprovar" onclick="concluirOcorr('+o.id+')">✓ Concluir</button>';
       }
+    } else if(o.status==='em_analise'){
+      acoes='<span style="display:inline-block;padding:5px 12px;border-radius:7px;background:#dbeafe;color:#1e40af;font-size:11px;font-weight:700;margin-right:8px;">📋 Recebido</span>'
+        +'<button class="btn-act btn-aprovar" onclick="concluirOcorr('+o.id+')">✓ Resolver caso</button>';
     }
     return'<div style="background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:16px 18px;margin-bottom:12px;">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">'
@@ -892,10 +899,21 @@ async function confirmarRecusaReembolso(){
 }
 
 async function concluirOcorr(id){
-  if(!confirm('Concluir esta ocorrência?')) return;
-  var {error}=await sb.rpc('resolver_ocorrencia',{p_id:id,p_status:'concluida',p_decisao:'Concluída pelo admin',p_mensagem_notif:null});
+  var decisao=prompt('Descreva brevemente a resolução do caso (ex: "Credencial substituída", "Acesso restabelecido"):');
+  if(!decisao) return;
+  var {error}=await sb.rpc('resolver_ocorrencia',{p_id:id,p_status:'concluida',p_decisao:decisao,p_mensagem_notif:null});
   if(error){showToast('Erro: '+error.message,'error');return;}
-  showToast('Ocorrência concluída!','success');
+  showToast('Caso resolvido!','success');
+  await carregarOcorrencias();
+}
+
+async function acusarRecebimento(id){
+  if(!confirm('Acusar recebimento desta disputa? O membro verá que o caso foi recebido pela Splitpool.')) return;
+  // Usa a RPC resolver_ocorrencia com status em_analise (ela aceita qualquer status).
+  // Nao preenche decisao nem resolvida_em — o caso nao esta resolvido, apenas recebido.
+  var {error}=await sb.rpc('resolver_ocorrencia',{p_id:id,p_status:'em_analise',p_decisao:null,p_mensagem_notif:null});
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Recebimento acusado — o membro será informado.','success');
   await carregarOcorrencias();
 }
 
