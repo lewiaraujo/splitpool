@@ -506,7 +506,9 @@ function comprovanteHref(v){
   return SBU+'/storage/v1/object/public/comprovantes/'+v;
 }
 const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
-const sb=supabase.createClient(SBU,SBK);
+// storageKey proprio: sessao do painel admin ISOLADA da sessao do site.
+// Precisa ser identico ao usado em admin-login.html.
+const sb=supabase.createClient(SBU,SBK,{auth:{storageKey:'sp-admin-auth'}});
 
 // Sanitiza dado de usuario antes de injetar via innerHTML (previne XSS).
 // Aplicar em TODO texto vindo de profiles/piscinas/ocorrencias inserido em HTML.
@@ -637,9 +639,9 @@ async function init(){
   // O localStorage serve apenas para exibicao; nao e mais a barreira de acesso.
   try{
     var {data:sessSb}=await sb.auth.getSession();
-    if(!sessSb||!sessSb.session){window.location.replace('admin-login.html');return;}
+    if(!sessSb||!sessSb.session){localStorage.removeItem('sp_admin_sess');window.location.replace('admin-login.html');return;}
     var {data:ehAdmin,error:admErr}=await sb.rpc('is_admin');
-    if(admErr||!ehAdmin){await sb.auth.signOut();window.location.replace('admin-login.html');return;}
+    if(admErr||!ehAdmin){await sb.auth.signOut();localStorage.removeItem('sp_admin_sess');window.location.replace('admin-login.html');return;}
     adminSess={email:sessSb.session.user.email,nome:'Admin'};
     var n=document.getElementById('nav-admin-nome');
     if(n) n.textContent=sessSb.session.user.email;
