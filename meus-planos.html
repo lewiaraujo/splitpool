@@ -534,16 +534,13 @@ function abrirCancel(id){
         <button class="conf-btn-sim" style="background:#dc2626;" onclick="confirmarCancelamento()">Confirmar cancelamento</button>
       </div>`;
   } else {
-    const calc=calcReembolso(a);
+    const fim=a.proximo_pagamento?new Date(a.proximo_pagamento):null;
+    const fimStr=fim?fim.toLocaleDateString('pt-BR'):'o fim do ciclo pago';
+    const dias=fim?Math.max(0,Math.ceil((fim.getTime()-Date.now())/86400000)):0;
     body.innerHTML=`
       <div class="conf-title">Cancelar ${a.servico}?</div>
-      <div class="conf-text">O cancelamento é imediato: seu acesso termina agora e a vaga é liberada.${calc.valor>0?` Pelos <strong>${calc.dias} dia${calc.dias===1?'':'s'}</strong> não utilizados do ciclo, você recebe um reembolso proporcional de <strong>${fmt(calc.valor)}</strong> via PIX em até 5 dias úteis.`:' Não há dias restantes no ciclo, portanto não há reembolso.'}</div>
-      ${calc.valor>0?`<div style="margin:14px 0 4px;">
-        <label style="font-size:12px;font-weight:700;color:#0A3080;display:block;margin-bottom:6px;">Chave PIX para o reembolso</label>
-        <input id="cancel-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" value="${perfilPixChave||''}" style="width:100%;padding:10px 12px;border:1px solid rgba(0,160,200,0.3);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box;">
-        <div id="cancel-pix-erro" style="display:none;font-size:11px;color:#dc2626;font-weight:700;margin-top:4px;">Informe a chave PIX para receber o reembolso.</div>
-        <div style="font-size:11px;color:#8a5c00;background:#fff8e0;border-radius:8px;padding:8px 10px;margin-top:8px;line-height:1.5;">⚠️ Por segurança, o reembolso é feito somente para chave PIX <strong>do mesmo titular (CPF)</strong> que realizou o pagamento. Chaves de terceiros serão recusadas na análise.</div>
-      </div>`:''}
+      <div class="conf-text">Você continua com acesso até <strong>${fimStr}</strong>${fim?` (${dias} dia${dias===1?'':'s'} restante${dias===1?'':'s'})`:''}, pois esse período já está pago. Não há reembolso do mês corrente. Depois dessa data, sua vaga é liberada e não há nova cobrança.</div>
+      <div style="font-size:11px;color:#8a5c00;background:#fff8e0;border-radius:8px;padding:8px 10px;margin-top:10px;line-height:1.5;">ℹ️ Seu acesso permanece ativo até <strong>${fimStr}</strong>. Aproveite o período que já foi pago — a remoção acontece somente no fim do ciclo.</div>
       <div class="conf-actions">
         <button class="conf-btn-nao" onclick="fecharCancel()">Voltar</button>
         <button class="conf-btn-sim" style="background:#dc2626;" onclick="confirmarCancelamento()">Confirmar cancelamento</button>
@@ -559,29 +556,12 @@ async function confirmarCancelamento(){
   const btn=document.querySelector('#cancel-modal-body .conf-btn-sim');
   if(btn){btn.disabled=true;btn.textContent='Cancelando...';}
   const wellness=ehWellness(a.servico);
-  let erro=null, descr='', reembolso=null, pixChave=null;
-
-  if(!wellness){
-    const calcPre=calcReembolso(a);
-    if(calcPre.valor>0){
-      const pixEl=document.getElementById('cancel-pix');
-      pixChave=pixEl?pixEl.value.trim():'';
-      const erroEl=document.getElementById('cancel-pix-erro');
-      if(!pixChave||!validarChavePix(pixChave)){
-        if(erroEl){
-          erroEl.textContent=!pixChave?'Informe a chave PIX para receber o reembolso.':'Chave PIX inválida — use CPF, e-mail, telefone ou chave aleatória válidos.';
-          erroEl.style.display='block';
-        }
-        if(btn){btn.disabled=false;btn.textContent='Confirmar cancelamento';}
-        return;
-      }
-    }
-  }
+  let erro=null, descr='';
 
   // Busca dados para descrição rica da ocorrência (membro que cancelou + dono da piscina)
   var perfMembro=(await sb.from('profiles').select('nome,email').eq('id',userId).single()).data;
   var nomeMembro=(perfMembro&&(perfMembro.nome||perfMembro.email))||'Um membro';
-  var piscInfo=(await sb.from('piscinas').select('dono_id').eq('id',a.piscina_id).single()).data;
+  var piscInfo=(await sb.from('piscinas').select('dono_id,servico').eq('id',a.piscina_id).single()).data;
   var nomeDono='sem nome';
   if(piscInfo&&piscInfo.dono_id){
     var perfDono=(await sb.from('profiles').select('nome').eq('id',piscInfo.dono_id).single()).data;
@@ -595,41 +575,42 @@ async function confirmarCancelamento(){
     erro=error;
     descr=nomeMembro+' agendou o cancelamento da assinatura de '+a.servico+' ('+codPisc+'), do dono '+nomeDono+'. Modelo wellness: o acesso vale até '+new Date(fim).toLocaleDateString('pt-BR')+', quando a vaga é liberada.';
   } else {
-    const calc=calcReembolso(a);
-    reembolso=calc.valor>0?calc.valor:null;
-    const {error}=await sb.from('assinaturas').update({status:'cancelado',cancela_em:new Date().toISOString()}).eq('id',a.id).eq('membro_id',userId);
+    const fim=a.proximo_pagamento||new Date().toISOString();
+    const {error}=await sb.from('assinaturas').update({cancela_em:fim}).eq('id',a.id).eq('membro_id',userId);
     erro=error;
-    descr=nomeMembro+' cancelou imediatamente a assinatura de '+a.servico+' ('+codPisc+'), do dono '+nomeDono+' (plano família). '+(reembolso?('Reembolso proporcional de '+fmt(reembolso)+' referente a '+calc.dias+' dia(s) não utilizados.'):'Sem reembolso — ciclo já esgotado.');
+    descr=nomeMembro+' agendou o cancelamento da assinatura de '+a.servico+' ('+codPisc+'), do dono '+nomeDono+' (plano família). Sem reembolso do mês corrente. Acesso mantido até '+new Date(fim).toLocaleDateString('pt-BR')+', quando a vaga é liberada e o dono deve remover o membro do plano.';
   }
 
   if(erro){fecharCancel();showToast('Erro ao cancelar: '+erro.message);return;}
 
-  // Registrar ocorrência (reembolso pendente = 'aberta' para o admin agir)
+  // Registrar ocorrência (sinalização — nao ha mais reembolso em cancelamento)
   await sb.from('ocorrencias').insert({
     tipo:'cancelamento_membro',
     piscina_id:a.piscina_id,
     assinatura_id:a.id,
     aberto_por:userId,
-    status:reembolso?'aberta':'concluida',
-    descricao:descr,
-    valor_reembolso:reembolso,
-    pix_chave:pixChave
+    status:'concluida',
+    descricao:descr
   });
 
-  // Notificar dono (reusa piscInfo e nomeMembro já buscados acima)
+  // Notificar dono com a DATA EXATA de remocao e a orientacao de NUNCA remover antes
+  var fimCiclo=a.proximo_pagamento||new Date().toISOString();
+  var fimCicloStr=new Date(fimCiclo).toLocaleDateString('pt-BR');
   if(piscInfo&&piscInfo.dono_id){
     await sb.from('notificacoes').insert({
       user_id:piscInfo.dono_id,
       tipo:'membro_cancelou',
-      mensagem:wellness
-        ?(nomeMembro+' cancelou a assinatura de '+a.servico+'. O acesso vale até '+new Date(a.proximo_pagamento||Date.now()).toLocaleDateString('pt-BR')+', depois a vaga é liberada.')
-        :(nomeMembro+' cancelou a assinatura de '+a.servico+'. A vaga foi liberada.'),
+      mensagem:nomeMembro+' cancelou a assinatura de '+a.servico+'. O acesso está pago até '+fimCicloStr+' — remova esse membro do seu plano SOMENTE nessa data, NUNCA antes. Você será lembrado no dia.',
       link:'dashboard-owner.html'
     });
   }
+  // E-mail ao dono com a orientacao (a funcao busca dados server-side pelo id da assinatura)
+  try{
+    await sb.functions.invoke('enviar-email-membro-cancelou',{body:{assinatura_id:a.id}});
+  }catch(exMC){console.warn('E-mail de cancelamento ao dono falhou:',exMC);}
 
   fecharCancel();
-  showToast(wellness?'Cancelamento agendado.':'Assinatura cancelada.','success');
+  showToast('Cancelamento agendado. Seu acesso vale até '+fimCicloStr+'.','success');
   setTimeout(()=>carregarPlanos(),1000);
 }
 
