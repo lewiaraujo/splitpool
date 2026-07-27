@@ -418,6 +418,21 @@ tbody td{padding:12px 16px;font-size:13px;}
 
 </div>
 
+<div id="repasse-pago-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,30,80,0.5);z-index:6000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px);">
+  <div style="background:#fff;border-radius:18px;padding:26px;max-width:480px;width:100%;box-shadow:0 12px 48px rgba(0,20,80,0.3);max-height:90vh;overflow-y:auto;">
+    <div style="font-family:'Nunito',sans-serif;font-size:19px;font-weight:900;color:#0A3080;margin-bottom:4px;">💸 Marcar repasse como pago</div>
+    <div style="font-size:12.5px;color:#555;line-height:1.6;margin-bottom:14px;">Anexe o comprovante do PIX enviado ao dono. Cada piscina tem seu próprio repasse e comprovante — isso cria histórico financeiro auditável.</div>
+    <div id="repasse-pago-contexto" style="background:#f8fafc;border:1px solid rgba(0,0,0,0.08);border-radius:10px;padding:12px 14px;font-size:12px;color:#333;line-height:1.6;margin-bottom:14px;"></div>
+    <label style="font-size:12px;font-weight:700;color:#0A3080;display:block;margin-bottom:6px;">📎 Comprovante do PIX (obrigatório)</label>
+    <input type="file" id="repasse-pago-comprovante" accept="image/*,.pdf" style="width:100%;font-size:12px;font-family:inherit;padding:4px 0;">
+    <div id="repasse-pago-erro" style="display:none;font-size:11px;color:#dc2626;font-weight:700;margin-top:6px;"></div>
+    <div style="display:flex;gap:10px;margin-top:18px;">
+      <button onclick="fecharRepassePagoModal()" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid rgba(0,0,0,0.15);background:#fff;color:#333;font-weight:700;font-size:13px;cursor:pointer;">Cancelar</button>
+      <button id="repasse-pago-confirm-btn" onclick="confirmarRepassePago()" style="flex:1;padding:12px;border-radius:10px;border:none;background:#0A5CB8;color:#fff;font-weight:800;font-size:13px;cursor:pointer;">Confirmar pagamento</button>
+    </div>
+  </div>
+</div>
+
 <div id="pagamento-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,30,80,0.5);z-index:6000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px);">
   <div style="background:#fff;border-radius:18px;padding:26px;max-width:480px;width:100%;box-shadow:0 12px 48px rgba(0,20,80,0.3);max-height:90vh;overflow-y:auto;">
     <div style="font-family:'Nunito',sans-serif;font-size:19px;font-weight:900;color:#00875A;margin-bottom:4px;">✓ Marcar reembolso como pago</div>
@@ -1427,7 +1442,7 @@ function renderRepasses(){
       +'</div>';
     html+='<div class="dono-actions" onclick="event.stopPropagation()">';
     if(temPendente) html+='<button class="btn-aprovar-todos" onclick="aprovarTodosDono(\''+donoId+'\')">✓ Aprovar todos</button>';
-    if(temAprovado) html+='<button class="btn-aprovar-todos" onclick="pagarTodosDono(\''+donoId+'\')">💸 Todos pagos</button>';
+    if(temAprovado) html+='<span style="font-size:11px;color:#888;font-style:italic;">Pague cada piscina individualmente (comprovante por PIX)</span>';
     html+='</div>';
     html+='<div class="dono-total"><div class="dono-total-val">'+fmt(totalDono)+'</div><div class="dono-total-lbl">Total</div></div>';
     html+='</div>';
@@ -1447,7 +1462,7 @@ function renderRepasses(){
         if(r.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="aprovar(\''+r.id+'\')">Aprovar</button> <button class="btn-act" style="background:#dc2626;color:#fff;" onclick="recusarRepasse(\''+r.id+'\')">Recusar</button>';
         else if(r.status==='recusado') acoes='<span style="color:#991b1b;font-size:12px;font-weight:700;">✕ Recusado</span>';
         else if(r.status==='aprovado') acoes='<button class="btn-act btn-pago" onclick="marcarPago(\''+r.id+'\')">Pago</button>';
-        else acoes='<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Pago '+fmtData(r.pago_em)+'</span>';
+        else acoes='<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Pago '+fmtData(r.pago_em)+'</span>'+(r.comprovante_url?' <a href="'+escapeHtml(r.comprovante_url)+'" target="_blank" style="font-size:11px;font-weight:700;color:#0A5CB8;text-decoration:none;background:#eef4fc;border:1px solid rgba(10,92,184,0.2);padding:3px 9px;border-radius:6px;margin-left:6px;">🧾 Comprovante</a>':'');
         html+='<div class="rep-item">';
         html+='<div class="rep-info"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">';
         html+='<span class="pill '+r.status+'">'+r.status+'</span>';
@@ -1474,13 +1489,54 @@ async function aprovar(id){
   await carregarRepasses();
   atualizarBadgesAdmin();
 }
-async function marcarPago(id){
-  var {data:repArr}=await sb.rpc('admin_atualizar_repasse',{p_id:id,p_status:'pago'});
+var repassePagoId=null;
+function marcarPago(id){
+  repassePagoId=id;
+  // Monta contexto legivel do repasse (dono, servico, mes, valor)
+  var rep=(dados.repasses||[]).find(function(x){return String(x.id)===String(id);});
+  var ctx=document.getElementById('repasse-pago-contexto');
+  if(rep){
+    var donoNome=(dados.perfisMap[rep.dono_id]||{}).nome||'—';
+    var donoPix=(dados.perfisMap[rep.dono_id]||{}).pix_chave||'';
+    var svc=(dados.piscMap[rep.piscina_id]||{}).servico||'—';
+    var cod=rep.piscina_id?poolCode(Number(rep.piscina_id)):'';
+    ctx.innerHTML='Dono: <strong>'+escapeHtml(donoNome)+'</strong><br>'
+      +'Piscina: <strong>'+escapeHtml(svc)+'</strong> '+cod+'<br>'
+      +'Mês: <strong>'+escapeHtml(fmtMes(rep.mes_referencia))+'</strong><br>'
+      +'Valor a repassar: <strong style="color:#0A5CB8;">'+fmt(rep.valor)+'</strong>'
+      +(donoPix?'<br>Chave PIX: <strong style="user-select:all;">'+escapeHtml(donoPix)+'</strong>':'<br><span style="color:#b45309;">⚠️ Dono sem chave PIX registrada — contatar antes de pagar.</span>');
+  } else { ctx.innerHTML=''; }
+  document.getElementById('repasse-pago-comprovante').value='';
+  document.getElementById('repasse-pago-erro').style.display='none';
+  document.getElementById('repasse-pago-overlay').style.display='flex';
+}
+function fecharRepassePagoModal(){
+  document.getElementById('repasse-pago-overlay').style.display='none';
+  repassePagoId=null;
+}
+async function confirmarRepassePago(){
+  var id=repassePagoId;
+  if(!id) return;
+  var fileEl=document.getElementById('repasse-pago-comprovante');
+  var erroEl=document.getElementById('repasse-pago-erro');
+  if(!fileEl.files||!fileEl.files[0]){erroEl.textContent='Anexe o comprovante do PIX para confirmar o pagamento.';erroEl.style.display='block';return;}
+  var btn=document.getElementById('repasse-pago-confirm-btn');
+  btn.disabled=true;btn.textContent='Enviando...';
+  var file=fileEl.files[0];
+  var ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+  var path='repasses/'+id+'-'+Date.now()+'.'+ext;
+  var {error:upErr}=await sb.storage.from('evidencias').upload(path,file,{upsert:true});
+  if(upErr){btn.disabled=false;btn.textContent='Confirmar pagamento';erroEl.textContent='Erro no upload: '+upErr.message;erroEl.style.display='block';return;}
+  var urlComp=sb.storage.from('evidencias').getPublicUrl(path).data.publicUrl;
+  var {data:repArr,error}=await sb.rpc('admin_marcar_repasse_pago',{p_id:id,p_comprovante_url:urlComp});
+  btn.disabled=false;btn.textContent='Confirmar pagamento';
+  if(error){erroEl.textContent='Erro: '+error.message;erroEl.style.display='block';return;}
   var rep=repArr&&repArr[0];
   if(rep&&rep.dono_id){
     await sb.rpc('notificar_usuario',{p_user_id:rep.dono_id,p_tipo:'repasse_pago',p_mensagem:'Seu repasse'+(rep.mes_referencia?' de '+rep.mes_referencia:'')+' foi pago! Confira no extrato.',p_link:'dashboard-owner.html'});
   }
-  showToast('Repasse marcado como pago!','success');
+  fecharRepassePagoModal();
+  showToast('Repasse pago com comprovante anexado!','success');
   await carregarRepasses();
   atualizarBadgesAdmin();
 }
@@ -1502,13 +1558,9 @@ async function aprovarTodosDono(donoId){
   atualizarBadgesAdmin();
 }
 async function pagarTodosDono(donoId){
-  var {data:nAtu}=await sb.rpc('admin_atualizar_repasses_dono',{p_dono:donoId,p_de:'aprovado',p_para:'pago'});
-  if(nAtu>0){
-    await sb.rpc('notificar_usuario',{p_user_id:donoId,p_tipo:'repasse_pago',p_mensagem:'Seus repasses foram pagos! Confira no extrato.',p_link:'dashboard-owner.html'});
-  }
-  showToast('Todos marcados como pagos!','success');
-  await carregarRepasses();
-  atualizarBadgesAdmin();
+  // Pagamento em lote desativado: cada piscina tem seu proprio PIX e comprovante.
+  // Marcar varios como pagos de uma vez sem comprovante quebraria o controle financeiro.
+  showToast('Marque cada repasse individualmente para anexar o comprovante de cada PIX.','info');
 }
 
 function exportarCSV(){
