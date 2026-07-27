@@ -30,18 +30,20 @@ nav{background:#0A3080;padding:0 5%;position:sticky;top:0;z-index:200;}
   .mob-menu-btn{display:flex;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;margin-left:auto;}
 }
 @media(min-width:769px){.mob-menu-btn{display:none;}}
-/* Tabela de piscinas do admin: no desktop cabe inteira sem scroll horizontal.
-   No mobile mantem o scroll (14 colunas nao cabem numa tela estreita). */
-.pisc-wrap{overflow-x:auto;}
+/* Tabela de piscinas do admin: o scroll horizontal continua, mas a coluna de Ação
+   fica CONGELADA na direita (position:sticky) — sempre visivel, sem precisar rolar
+   ate o fim para agir. Nenhuma coluna e escondida. */
+.pisc-wrap{overflow-x:auto;position:relative;}
 .pisc-table{width:100%;border-collapse:collapse;min-width:800px;}
-@media(min-width:1100px){
-  .pisc-wrap{overflow-x:visible;}
-  .pisc-table{min-width:0;table-layout:auto;}
-  .pisc-table th{padding:7px 6px !important;font-size:10px;}
-  .pisc-table td{padding:7px 6px !important;font-size:11px !important;}
-  /* Encolhe o link de convite para nao empurrar as demais colunas */
-  .pisc-table td a[title]{max-width:90px !important;}
+.pisc-table th.col-acao,
+.pisc-table td.col-acao{
+  position:sticky;
+  right:0;
+  background:#fff;
+  z-index:2;
+  box-shadow:-8px 0 12px -6px rgba(0,20,80,0.15);
 }
+.pisc-table th.col-acao{background:#eef3fb;}
 
 /* LAYOUT */
 .wrap{max-width:1200px;margin:0 auto;padding:28px 5% 60px;}
@@ -1547,6 +1549,11 @@ async function confirmarRepassePago(){
   if(rep&&rep.dono_id){
     await sb.rpc('notificar_usuario',{p_user_id:rep.dono_id,p_tipo:'repasse_pago',p_mensagem:'Seu repasse'+(rep.mes_referencia?' de '+rep.mes_referencia:'')+' foi pago! Confira no extrato.',p_link:'dashboard-owner.html'});
   }
+  // E-mail ao dono com o comprovante anexado (a funcao busca tudo server-side pelo id)
+  try{
+    var {error:eMailRep}=await sb.functions.invoke('enviar-email-repasse-pago',{body:{repasse_id:id}});
+    if(eMailRep)console.warn('E-mail de repasse pago nao enviado:',eMailRep);
+  }catch(exMailRep){console.warn('E-mail de repasse pago falhou:',exMailRep);}
   fecharRepassePagoModal();
   showToast('Repasse pago com comprovante anexado!','success');
   await carregarRepasses();
@@ -1713,7 +1720,7 @@ function renderPiscinas(){
     html+='<th style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Custo dono</th>';
     html+='<th style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Lucro SP</th>';
     html+='<th style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Status</th>';
-    html+='<th style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Ação</th>';
+    html+='<th class="col-acao" style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;opacity:.4;padding:8px 12px;letter-spacing:.05em;white-space:nowrap;">Ação</th>';
     html+='</tr></thead><tbody>';
     piscs.forEach(function(p){
       var lucroSP=getLucroSP(p.servico,'')*Number(p.vagas_ocupadas||0);
@@ -1755,7 +1762,7 @@ function renderPiscinas(){
       html+='<td style="padding:10px 12px;font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--blue);text-align:right;white-space:nowrap;">'+fmt(lucrodono)+'</td>';
       html+='<td style="padding:10px 12px;font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--teal);text-align:right;white-space:nowrap;">'+fmt(lucroSP)+'</td>';
       html+='<td style="padding:10px 12px;text-align:center;white-space:nowrap;"><span class="pill '+(p.status==='pendente'?'pendente-aprov':p.status)+'">'+p.status+'</span></td>';
-      html+='<td style="padding:10px 12px;text-align:center;white-space:nowrap;">'+acoes+'</td>';
+      html+='<td class="col-acao" style="padding:10px 12px;text-align:center;white-space:nowrap;'+(trBgPisc||'background:#fff;')+'">'+acoes+'</td>';
       html+='</tr>';
     });
     html+='</tbody></table></div>';
