@@ -283,6 +283,7 @@ tbody td{padding:12px 16px;font-size:13px;}
       <select id="tipo-ocorr" onchange="renderOcorrencias()" style="padding:8px 12px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:12px;font-family:inherit;outline:none;cursor:pointer;">
         <option value="">Todos os tipos</option>
         <option value="cancelamento_membro">Cancelamento</option>
+        <option value="cancelamento_efetivado">Ciclo encerrado</option>
         <option value="disputa_sem_acesso">Disputa — sem acesso</option>
         <option value="disputa_acesso_parou">Disputa — acesso parou</option>
         <option value="disputa_diferente_anunciado">Disputa — diferente do anunciado</option>
@@ -723,6 +724,7 @@ function filtrarOcorr(f,el){
 function labelTipoOcorr(t){
   return({
     'cancelamento_membro':'🚪 Cancelamento de membro',
+    'cancelamento_efetivado':'🏁 Ciclo encerrado (vaga liberada)',
     'cancelamento_desfeito':'↩️ Cancelamento desfeito',
     'fechamento_piscina':'🔒 Fechamento de piscina',
     'perda_plano':'⚠️ Perda de plano',
