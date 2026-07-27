@@ -52,15 +52,21 @@ body{font-family:'Inter',sans-serif;min-height:100vh;background:linear-gradient(
 <script>
 const SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
 const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
-const sb=supabase.createClient(SBU,SBK);
+// storageKey proprio: a sessao do painel admin fica ISOLADA da sessao do site.
+// Sem isso, logar no admin logava no site e sair do site derrubava o admin.
+const sb=supabase.createClient(SBU,SBK,{auth:{storageKey:'sp-admin-auth'}});
 
-// Verificar sessão admin no localStorage
-(function(){
+// Se ja houver sessao ADMIN valida, vai direto para o painel.
+// Checa a sessao real do Supabase (nao o localStorage) para nao criar loop.
+(async function(){
   try{
-    var sess=JSON.parse(localStorage.getItem('sp_admin_sess')||'null');
-    if(sess&&sess.email&&sess.exp>Date.now()){
-      window.location.replace('dashboard-admin.html');
+    var {data:s}=await sb.auth.getSession();
+    if(s&&s.session){
+      var {data:ok}=await sb.rpc('is_admin');
+      if(ok){window.location.replace('dashboard-admin.html');return;}
+      await sb.auth.signOut();
     }
+    localStorage.removeItem('sp_admin_sess');
   }catch(e){}
 })();
 
