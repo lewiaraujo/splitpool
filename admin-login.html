@@ -89,20 +89,27 @@ async function entrar(){
 
   btn.disabled=true;btn.textContent='Verificando...';
 
-  var hash=await sha256(senha);
-
-  // Buscar admin na tabela admins usando service key via função RPC
-  var {data,error}=await sb.rpc('verificar_admin',{p_email:email,p_hash:hash});
-
-  if(error||!data||!data.autorizado){
+  // Passo 1 - Autenticacao real via Supabase Auth (bcrypt + rate limit do proprio Supabase)
+  var {data:authData,error:authErr}=await sb.auth.signInWithPassword({email:email,password:senha});
+  if(authErr||!authData||!authData.session){
     err.textContent='Email ou senha incorretos.';
     err.classList.add('show');
     btn.disabled=false;btn.textContent='Acessar painel →';
     return;
   }
 
-  // Salvar sessão admin no localStorage (expira em 8h)
-  var sess={email:email,nome:data.nome,exp:Date.now()+8*60*60*1000};
+  // Passo 2 - A conta autenticada precisa estar na tabela admins e ativa
+  var {data:ehAdmin,error:admErr}=await sb.rpc('is_admin');
+  if(admErr||!ehAdmin){
+    await sb.auth.signOut();
+    err.textContent='Esta conta não tem permissão de administrador.';
+    err.classList.add('show');
+    btn.disabled=false;btn.textContent='Acessar painel →';
+    return;
+  }
+
+  // Passo 3 - Guarda dados de exibicao (a sessao real e a do Supabase, nao esta)
+  var sess={email:email,nome:'Admin',exp:Date.now()+8*60*60*1000};
   localStorage.setItem('sp_admin_sess',JSON.stringify(sess));
   window.location.replace('dashboard-admin.html');
 }
