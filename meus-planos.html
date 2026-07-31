@@ -282,12 +282,16 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 
 <div class="confirmar-overlay" id="conf-overlay">
   <div class="confirmar-modal">
-    <div class="conf-title">Confirmar acesso recebido?</div>
-    <div class="conf-sub">Ao confirmar, você informa que recebeu o acesso ao serviço. Os dados de acesso ficam visíveis e o repasse ao dono é liberado. A partir daqui você também pode cancelar a assinatura ou reportar um problema, se precisar.</div>
-    <div class="conf-warning">⚠️ Só confirme se o link/dados realmente chegaram. Reembolso por "nunca recebi o acesso" não se aplica depois desta confirmação.</div>
+    <div class="conf-title">Revelar dados de acesso?</div>
+    <div class="conf-sub">Ao revelar, os dados de acesso ficam visíveis para você. A partir daí, você tem <strong>48 horas</strong> para confirmar que o acesso está funcionando.</div>
+    <div class="conf-warning">⚠️ Depois de revelar, aparece um botão "Confirmar que o acesso funciona" no seu plano — ele some após 48h. Se você não confirmar nem reportar problema nesse prazo, consideramos que o acesso está funcionando e o repasse é liberado ao dono. Você ainda poderá reportar um problema depois, que será analisado com evidência.</div>
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#334155;line-height:1.5;margin:4px 0 6px;cursor:pointer;">
+      <input type="checkbox" id="conf-check" onchange="var b=document.querySelector('.conf-btn-sim');if(b)b.disabled=!this.checked;" style="margin-top:2px;flex-shrink:0;">
+      <span>Li e entendi: tenho 48h para confirmar que o acesso funciona ou reportar um problema; passado o prazo sem manifestação, assume-se que está funcionando e o repasse é liberado.</span>
+    </label>
     <div class="conf-btns">
       <button class="conf-btn-nao" onclick="fecharConf()">Ainda não</button>
-      <button class="conf-btn-sim" onclick="confirmarAcesso()">Sim, estou com acesso ✓</button>
+      <button class="conf-btn-sim" onclick="revelarAcesso()" disabled>Revelar acesso 🔓</button>
     </div>
   </div>
 </div>
@@ -351,37 +355,69 @@ function showToast(msg,tipo=''){
 function fecharConf(){
   document.getElementById('conf-overlay').classList.remove('open');
   assinaturaParaConfirmar=null;
+  var cc=document.getElementById('conf-check'); if(cc){cc.checked=false;}
+  var bs=document.querySelector('.conf-btn-sim'); if(bs){bs.disabled=true;}
 }
 
 function abrirConf(id){
   assinaturaParaConfirmar=id;
+  var cc=document.getElementById('conf-check'); if(cc){cc.checked=false;}
+  var bs=document.querySelector('.conf-btn-sim'); if(bs){bs.disabled=true;}
   document.getElementById('conf-overlay').classList.add('open');
 }
 
-async function confirmarAcesso(){
+// FASE 2 do fluxo de acesso: revelar a credencial (com aceite do checkbox das 48h).
+// NÃO vira status 'ativo' aqui — o membro fica em 'aguardando_acesso' durante a janela
+// de 48h, então o repasse continua segurado até o funcionamento ser confirmado (ou o
+// cron de 48h assumir automaticamente).
+async function revelarAcesso(){
   if(!assinaturaParaConfirmar) return;
+  var cc=document.getElementById('conf-check');
+  if(!cc||!cc.checked){showToast('Marque a confirmação para continuar.'); return;}
   const btn=document.querySelector('.conf-btn-sim');
-  btn.disabled=true;btn.textContent='Confirmando...';
+  const idRevelado=assinaturaParaConfirmar;
+  btn.disabled=true;btn.textContent='Revelando...';
   const {data:assin,error}=await sb.from('assinaturas')
-    .update({status:'ativo',confirmado_em:new Date().toISOString()})
-    .eq('id',assinaturaParaConfirmar).eq('membro_id',userId)
+    .update({acesso_revelado_em:new Date().toISOString()})
+    .eq('id',idRevelado).eq('membro_id',userId)
     .select('piscina_id,servico')
     .single();
   fecharConf();
-  btn.disabled=false;btn.textContent='Sim, estou com acesso ✓';
-  if(error){showToast('Erro ao confirmar. Tente novamente.'); return;}
-  // Notificar dono que membro confirmou
+  btn.disabled=false;btn.textContent='Revelar acesso 🔓';
+  if(error){showToast('Erro ao revelar. Tente novamente.'); return;}
   if(assin&&assin.piscina_id){
     const {data:perfil}=await sb.from('profiles').select('nome').eq('id',userId).single();
     const nomeMembro=perfil?.nome||'Um membro';
     await sb.rpc('notificar_contraparte',{
-      p_assinatura_id:assinaturaParaConfirmar,
-      p_tipo:'acesso_confirmado',
-      p_mensagem:nomeMembro+' confirmou o acesso ao '+assin.servico+'. Repasse liberado!',
+      p_assinatura_id:idRevelado,
+      p_tipo:'acesso_revelado',
+      p_mensagem:nomeMembro+' revelou o acesso ao '+assin.servico+' e tem 48h para validar o funcionamento. O repasse é liberado após a validação.',
       p_link:'dashboard-owner.html'
     });
   }
-  showToast('Acesso confirmado! Repasse liberado ao dono.','success');
+  showToast('Acesso revelado! Confirme se está funcionando em até 48h.','success');
+  setTimeout(()=>carregarPlanos(),1200);
+}
+
+// FASE 3: membro confirma que o acesso funciona → promove para 'ativo', libera repasse.
+async function confirmarFuncionamento(id){
+  const {data:assin,error}=await sb.from('assinaturas')
+    .update({status:'ativo',funcionamento_confirmado_em:new Date().toISOString(),confirmado_em:new Date().toISOString()})
+    .eq('id',id).eq('membro_id',userId)
+    .select('piscina_id,servico')
+    .single();
+  if(error){showToast('Erro ao confirmar. Tente novamente.'); return;}
+  if(assin&&assin.piscina_id){
+    const {data:perfil}=await sb.from('profiles').select('nome').eq('id',userId).single();
+    const nomeMembro=perfil?.nome||'Um membro';
+    await sb.rpc('notificar_contraparte',{
+      p_assinatura_id:id,
+      p_tipo:'funcionamento_confirmado',
+      p_mensagem:nomeMembro+' confirmou que o acesso ao '+assin.servico+' está funcionando. Repasse liberado!',
+      p_link:'dashboard-owner.html'
+    });
+  }
+  showToast('Tudo certo! Acesso confirmado e repasse liberado.','success');
   setTimeout(()=>carregarPlanos(),1200);
 }
 
@@ -683,7 +719,8 @@ function renderPlano(a){
   const podeCancelar=!a.cancela_em&&(a.status==='ativo'||a.status==='aguardando_acesso');
   const cancelarLink=podeCancelar?`<button class="btn-cancelar-plano" onclick="abrirCancel(${a.id})">Cancelar assinatura</button>`:'';
   const temDisputaAberta=!!(disputasMap[a.id]&&disputasMap[a.id].status!=='concluida');
-  const podeReportar=a.status==='ativo'&&!a.cancela_em&&!temDisputaAberta;
+  const jaRevelou=a.status==='aguardando_acesso'&&!!a.acesso_revelado_em;
+  const podeReportar=(a.status==='ativo'||jaRevelou)&&!a.cancela_em&&!temDisputaAberta;
   const reportarLink=podeReportar?`<button class="btn-cancelar-plano" style="color:#b45309;" onclick="abrirReporte(${a.id},${a.piscina_id},'${a.servico}')">⚠️ Reportar problema de acesso</button>`:'';
   const avisoConfirmarPrimeiro='';
 
@@ -705,12 +742,12 @@ function renderPlano(a){
         <div style="font-size:13px;font-weight:700;color:#8a5c00;margin-bottom:4px;">⏳ Aguardando o dono adicionar seu acesso</div>
         <div style="font-size:12px;color:#8a5c00;opacity:.8;line-height:1.6;">O dono vai adicionar o email <strong>${a.email_servico||'seu email'}</strong> no ${a.servico}. Você receberá um convite em breve.</div>
       </div>`;
-    } else {
-      // Dono enviou — credenciais ficam BORRADAS e ocultas até o membro confirmar.
-      // Isso evita que o membro cancele/dispute sem sequer ter visto o acesso.
+    } else if(!a.acesso_revelado_em){
+      // FASE 1 — dono enviou, mas o membro ainda NÃO revelou. Credenciais BORRADAS.
+      // Prazo de 72h: se não revelar, cancela automático + reembolso integral.
       acessoHTML=`<div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;padding:16px;margin-top:12px;">
         <div style="font-size:13px;font-weight:800;color:#15803d;margin-bottom:4px;">🔑 Suas credenciais de acesso chegaram!</div>
-        <div style="font-size:12px;color:#166534;line-height:1.6;margin-bottom:12px;">O dono enviou o acesso ao ${a.servico}. Confirme o recebimento para revelar os dados de acesso.</div>
+        <div style="font-size:12px;color:#166534;line-height:1.6;margin-bottom:12px;">O dono enviou o acesso ao ${a.servico}. Revele os dados para começar a usar.</div>
         <div class="cred-box" style="margin-bottom:12px;background:rgba(255,255,255,0.7);position:relative;overflow:hidden;">
           <div class="cred-ico">🔑</div>
           <div class="cred-content" style="filter:blur(6px);user-select:none;pointer-events:none;">
@@ -718,12 +755,36 @@ function renderPlano(a){
             <div class="cred-row"><span class="cred-label">Login</span><span class="cred-val">nome@exemplo.com</span></div>
           </div>
           <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.35);">
-            <span style="font-size:12px;font-weight:800;color:#15803d;background:#fff;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.12);">🔒 Confirme para revelar</span>
+            <span style="font-size:12px;font-weight:800;color:#15803d;background:#fff;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.12);">🔒 Revele para ver</span>
           </div>
         </div>
-        <div style="font-size:11px;color:#92400e;background:#fff8e0;border-radius:8px;padding:8px 10px;">⏰ Confirme em até 72h. Se não confirmar, sua assinatura é cancelada automaticamente e você recebe reembolso integral, já que o acesso nunca chegou a ser revelado.</div>
+        <div style="font-size:11px;color:#92400e;background:#fff8e0;border-radius:8px;padding:8px 10px;">⏰ Revele em até 72h. Se não revelar, sua assinatura é cancelada automaticamente e você recebe reembolso integral, já que o acesso nunca chegou a ser revelado.</div>
       </div>`;
-      confirmarBtn=`<button class="btn-confirmar" style="margin-top:12px;" onclick="abrirConf(${a.id})">🔓 Confirmar recebimento e revelar acesso</button>`;
+      confirmarBtn=`<button class="btn-confirmar" style="margin-top:12px;" onclick="abrirConf(${a.id})">🔓 Revelar acesso</button>`;
+    } else {
+      // FASE 2 — membro já REVELOU. Credenciais reais visíveis + janela de 48h para
+      // confirmar funcionamento. Repasse ainda segurado (status continua aguardando_acesso).
+      const cred=credenciaisMap[a.piscina_id];
+      let credRows='';
+      if(cred&&(cred.link_convite||cred.email||cred.senha)){
+        const lr=cred.link_convite?`<div class="cred-row" style="align-items:flex-start;">
+              <span class="cred-label">Link</span>
+              <span class="cred-val" id="cl-${a.id}" style="word-break:break-all;font-size:11px;">${cred.link_convite}</span>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <button class="cred-copy" onclick="copiarCred('cl-${a.id}','Link')">Copiar</button>
+                <a href="${cred.link_convite}" target="_blank" style="padding:3px 8px;background:var(--blue);color:#fff;border-radius:5px;font-size:10px;font-weight:700;text-decoration:none;text-align:center;">Abrir</a>
+              </div>
+            </div>`:'';
+        const er=cred.email?`<div class="cred-row"><span class="cred-label">Login</span><span class="cred-val" id="ce-${a.id}">${cred.email}</span><button class="cred-copy" onclick="copiarCred('ce-${a.id}','Login')">Copiar</button></div>`:'';
+        const sr=cred.senha?`<div class="cred-row"><span class="cred-label">Senha</span><span class="cred-val" id="cs-${a.id}">${cred.senha}</span><button class="cred-copy" onclick="copiarCred('cs-${a.id}','Senha')">Copiar</button></div>`:'';
+        credRows=`<div class="cred-box"><div class="cred-ico">🔑</div><div class="cred-content"><div class="cred-title">Seu acesso</div>${lr}${er}${sr}</div></div>`;
+      }
+      const revEm=new Date(a.acesso_revelado_em);
+      const fim48=new Date(revEm.getTime()+48*3600000);
+      const horasRest=Math.max(0,Math.ceil((fim48.getTime()-Date.now())/3600000));
+      acessoHTML=`${credRows}
+        <div style="font-size:11px;color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;margin-top:12px;">⏰ Confirme abaixo se o acesso está funcionando — o botão some em ~${horasRest}h. Passado o prazo sem manifestação, consideramos que está funcionando e o repasse é liberado ao dono (você ainda poderá reportar um problema, que será analisado).</div>`;
+      confirmarBtn=`<button class="btn-confirmar" style="margin-top:12px;" onclick="confirmarFuncionamento(${a.id})">✅ Confirmar que o acesso funciona</button>`;
     }
   } else if(a.status==='ativo'){
     // Credenciais para ativo — mostra link de convite, email e senha conforme disponível
