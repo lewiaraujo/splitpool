@@ -556,6 +556,23 @@ function abrirCancel(id){
   if(!a) return;
   assinaturaParaCancelar=id;
   const body=document.getElementById('cancel-modal-body');
+  // Passo 1 — retenção legítima: o cancelamento continua claramente disponível
+  // (nunca escondido), mas com um "tem certeza?" que mostra o que a pessoa perde.
+  body.innerHTML=`
+    <div class="conf-title">Antes de cancelar ${a.servico}...</div>
+    <div class="conf-text">Você está economizando com esse plano por <strong>${fmt(a.valor)}/mês</strong>. Ao cancelar, sua vaga é liberada no fim do ciclo já pago e você deixa de ter esse acesso. Tem certeza de que quer cancelar?</div>
+    <div class="conf-actions">
+      <button class="conf-btn-sim" style="background:#16a34a;" onclick="fecharCancel()">Manter meu plano</button>
+      <button class="conf-btn-nao" onclick="prosseguirCancelamento(${id})">Quero cancelar</button>
+    </div>`;
+  document.getElementById('cancel-overlay').classList.add('open');
+}
+
+function prosseguirCancelamento(id){
+  const a=planosCache.find(p=>p.id===id);
+  if(!a) return;
+  assinaturaParaCancelar=id;
+  const body=document.getElementById('cancel-modal-body');
   if(ehWellness(a.servico)){
     const fim=a.proximo_pagamento?new Date(a.proximo_pagamento):null;
     const fimStr=fim?fim.toLocaleDateString('pt-BR'):'o fim do ciclo pago';
@@ -783,7 +800,7 @@ function renderPlano(a){
       const fim48=new Date(revEm.getTime()+48*3600000);
       const horasRest=Math.max(0,Math.ceil((fim48.getTime()-Date.now())/3600000));
       acessoHTML=`${credRows}
-        <div style="font-size:11px;color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;margin-top:12px;">⏰ Confirme abaixo se o acesso está funcionando — o botão some em ~${horasRest}h. Passado o prazo sem manifestação, consideramos que está funcionando e o repasse é liberado ao dono (você ainda poderá reportar um problema, que será analisado).</div>`;
+        <div style="font-size:11px;color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;margin-top:12px;">⏰ Confirme se o acesso está funcionando (botão acima) — ele some em ~${horasRest}h. Passado o prazo sem manifestação, consideramos que está funcionando e o repasse é liberado ao dono (você ainda poderá reportar um problema, que será analisado).</div>`;
       confirmarBtn=`<button class="btn-confirmar" style="margin-top:12px;" onclick="confirmarFuncionamento(${a.id})">✅ Confirmar que o acesso funciona</button>`;
     }
   } else if(a.status==='ativo'){
