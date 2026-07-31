@@ -965,13 +965,26 @@ async function toggleMembrosPisc(piscId,btn){
       passos.push('<span style="color:#1255CC;">🏊 Entrou '+fmtDT(a.created_at)+'</span>');
       if(a.acesso_enviado_em){
         passos.push('<span style="color:#0e7490;">🔑 Acesso enviado '+fmtDT(a.acesso_enviado_em)+'</span>');
+        if(a.acesso_revelado_em){
+          passos.push('<span style="color:#2563eb;">🔓 Revelado '+fmtDT(a.acesso_revelado_em)+'</span>');
+          if(a.status==='aguardando_acesso'&&!a.funcionamento_confirmado_em&&!a.cancela_em){
+            var hv=horasDesde(a.acesso_revelado_em);
+            var restV=Math.max(0,48-hv);
+            var corV=restV<=0?'#dc2626':(restV<=24?'#b45309':'#889');
+            passos.push('<span style="color:'+corV+';font-weight:700;">⏰ '+restV+'h p/ validar acesso (janela 48h)</span>');
+          }
+        } else if(a.status==='aguardando_acesso'&&!a.cancela_em){
+          var hr=horasDesde(a.acesso_enviado_em);
+          var corR=hr>=72?'#dc2626':(hr>=24?'#b45309':'#889');
+          passos.push('<span style="color:'+corR+';font-weight:700;">⏰ '+hr+'h sem revelar (janela 72h)</span>');
+        }
       } else if(a.status==='aguardando_acesso'){
         var h=horasDesde(a.created_at);
         var corSLA=h>=72?'#dc2626':(h>=24?'#b45309':'#889');
         passos.push('<span style="color:'+corSLA+';font-weight:700;">⏰ '+h+'h sem envio de acesso</span>');
       }
       if(a.status==='ativo'){
-        passos.push('<span style="color:#00875A;">✅ Confirmado e ativo</span>');
+        passos.push('<span style="color:#00875A;">✅ Validado e ativo'+(a.funcionamento_confirmado_em?' '+fmtDT(a.funcionamento_confirmado_em):'')+'</span>');
       }
       if(a.cancela_em){
         passos.push('<span style="color:#8a5c00;">📅 Encerra '+new Date(a.cancela_em).toLocaleDateString('pt-BR')+'</span>');
