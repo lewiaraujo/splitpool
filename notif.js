@@ -22,7 +22,12 @@
     'repasse_recusado':'dashboard-owner.html',
     'credencial_pendente':'dashboard-owner.html',
     'acesso_nao_confirmado':'meus-planos.html',
-    'saida_automatica':'dashboard-owner.html'
+    'saida_automatica':'dashboard-owner.html',
+    'acesso_revelado':'dashboard-owner.html',
+    'funcionamento_confirmado':'dashboard-owner.html',
+    'funcionamento_auto':'meus-planos.html',
+    'repasse_liberado':'dashboard-owner.html',
+    'lembrete_funcionamento':'meus-planos.html'
   };
 
   var ICONE_TIPO={
@@ -40,7 +45,12 @@
     'repasse_recusado':'🚫',
     'credencial_pendente':'⏰',
     'acesso_nao_confirmado':'⏰',
-    'saida_automatica':'🚪'
+    'saida_automatica':'🚪',
+    'acesso_revelado':'🔓',
+    'funcionamento_confirmado':'✅',
+    'funcionamento_auto':'⏳',
+    'repasse_liberado':'💵',
+    'lembrete_funcionamento':'⏰'
   };
 
   var cacheNotifs=[];
