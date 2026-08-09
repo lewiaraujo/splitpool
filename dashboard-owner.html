@@ -485,7 +485,7 @@ function showToast(msg,tipo){
   setTimeout(()=>t.classList.remove('show'),3200);
 }
 
-function fecharModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function fecharModal(){document.getElementById('modal-overlay').classList.remove('open');var b=document.getElementById('modal-confirm-btn');if(b)b.disabled=false;}
 
 function abrirModal(titulo,sub,onConfirm){
   document.getElementById('modal-title').textContent=titulo;
@@ -521,8 +521,8 @@ function getIco(servico,icone_url){
 
 /* ── BADGE STATUS PISCINA ── */
 function getBadge(status){
-  const cls={aberta:'badge-aberta',pendente:'badge-pendente',encerrada:'badge-encerrada',pausada:'badge-pausada'}[status]||'badge-pausada';
-  const label={aberta:'Aberta',pendente:'Pendente',encerrada:'Encerrada',pausada:'Pausada'}[status]||status;
+  const cls={aberta:'badge-aberta',pendente:'badge-pendente',encerrada:'badge-encerrada',encerrando:'badge-encerrada',pausada:'badge-pausada'}[status]||'badge-pausada';
+  const label={aberta:'Aberta',pendente:'Pendente',encerrada:'Encerrada',encerrando:'Encerrando',pausada:'Pausada'}[status]||status;
   return`<span class="status-badge ${cls}"><span class="status-dot"></span>${label}</span>`;
 }
 
@@ -763,26 +763,72 @@ async function saveVaultMembro(piscinaId,membroId){
 
 /* ── FECHAR PISCINA (dono) — com modal de impacto ── */
 function abrirFecharPiscina(piscinaId, nome, nAtivos, receitaMes){
-  document.getElementById('modal-title').textContent='Fechar piscina de '+nome;
-  var msgImpacto='<div style="text-align:left;">'
+  var temMembros = nAtivos > 0;
+  var cb = document.getElementById('modal-confirm-btn');
+
+  if(!temMembros){
+    // ── CASO FÁCIL: ninguém pagando → fechar é simples e imediato ──
+    document.getElementById('modal-title').textContent='Fechar piscina de '+nome;
+    document.getElementById('modal-sub').innerHTML='<div style="text-align:left;font-size:13px;line-height:1.7;color:var(--bluedark);">'
+      +'<div style="background:#f0fdf4;border:1px solid rgba(22,163,74,0.25);border-radius:10px;padding:12px 14px;margin-bottom:12px;color:#15803d;">'
+      +'✅ Esta piscina <strong>não tem ninguém pagando</strong> por ela agora. Fechar é simples e imediato — ninguém é prejudicado.'
+      +'</div>'
+      +'• Ela <strong>sai do Explorar</strong> na hora, e ninguém novo consegue entrar.<br>'
+      +'• Você <strong>não poderá reabri-la</strong> — é só criar uma nova quando quiser.'
+      +'</div>';
+    cb.textContent='Fechar piscina'; cb.disabled=false;
+    cb.onclick=async function(){
+      fecharModal();
+      const {error}=await sb.from('piscinas').update({status:'encerrada'}).eq('id',piscinaId);
+      cb.textContent='Confirmar';
+      if(error){showToast('Erro: '+error.message,'error');return;}
+      showToast('Piscina fechada.','success');
+      setTimeout(()=>carregarDashboard(),900);
+    };
+    document.getElementById('modal-overlay').classList.add('open');
+    return;
+  }
+
+  // ── CASO DIFÍCIL: tem gente pagando → responsabilidade real + aviso de 30 dias ──
+  document.getElementById('modal-title').textContent='Encerrar piscina de '+nome;
+  document.getElementById('modal-sub').innerHTML='<div style="text-align:left;">'
     +'<div style="background:#fff8e0;border:1px solid rgba(180,120,0,0.25);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:12.5px;color:#8a5c00;line-height:1.6;">'
-    +'⚠️ <strong>Isso não pode ser desfeito.</strong> Confira o impacto antes de confirmar.'
+    +'⚠️ <strong>Atenção: '+nAtivos+' pessoa(s) estão pagando por esta piscina.</strong> Encerrar NÃO desliga essas pessoas na hora. Leia com calma o que acontece de verdade.'
     +'</div>'
-    +'<div style="font-size:13px;line-height:1.9;color:var(--bluedark);">'
-    +'• A piscina <strong>some do Explorar imediatamente</strong> — ninguém mais poderá entrar<br>'
-    +'• <strong>'+nAtivos+' membro(s) ativo(s)</strong> continuam com acesso até o fim do ciclo já pago<br>'
-    +'• Receita afetada: <strong>'+fmt(receitaMes)+'/mês</strong><br>'
-    +'• Não há reembolso — o compromisso de aviso de 30 dias já é cumprido pelo aviso desta ação<br>'
-    +'• Você não poderá reabrir esta piscina — crie uma nova quando quiser'
-    +'</div></div>';
-  document.getElementById('modal-sub').innerHTML=msgImpacto;
-  document.getElementById('modal-confirm-btn').textContent='Sim, fechar piscina';
-  document.getElementById('modal-confirm-btn').onclick=async function(){
+    +'<div style="font-size:13px;line-height:1.75;color:var(--bluedark);">'
+    +'<strong>O que acontece quando você encerra:</strong><br><br>'
+    +'<strong>1.</strong> Sua piscina <strong>para de aparecer no Explorar agora</strong> — ninguém novo consegue entrar.<br><br>'
+    +'<strong>2.</strong> As <strong>'+nAtivos+' pessoa(s)</strong> que já pagaram <strong>não são desligadas de uma vez</strong>. Cada uma continua usando até o fim do período que já pagou. Você prometeu esse acesso a elas.<br><br>'
+    +'<strong>3.</strong> Começa um <strong>aviso de 30 dias</strong>. Nesse tempo a piscina fica marcada como <strong>"Encerrando"</strong>. Ela só fecha de vez quando o período pago da última pessoa terminar.<br><br>'
+    +'<strong>4.</strong> Enquanto tiver gente com acesso, você <strong>precisa continuar pagando o plano na operadora</strong> (Microsoft, Duolingo, etc.). Se você parar de pagar e o acesso cair antes do fim do ciclo dessas pessoas, isso é <strong>quebra do seu compromisso</strong> — e a Splitpool vai <strong>reembolsar essas pessoas às suas custas</strong>.<br><br>'
+    +'<strong>5.</strong> Não há reembolso para você do que já pagou à operadora.'
+    +'</div>'
+    +'<label style="display:flex;gap:9px;align-items:flex-start;margin-top:14px;padding:11px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;font-size:12px;color:#334155;line-height:1.5;cursor:pointer;">'
+    +'<input type="checkbox" id="fechar-check" onchange="var b=document.getElementById(\'modal-confirm-btn\');if(b)b.disabled=!this.checked;" style="margin-top:2px;flex-shrink:0;">'
+    +'<span>Eu entendi e <strong>me comprometo</strong>: vou manter o plano ativo na operadora e o acesso funcionando para as '+nAtivos+' pessoa(s) até o fim do ciclo pago de cada uma. Entendo que, se eu não cumprir, a Splitpool reembolsará os membros afetados às minhas custas.</span>'
+    +'</label>'
+    +'</div>';
+  cb.textContent='Iniciar encerramento (aviso de 30 dias)'; cb.disabled=true;
+  cb.onclick=async function(){
+    var chk=document.getElementById('fechar-check');
+    if(!chk||!chk.checked){showToast('Marque o compromisso para continuar.');return;}
     fecharModal();
-    const {error}=await sb.from('piscinas').update({status:'encerrada'}).eq('id',piscinaId);
-    document.getElementById('modal-confirm-btn').textContent='Confirmar';
+    const {error}=await sb.from('piscinas').update({status:'encerrando',encerrando_em:new Date().toISOString()}).eq('id',piscinaId);
+    cb.textContent='Confirmar'; cb.disabled=false;
     if(error){showToast('Erro: '+error.message,'error');return;}
-    showToast('Piscina fechada. Membros ativos mantêm acesso até o fim do ciclo.','success');
+    // Avisar cada membro ativo (mantêm acesso até o fim do ciclo)
+    const {data:assins}=await sb.from('assinaturas').select('id').eq('piscina_id',piscinaId).in('status',['ativo','aguardando_acesso']);
+    if(assins&&assins.length){
+      for(const a of assins){
+        await sb.rpc('notificar_contraparte',{
+          p_assinatura_id:a.id,
+          p_tipo:'piscina_encerrando',
+          p_mensagem:'O dono está encerrando a piscina de '+nome+'. Seu acesso continua garantido até o fim do seu ciclo já pago. Se o acesso parar antes disso, use "Reportar problema".',
+          p_link:'meus-planos.html'
+        });
+      }
+    }
+    showToast('Encerramento iniciado. Os membros foram avisados e mantêm acesso até o fim do ciclo.','success');
     setTimeout(()=>carregarDashboard(),900);
   };
   document.getElementById('modal-overlay').classList.add('open');
@@ -993,6 +1039,8 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
     toggleBtn='<button class="btn-sm danger" onclick="abrirFecharPiscina('+pool.id+',\''+pool.servico.replace(/\'/g,"")+'\','+nAtivosFechar+','+receitaFechar.toFixed(2)+')">✕ Fechar piscina</button>';
   } else if(pool.status==='pausada'){
     toggleBtn='<span style="font-size:12px;color:#8a5c00;font-weight:700;background:#fff8e0;padding:7px 14px;border-radius:8px;">⏸ Pausada pela Splitpool</span>';
+  } else if(pool.status==='encerrando'){
+    toggleBtn='<span style="font-size:12px;color:#c0392b;font-weight:700;background:#fff0f0;padding:7px 14px;border-radius:8px;">⏳ Encerrando — mantenha o acesso até o fim do ciclo de cada membro</span>';
   }
 
   return '<div class="pool-card" id="pc-'+pool.id+'">'
