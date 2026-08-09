@@ -27,7 +27,8 @@
     'funcionamento_confirmado':'dashboard-owner.html',
     'funcionamento_auto':'meus-planos.html',
     'repasse_liberado':'dashboard-owner.html',
-    'lembrete_funcionamento':'meus-planos.html'
+    'lembrete_funcionamento':'meus-planos.html',
+    'piscina_encerrando':'meus-planos.html'
   };
 
   var ICONE_TIPO={
@@ -50,7 +51,8 @@
     'funcionamento_confirmado':'✅',
     'funcionamento_auto':'⏳',
     'repasse_liberado':'💵',
-    'lembrete_funcionamento':'⏰'
+    'lembrete_funcionamento':'⏰',
+    'piscina_encerrando':'⏳'
   };
 
   var cacheNotifs=[];
