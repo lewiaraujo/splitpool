@@ -80,11 +80,31 @@
       var raw=localStorage.getItem('sb-eawfweuamtwlsilrkgoo-auth-token');
       if(raw){
         var v=JSON.parse(raw);
-        if(v&&v.user&&v.user.id&&v.access_token)
-          return {uid:v.user.id, token:v.access_token};
+        if(v&&v.user&&v.user.id&&v.access_token){
+          var meta=v.user.user_metadata||{};
+          var foto=meta.avatar_url||meta.picture||'';
+          return {uid:v.user.id, token:v.access_token, foto:foto};
+        }
       }
     }catch(e){}
     return null;
+  }
+
+  // Captura a foto do Google (ou provedor) no login e salva em profiles.avatar_url,
+  // apenas se ainda estiver vazio (não sobrescreve foto que o usuário já definiu).
+  function syncAvatar(){
+    var s=getSession(); if(!s||!s.foto) return;
+    fetch(SBU+'/rest/v1/profiles?select=avatar_url&id=eq.'+s.uid,{
+      headers:{'apikey':SBK,'Authorization':'Bearer '+s.token}
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d&&d[0]&&!d[0].avatar_url){
+        fetch(SBU+'/rest/v1/profiles?id=eq.'+s.uid,{
+          method:'PATCH',
+          headers:{'apikey':SBK,'Authorization':'Bearer '+s.token,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify({avatar_url:s.foto})
+        }).catch(function(){});
+      }
+    }).catch(function(){});
   }
 
   function tempoRelativo(iso){
@@ -394,6 +414,7 @@
 
   function start(){
     injetarUI();
+    syncAvatar();
     poll();
     setInterval(poll,2000);
   }
