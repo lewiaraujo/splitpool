@@ -800,12 +800,12 @@ function abrirFecharPiscina(piscinaId, nome, nAtivos, receitaMes){
     +'<strong>1.</strong> Sua piscina <strong>para de aparecer no Explorar agora</strong> — ninguém novo consegue entrar.<br><br>'
     +'<strong>2.</strong> As <strong>'+nAtivos+' pessoa(s)</strong> que já pagaram <strong>não são desligadas de uma vez</strong>. Cada uma continua usando até o fim do período que já pagou. Você prometeu esse acesso a elas.<br><br>'
     +'<strong>3.</strong> Começa um <strong>aviso de 30 dias</strong>. Nesse tempo a piscina fica marcada como <strong>"Encerrando"</strong>. Ela só fecha de vez quando o período pago da última pessoa terminar.<br><br>'
-    +'<strong>4.</strong> Enquanto tiver gente com acesso, você <strong>precisa continuar pagando o plano na operadora</strong> (Microsoft, Duolingo, etc.). Se você parar de pagar e o acesso cair antes do fim do ciclo dessas pessoas, isso é <strong>quebra do seu compromisso</strong> — e a Splitpool vai <strong>reembolsar essas pessoas às suas custas</strong>.<br><br>'
+    +'<strong>4.</strong> Enquanto tiver gente com acesso, você <strong>precisa continuar pagando o plano na operadora</strong> (Microsoft, Duolingo, etc.) e manter o acesso funcionando. Encerrar a piscina <strong>não encerra o seu compromisso</strong> com quem já pagou — ele vale até o fim do ciclo de cada pessoa. Descumprir é uma falha grave sua, sujeita a penalidade na sua conta e responsabilização pelos prejuízos causados aos membros.<br><br>'
     +'<strong>5.</strong> Não há reembolso para você do que já pagou à operadora.'
     +'</div>'
     +'<label style="display:flex;gap:9px;align-items:flex-start;margin-top:14px;padding:11px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;font-size:12px;color:#334155;line-height:1.5;cursor:pointer;">'
     +'<input type="checkbox" id="fechar-check" onchange="var b=document.getElementById(\'modal-confirm-btn\');if(b)b.disabled=!this.checked;" style="margin-top:2px;flex-shrink:0;">'
-    +'<span>Eu entendi e <strong>me comprometo</strong>: vou manter o plano ativo na operadora e o acesso funcionando para as '+nAtivos+' pessoa(s) até o fim do ciclo pago de cada uma. Entendo que, se eu não cumprir, a Splitpool reembolsará os membros afetados às minhas custas.</span>'
+    +'<span>Eu entendi e <strong>assumo total responsabilidade</strong>: vou manter o plano ativo na operadora e o acesso funcionando para as '+nAtivos+' pessoa(s) até o fim do ciclo pago de cada uma. Entendo que este compromisso é meu e que descumpri-lo é uma falha grave sujeita a penalidade e responsabilização pelos prejuízos causados.</span>'
     +'</label>'
     +'</div>';
   cb.textContent='Iniciar encerramento (aviso de 30 dias)'; cb.disabled=true;
