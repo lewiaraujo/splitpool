@@ -28,7 +28,8 @@
     'funcionamento_auto':'meus-planos.html',
     'repasse_liberado':'dashboard-owner.html',
     'lembrete_funcionamento':'meus-planos.html',
-    'piscina_encerrando':'meus-planos.html'
+    'piscina_encerrando':'meus-planos.html',
+    'piscina_encerrada':'dashboard-owner.html'
   };
 
   var ICONE_TIPO={
@@ -52,7 +53,8 @@
     'funcionamento_auto':'⏳',
     'repasse_liberado':'💵',
     'lembrete_funcionamento':'⏰',
-    'piscina_encerrando':'⏳'
+    'piscina_encerrando':'⏳',
+    'piscina_encerrada':'🏁'
   };
 
   var cacheNotifs=[];
