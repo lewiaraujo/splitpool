@@ -287,6 +287,10 @@ tbody td{padding:12px 16px;font-size:13px;}
         <option value="disputa_sem_acesso">Disputa — sem acesso</option>
         <option value="disputa_acesso_parou">Disputa — acesso parou</option>
         <option value="disputa_diferente_anunciado">Disputa — diferente do anunciado</option>
+        <option value="dono_perdeu_plano">Dono — perdeu o plano</option>
+        <option value="dono_precisa_encerrar">Dono — precisa encerrar</option>
+        <option value="dono_problema_membro">Dono — problema com membro</option>
+        <option value="dono_outro">Dono — outro problema</option>
         <option value="credencial_atrasada">Credencial atrasada</option>
       </select>
       <select id="ordem-ocorr" onchange="renderOcorrencias()" style="padding:8px 12px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:12px;font-family:inherit;outline:none;cursor:pointer;">
@@ -737,6 +741,10 @@ function labelTipoOcorr(t){
     'disputa_acesso_parou':'⚖️ Disputa — acesso parou',
     'disputa_sem_acesso':'⚖️ Disputa — sem acesso',
     'disputa_diferente_anunciado':'⚖️ Disputa — diferente do anunciado',
+    'dono_perdeu_plano':'🆘 Dono — perdeu o plano na operadora',
+    'dono_precisa_encerrar':'🚪 Dono — precisa encerrar antes',
+    'dono_problema_membro':'👤 Dono — problema com um membro',
+    'dono_outro':'❓ Dono — outro problema',
     'credencial_atrasada':'⏰ Credencial atrasada (72h+)',
     'cancelamento_automatico':'🤖 Cancelamento automático (SLA 72h)'
   })[t]||t;
