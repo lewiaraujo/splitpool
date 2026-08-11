@@ -762,6 +762,64 @@ async function saveVaultMembro(piscinaId,membroId){
 }
 
 /* ── FECHAR PISCINA (dono) — com modal de impacto ── */
+// Canal do dono reportar problema à Splitpool (2ª porta da realocação).
+// Abre uma ocorrência na fila do admin, espelhando o fluxo do membro.
+function abrirReporteDono(piscinaId, servico){
+  var cb=document.getElementById('modal-confirm-btn');
+  document.getElementById('modal-title').textContent='Reportar problema — '+servico;
+  document.getElementById('modal-sub').innerHTML=
+     '<div style="text-align:left;font-size:13px;color:var(--bluedark);line-height:1.6;">'
+    +'<div style="background:#fff8e0;border:1px solid rgba(180,120,0,0.25);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#8a5c00;">Use este canal para avisar a Splitpool de um problema com esta piscina — ex: você perdeu o acesso ao plano na operadora, precisa encerrar antes do previsto, ou tem um problema com um membro. Nossa equipe analisa e entra em contato.</div>'
+    +'<label style="font-weight:700;font-size:12px;display:block;margin-bottom:4px;">Tipo de problema:</label>'
+    +'<select id="repd-tipo" style="width:100%;padding:10px;border:1px solid #d7e0ee;border-radius:9px;font-size:13px;font-family:inherit;margin-bottom:12px;">'
+    +'<option value="">Selecione</option>'
+    +'<option value="dono_perdeu_plano">Perdi o acesso ao plano na operadora</option>'
+    +'<option value="dono_precisa_encerrar">Preciso encerrar a piscina antes do previsto</option>'
+    +'<option value="dono_problema_membro">Problema com um membro</option>'
+    +'<option value="dono_outro">Outro problema</option>'
+    +'</select>'
+    +'<label style="font-weight:700;font-size:12px;display:block;margin-bottom:4px;">Descreva o que aconteceu:</label>'
+    +'<textarea id="repd-desc" rows="4" style="width:100%;padding:10px;border:1px solid #d7e0ee;border-radius:9px;font-size:13px;font-family:inherit;resize:vertical;" placeholder="Conte os detalhes para agilizar a análise (mínimo 10 caracteres)."></textarea>'
+    +'<label style="font-weight:700;font-size:12px;display:block;margin:12px 0 4px;">Evidência (opcional):</label>'
+    +'<input type="file" id="repd-evidencia" accept="image/*,.pdf" style="width:100%;font-size:12px;">'
+    +'<div id="repd-erro" style="display:none;color:#c0392b;font-size:12px;margin-top:8px;font-weight:600;"></div>'
+    +'</div>';
+  cb.textContent='Enviar reporte'; cb.disabled=false;
+  cb.onclick=function(){ enviarReporteDono(piscinaId, servico); };
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function enviarReporteDono(piscinaId, servico){
+  var tipo=document.getElementById('repd-tipo').value;
+  var desc=document.getElementById('repd-desc').value.trim();
+  var erro=document.getElementById('repd-erro');
+  if(!tipo){erro.textContent='Selecione o tipo de problema.';erro.style.display='block';return;}
+  if(desc.length<10){erro.textContent='Descreva com pelo menos 10 caracteres.';erro.style.display='block';return;}
+  var cb=document.getElementById('modal-confirm-btn');
+  cb.disabled=true; cb.textContent='Enviando...';
+  // Evidência opcional (mesmo bucket que o reporte do membro)
+  var evidenciaUrl=null;
+  var fi=document.getElementById('repd-evidencia');
+  if(fi&&fi.files&&fi.files[0]){
+    var file=fi.files[0];
+    var ext=file.name.split('.').pop();
+    var path=userId+'/dono-'+Date.now()+'.'+ext;
+    var up=await sb.storage.from('evidencias').upload(path,file,{upsert:true});
+    if(!up.error){ var u=sb.storage.from('evidencias').getPublicUrl(path); evidenciaUrl=u.data.publicUrl; }
+  }
+  var perf=(await sb.from('profiles').select('nome').eq('id',userId).single()).data;
+  var nomeDono=(perf&&perf.nome)||'Dono';
+  var rotulo={'dono_perdeu_plano':'Dono perdeu o plano na operadora','dono_precisa_encerrar':'Dono precisa encerrar antes','dono_problema_membro':'Problema com membro','dono_outro':'Outro problema'}[tipo]||tipo;
+  var descRica='['+rotulo+'] O dono '+nomeDono+' reportou um problema na piscina de '+(servico||'—')+' ('+poolCode(piscinaId)+'). Relato: "'+desc+'"';
+  var ins=await sb.from('ocorrencias').insert({tipo:tipo, piscina_id:piscinaId, assinatura_id:null, aberto_por:userId, status:'aberta', descricao:descRica, evidencia_url:evidenciaUrl});
+  if(ins.error){ cb.disabled=false; cb.textContent='Enviar reporte'; erro.textContent='Erro: '+ins.error.message; erro.style.display='block'; return; }
+  await sb.from('notificacoes').insert({user_id:userId, tipo:'ocorrencia_resolvida', mensagem:'Recebemos seu reporte sobre a piscina de '+(servico||'—')+'. Nossa equipe vai analisar e entrar em contato.', link:'dashboard-owner.html'});
+  fecharModal();
+  cb.textContent='Confirmar';
+  showToast('Reporte enviado! Nossa equipe vai analisar.','success');
+  setTimeout(function(){ carregarDashboard(); },900);
+}
+
 function abrirFecharPiscina(piscinaId, nome, nAtivos, receitaMes){
   var temMembros = nAtivos > 0;
   var cb = document.getElementById('modal-confirm-btn');
@@ -1042,6 +1100,10 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
   } else if(pool.status==='encerrando'){
     toggleBtn='<span style="font-size:12px;color:#c0392b;font-weight:700;background:#fff0f0;padding:7px 14px;border-radius:8px;">⏳ Encerrando — mantenha o acesso até o fim do ciclo de cada membro</span>';
   }
+  var reportBtn='';
+  if(pool.status==='aberta'||pool.status==='encerrando'){
+    reportBtn='<button class="btn-sm ghost" style="color:#b45309;" onclick="abrirReporteDono('+pool.id+',\''+pool.servico.replace(/\'/g,"")+'\')">⚠️ Reportar problema</button>';
+  }
 
   return '<div class="pool-card" id="pc-'+pool.id+'">'
 
@@ -1112,6 +1174,7 @@ function renderPool(pool,assins,vault,vaultByMembro,piscinaIdCtx){
     +'<div id="mini-extrato-'+pool.id+'" class="pool-mini-extrato" style="display:none;"></div>'
     +'<div class="pool-actions">'
     +toggleBtn
+    +reportBtn
     +'<button class="btn-sm ghost" id="btn-rep-'+pool.id+'" onclick="gerarRepassePiscina('+pool.id+',event)" title="Gerar repasse deste mês para esta piscina">⚡ Gerar repasse</button>'
     +'<a href="criar-piscina.html" class="btn-sm ghost">+ Nova piscina</a>'
     +'</div>'
