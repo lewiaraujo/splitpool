@@ -1307,7 +1307,7 @@ async function carregarDashboard(){
   var membroIds=(assins||[]).map(function(a){return a.membro_id;}).filter(function(v,i,s){return s.indexOf(v)===i;});
   var profilesMap={};
   if(membroIds.length>0){
-    var {data:profs}=await sb.from('profiles').select('id,nome,email').in('id',membroIds);
+    var {data:profs}=await sb.rpc('perfis_meus_membros',{p_ids:membroIds});
     (profs||[]).forEach(function(p){profilesMap[p.id]=p;});
   }
   (assins||[]).forEach(function(a){a.profiles=profilesMap[a.membro_id]||null;});
