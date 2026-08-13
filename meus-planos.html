@@ -487,7 +487,7 @@ async function enviarReporte(){
   if(rPisc){
     rServico=rPisc.servico||'';
     if(rPisc.dono_id){
-      var rPerfDono=(await sb.from('profiles').select('nome').eq('id',rPisc.dono_id).single()).data;
+      var rPerfDono=((await sb.rpc('perfil_publico',{p_id:rPisc.dono_id})).data||[])[0];
       rDono=(rPerfDono&&rPerfDono.nome)||'sem nome';
     }
   }
@@ -615,7 +615,7 @@ async function confirmarCancelamento(){
   var piscInfo=(await sb.from('piscinas').select('dono_id,servico').eq('id',a.piscina_id).single()).data;
   var nomeDono='sem nome';
   if(piscInfo&&piscInfo.dono_id){
-    var perfDono=(await sb.from('profiles').select('nome').eq('id',piscInfo.dono_id).single()).data;
+    var perfDono=((await sb.rpc('perfil_publico',{p_id:piscInfo.dono_id})).data||[])[0];
     nomeDono=(perfDono&&perfDono.nome)||'sem nome';
   }
   var codPisc=poolCode(a.piscina_id);
@@ -676,7 +676,7 @@ async function desfazerCancelamento(id){
   var dPisc=(await sb.from('piscinas').select('dono_id').eq('id',a.piscina_id).single()).data;
   var dDono='sem nome';
   if(dPisc&&dPisc.dono_id){
-    var dPerfDono=(await sb.from('profiles').select('nome').eq('id',dPisc.dono_id).single()).data;
+    var dPerfDono=((await sb.rpc('perfil_publico',{p_id:dPisc.dono_id})).data||[])[0];
     dDono=(dPerfDono&&dPerfDono.nome)||'sem nome';
   }
   await sb.from('ocorrencias').insert({
