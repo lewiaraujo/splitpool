@@ -258,7 +258,7 @@ function load(){
   .then(function(d){
     if(!d||!d.length){showErr();return;}
     var p=d[0];
-    fetch(SBU+'/rest/v1/profiles?id=eq.'+p.dono_id+'&select=nome,nivel',{headers:{'apikey':SBK,'Authorization':'Bearer '+SBK}})
+    fetch(SBU+'/rest/v1/rpc/perfil_publico',{method:'POST',headers:{'apikey':SBK,'Authorization':'Bearer '+SBK,'Content-Type':'application/json'},body:JSON.stringify({p_id:p.dono_id})})
     .then(function(r){return r.json();})
     .then(function(ud){
       var nome='Dono',nivel='iniciante';
