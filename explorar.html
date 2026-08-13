@@ -791,12 +791,12 @@ let donosCache={}
 async function buscarDono(donoId){
   if(donosCache[donoId] !== undefined) return donosCache[donoId]
   try{
-    // Tenta tabela profiles primeiro (nome + email). avatar_url é opcional: se a coluna existir, o Supabase retorna; senão, campo fica undefined.
-    const r=await fetch(SUPABASE_URL+'/rest/v1/profiles?id=eq.'+donoId+'&select=nome,email,nivel,avatar_url',
-      {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}})
+    // Lê só nome/avatar/nível do dono via RPC pública (não expõe dados sensíveis)
+    const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/perfil_publico',
+      {method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_id:donoId})})
     const d=await r.json()
-    if(d&&d.length&&(d[0].nome||d[0].email)){
-      const raw=d[0].nome||d[0].email||''
+    if(d&&d.length&&d[0].nome){
+      const raw=d[0].nome||''
       const nomeCurto=raw.split(' ')[0].split('@')[0]
       donosCache[donoId]={nome:nomeCurto, avatar:(d[0].avatar_url||''), nivel:(d[0].nivel||'')}
       return donosCache[donoId]
