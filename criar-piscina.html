@@ -592,7 +592,7 @@ const SVCS_CORP=[
 // Atenção: repasses gerados no dashboard-owner/admin ainda dependem dos mapas hardcoded
 // (LUCRO_SP_MAP/REPASSE_MAP/LUCRO_DONO_MAP) — ao promover um serviço do catálogo pra produção
 // real, adicionar as mesmas chaves nesses mapas para o cálculo de repasse funcionar.
-sb.from('servicos_catalogo').select('*').eq('ativo',true).then(({data:catalogo})=>{
+sb.from('catalogo_publico').select('*').eq('ativo',true).then(({data:catalogo})=>{
   (catalogo||[]).forEach(function(s){
     var jaExisteFamilia=SVCS_FAMILIA.some(function(x){return x.nome===s.nome})
     var jaExisteCorp=SVCS_CORP.some(function(x){return x.nome===s.nome})
