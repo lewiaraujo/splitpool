@@ -1009,20 +1009,14 @@ async function carregarPlanos(){
       }catch(e){}
     });
     // Segundo passa: credenciais individuais sobrescrevem (prioridade)
-    console.log('[cred-debug] userId='+userId+' total creds='+( creds||[]).length);
-    (creds||[]).forEach(c=>{
-      console.log('[cred-debug] cred membro_id='+c.membro_id+' piscina_id='+c.piscina_id+' match='+(String(c.membro_id)===String(userId)));
-    });
     (creds||[]).filter(c=>String(c.membro_id)===String(userId)).forEach(c=>{
       try{
         const chave=c.dono_id.substring(0,32);
         const bytes=CryptoJS.AES.decrypt(c.dados_enc,chave);
         const dec=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-        console.log('[cred-debug] dec=',dec);
         if(dec) credenciaisMap[c.piscina_id]=dec;
-      }catch(e){console.log('[cred-debug] ERRO decrypt:',e);}
+      }catch(e){}
     });
-    console.log('[cred-debug] credenciaisMap final=',credenciaisMap);
 
     // link_convite vem exclusivamente do vault por membro (salvo pelo dono via salvarEEnviarAcesso)
     // Não usar link_convite da tabela piscinas como fallback — é o link geral de criação, não o individual
