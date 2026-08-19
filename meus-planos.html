@@ -991,35 +991,17 @@ async function carregarPlanos(){
     (piscsIco||[]).forEach(p=>{if(p.icone_url) piscIconeMap[p.id]=p.icone_url;});
   }
 
-  // Buscar credenciais do membro — inclui ativo e aguardando_acesso (para mostrar credenciais antes de confirmar)
-  const ativoIds=data.filter(a=>a.status==='ativo'||a.status==='aguardando_acesso').map(a=>a.piscina_id);
+  // Credenciais do membro — descriptografadas SERVER-SIDE pela RPC revelar_minhas_credenciais.
+  // A chave de cripto NUNCA chega ao browser. A RPC só devolve credencial para assinaturas
+  // 'ativo' OU 'aguardando_acesso' já revelado (acesso_revelado_em preenchido); F1 não recebe nada.
   credenciaisMap={};
-  if(ativoIds.length>0){
-    // Buscar credenciais individuais (por membro_id) e gerais (sem membro_id) juntas
-    const {data:creds}=await sb.from('credenciais')
-      .select('*')
-      .in('piscina_id',ativoIds);
-    // Primeiro passa: credenciais gerais (sem membro_id) como fallback
-    (creds||[]).filter(c=>!c.membro_id).forEach(c=>{
-      try{
-        const chave=c.dono_id.substring(0,32);
-        const bytes=CryptoJS.AES.decrypt(c.dados_enc,chave);
-        const dec=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-        if(dec) credenciaisMap[c.piscina_id]=dec;
-      }catch(e){}
-    });
-    // Segundo passa: credenciais individuais sobrescrevem (prioridade)
-    (creds||[]).filter(c=>String(c.membro_id)===String(userId)).forEach(c=>{
-      try{
-        const chave=c.dono_id.substring(0,32);
-        const bytes=CryptoJS.AES.decrypt(c.dados_enc,chave);
-        const dec=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-        if(dec) credenciaisMap[c.piscina_id]=dec;
-      }catch(e){}
-    });
-
-    // link_convite vem exclusivamente do vault por membro (salvo pelo dono via salvarEEnviarAcesso)
-    // Não usar link_convite da tabela piscinas como fallback — é o link geral de criação, não o individual
+  {
+    const {data:creds,error:eCred}=await sb.rpc('revelar_minhas_credenciais');
+    if(!eCred&&Array.isArray(creds)){
+      creds.forEach(c=>{
+        credenciaisMap[c.piscina_id]={email:c.email||'',senha:c.senha||'',link_convite:c.link_convite||''};
+      });
+    }
   }
 
   document.getElementById('planos-state').style.display='flex';
