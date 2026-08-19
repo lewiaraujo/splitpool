@@ -8,7 +8,6 @@
 
 
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -498,17 +497,8 @@ document.getElementById('modal-overlay').addEventListener('click',function(e){if
 
 function sair(){sb.auth.signOut().then(()=>window.location.href='index.html');}
 
-/* ── VAULT ── */
-function deriveKey(uid){return uid.substring(0,32);}
-function encryptVault(uid,email,senha){
-  return CryptoJS.AES.encrypt(JSON.stringify({email,senha}),deriveKey(uid)).toString();
-}
-function decryptVault(uid,dados_enc){
-  try{
-    const b=CryptoJS.AES.decrypt(dados_enc,deriveKey(uid));
-    return JSON.parse(b.toString(CryptoJS.enc.Utf8));
-  }catch(e){return null;}
-}
+/* ── VAULT ── credenciais são cifradas/decifradas SERVER-SIDE (RPCs
+   salvar_credencial / ler_credenciais_dono). A chave nunca fica no browser. */
 
 /* ── ICON HTML ── */
 function getIco(servico,icone_url){
@@ -592,9 +582,7 @@ async function saveVault(piscinaId){
   const email=document.getElementById('ve-'+piscinaId).value.trim();
   const senha=document.getElementById('vs-'+piscinaId).value;
   if(!email||!senha){showToast('Preencha e-mail e senha.','error');return;}
-  const dados_enc=encryptVault(userId,email,senha);
-  const {error}=await sb.from('credenciais')
-    .upsert({piscina_id:piscinaId,membro_id:null,dono_id:userId,dados_enc,updated_at:new Date().toISOString()},{onConflict:'piscina_id,membro_id'});
+  const {error}=await sb.rpc('salvar_credencial',{p_piscina_id:piscinaId,p_membro_id:null,p_email:email,p_senha:senha,p_link:''});
   if(error){showToast('Erro: '+error.message,'error');return;}
   showToast('Credenciais salvas com segurança! 🔒','success');
   setTimeout(()=>carregarDashboard(),900);
@@ -609,10 +597,7 @@ async function salvarEEnviarAcesso(piscinaId,membroId,assinaturaId,btn){
   if(!link&&!email){showToast('Preencha pelo menos o link de convite ou o e-mail.','error');return;}
   btn.disabled=true;btn.textContent='Salvando...';
   // Salvar credenciais no vault
-  var dadosObj={email:email,senha:senha,link_convite:link};
-  var dados_enc=CryptoJS.AES.encrypt(JSON.stringify(dadosObj),deriveKey(userId)).toString();
-  var {error:eVault}=await sb.from('credenciais')
-    .upsert({piscina_id:piscinaId,membro_id:membroId,dono_id:userId,dados_enc,updated_at:new Date().toISOString()},{onConflict:'piscina_id,membro_id'});
+  var {error:eVault}=await sb.rpc('salvar_credencial',{p_piscina_id:piscinaId,p_membro_id:membroId,p_email:email,p_senha:senha,p_link:link});
   if(eVault){showToast('Erro ao salvar: '+eVault.message,'error');btn.disabled=false;btn.textContent='💾 Salvar e enviar acesso';return;}
   // Marcar acesso como enviado
   var {data:assEnv,error:eAss}=await sb.from('assinaturas').update({acesso_enviado_em:new Date().toISOString()}).eq('id',assinaturaId).select('membro_id,servico').single();
@@ -638,19 +623,11 @@ async function salvarEEnviarAcesso(piscinaId,membroId,assinaturaId,btn){
 async function reabrirEnvioAcesso(assinaturaId,piscinaId,membroId,btn){
   btn.disabled=true;
   // Buscar credencial salva para pré-preencher
-  var {data:creds}=await sb.from('credenciais')
-    .select('dados_enc,dono_id')
-    .eq('piscina_id',piscinaId)
-    .eq('membro_id',membroId)
-    .limit(1);
+  var {data:creds}=await sb.rpc('ler_credenciais_dono');
   var link='',email='',senha='';
-  if(creds&&creds.length){
-    try{
-      var chave=creds[0].dono_id.substring(0,32);
-      var bytes=CryptoJS.AES.decrypt(creds[0].dados_enc,chave);
-      var dec=JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-      link=dec.link_convite||'';email=dec.email||'';senha=dec.senha||'';
-    }catch(e){}
+  var cMatch=(creds||[]).find(function(c){return String(c.piscina_id)===String(piscinaId)&&String(c.membro_id)===String(membroId);});
+  if(cMatch){
+    link=cMatch.link_convite||'';email=cMatch.email||'';senha=cMatch.senha||'';
   }
   // Zerar acesso_enviado_em no banco
   var {error}=await sb.from('assinaturas').update({acesso_enviado_em:null}).eq('id',assinaturaId);
@@ -750,10 +727,7 @@ async function saveVaultMembro(piscinaId,membroId){
   var email=emailEl?emailEl.value.trim():'';
   var senha=senhaEl?senhaEl.value:'';
   if(!link&&!email&&!senha){showToast('Preencha pelo menos o link ou e-mail.','error');return;}
-  var dadosObj={email:email,senha:senha,link_convite:link};
-  var dados_enc=CryptoJS.AES.encrypt(JSON.stringify(dadosObj),deriveKey(userId)).toString();
-  var {error}=await sb.from('credenciais')
-    .upsert({piscina_id:piscinaId,membro_id:membroId,dono_id:userId,dados_enc,updated_at:new Date().toISOString()},{onConflict:'piscina_id,membro_id'});
+  var {error}=await sb.rpc('salvar_credencial',{p_piscina_id:piscinaId,p_membro_id:membroId,p_email:email,p_senha:senha,p_link:link});
   if(error){showToast('Erro: '+error.message,'error');return;}
   // Notificar o membro sobre a atualização
   var {data:piscNot}=await sb.from('piscinas').select('servico').eq('id',piscinaId).single();
@@ -1323,8 +1297,7 @@ async function carregarDashboard(){
   }
   (assins||[]).forEach(function(a){a.profiles=profilesMap[a.membro_id]||null;});
 
-  var {data:creds}=await sb.from('credenciais')
-    .select('*').eq('dono_id',userId);
+  var {data:creds}=await sb.rpc('ler_credenciais_dono');
 
   // Agrupar por piscina
   var assinsByPool={};
@@ -1336,11 +1309,9 @@ async function carregarDashboard(){
   var vaultByPool={};
   var vaultByMembro={};
   (creds||[]).forEach(function(c){
-    var dec=decryptVault(userId,c.dados_enc);
-    if(dec){
-      vaultByPool[c.piscina_id]=dec;
-      if(c.membro_id) vaultByMembro[c.piscina_id+'_'+c.membro_id]=dec;
-    }
+    var dec={email:c.email||'',senha:c.senha||'',link_convite:c.link_convite||''};
+    vaultByPool[c.piscina_id]=dec;
+    if(c.membro_id) vaultByMembro[c.piscina_id+'_'+c.membro_id]=dec;
   });
 
   // Resumo
