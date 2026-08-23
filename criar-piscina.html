@@ -310,7 +310,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
           </div>
           <div class="vagas-visual" id="vagas-visual"></div>
           <div style="margin-top:1rem;">
-            <div class="calc-row"><span>Você recebe por vaga preenchida</span><span class="val blue" id="calc-repasse-vaga">—</span></div>
+            <div class="calc-row"><span>Seu bônus por vaga preenchida</span><span class="val blue" id="calc-repasse-vaga">—</span></div>
             <div class="calc-row" id="row-custo"><span>Custo do seu plano família</span><span class="val red" id="calc-custo">—</span></div>
             <div class="calc-row"><span id="calc-label-resultado">Com todas as vagas preenchidas</span><span class="val green" id="calc-resultado">—</span></div>
           </div>
@@ -327,7 +327,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">Wellhub — Configure sua piscina</h2>
         <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:.75rem;font-weight:500;">Sua empresa paga. Você oferta vagas de dependente.</p>
         <div class="info-box">
-          <strong>Como funciona:</strong> o membro escolhe qual plano Wellhub quer ao entrar. O Splitpool cuida do pagamento e do acesso. Você recebe por cada vaga ativada, independente do plano escolhido pelo membro.
+          <strong>Como funciona:</strong> o membro escolhe qual plano Wellhub quer ao entrar. O Splitpool cuida do pagamento e do acesso. Você ganha um bônus por cada vaga ativada, independente do plano escolhido pelo membro.
         </div>
         <p style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:10px;opacity:.8;">Selecione quais planos você permite:</p>
         <div class="wellhub-grid" id="wellhub-grid"></div>
@@ -348,7 +348,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         </div>
         <div class="calc-box">
           <div class="calc-title">🧮 Sua projeção de recebimentos — Wellhub</div>
-          <div class="motivacao mot-100">Custo zero para você — todo recebimento é renda adicional 💰</div>
+          <div class="motivacao mot-100">Custo zero para você — todo bônus é ganho extra 💰</div>
           <div class="calc-row"><span>Vagas disponíveis</span><span class="val blue" id="wh-calc-vagas">2</span></div>
           <div class="calc-row"><span>Recebimento mínimo (planos básicos)</span><span class="val blue" id="wh-calc-min">R$19,20/mês</span></div>
           <div class="calc-row"><span>Recebimento máximo (planos premium)</span><span class="val blue" id="wh-calc-max">R$80,00/mês</span></div>
@@ -362,7 +362,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         <h2 style="font-size:18px;font-weight:800;color:var(--bluedark);margin-bottom:6px;">TotalPass — Configure sua piscina</h2>
         <p style="font-size:14px;color:var(--bluedark);opacity:.6;margin-bottom:.75rem;font-weight:500;">Sua empresa paga. Você oferta vagas de dependente.</p>
         <div class="info-box">
-          <strong>Como funciona:</strong> o membro escolhe qual plano TotalPass quer ao entrar. O Splitpool cuida do pagamento e do acesso. Você recebe por cada vaga ativada, independente do plano escolhido pelo membro.
+          <strong>Como funciona:</strong> o membro escolhe qual plano TotalPass quer ao entrar. O Splitpool cuida do pagamento e do acesso. Você ganha um bônus por cada vaga ativada, independente do plano escolhido pelo membro.
         </div>
         <p style="font-size:13px;font-weight:700;color:var(--bluedark);margin-bottom:10px;opacity:.8;">Selecione quais planos você permite:</p>
         <div class="wellhub-grid" id="totalpass-grid"></div>
@@ -383,7 +383,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         </div>
         <div class="calc-box">
           <div class="calc-title">🧮 Sua projeção de recebimentos — TotalPass</div>
-          <div class="motivacao mot-100">Custo zero para você — todo recebimento é renda adicional 💰</div>
+          <div class="motivacao mot-100">Custo zero para você — todo bônus é ganho extra 💰</div>
           <div class="calc-row"><span>Vagas disponíveis</span><span class="val blue" id="tp-calc-vagas">2</span></div>
           <div class="calc-row"><span>Recebimento mínimo (TP GO)</span><span class="val blue" id="tp-calc-min">R$19,20/mês</span></div>
           <div class="calc-row"><span>Recebimento máximo (TP7)</span><span class="val blue" id="tp-calc-max">R$112,00/mês</span></div>
@@ -460,7 +460,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
         <div style="font-size:14px;font-weight:800;color:#00875A;margin-bottom:8px;">✅ O que acontece após publicar</div>
         <div style="font-size:13px;color:var(--bluedark);opacity:.7;line-height:1.8;font-weight:500;">
           • Membros entram, pagam e recebem acesso via Splitpool<br>
-          • Você recebe via PIX quando houver membros ativos<br>
+          • Seu bônus cai via PIX quando houver membros ativos<br>
           • O Splitpool gerencia pagamentos, credenciais e suporte
         </div>
       </div>
@@ -689,7 +689,7 @@ function renderTotalPassGrid(){
       <div class="wh-plan">${p.n}</div>
       <div class="wh-price-official">R$${p.of.toFixed(2).replace('.',',')} /mês (TotalPass)</div>
       <div class="wh-price-final">R$${p.sp.toFixed(2).replace('.',',')}<span style="font-size:11px;font-weight:500;opacity:.6">/mês</span></div>
-      <div class="wh-repasse">Você recebe R$${p.rep.toFixed(2).replace('.',',')}/vaga</div>
+      <div class="wh-repasse">Seu bônus: R$${p.rep.toFixed(2).replace('.',',')}/vaga</div>
       <div class="wh-academias">${p.desc}</div>
     </div>`).join('')
 }
@@ -729,7 +729,7 @@ function renderWellhubGrid(){
       <div class="wh-plan">${p.nome}</div>
       <div class="wh-price-official">R$${p.preco.toFixed(2).replace('.',',')} /mês (Wellhub)</div>
       <div class="wh-price-final">R$${(p.preco+(p.repasse*1.3)).toFixed(2).replace('.',',')}<span style="font-size:11px;font-weight:500;opacity:.6">/mês</span></div>
-      <div class="wh-repasse">Você recebe R$${p.repasse.toFixed(2).replace('.',',')}/vaga</div>
+      <div class="wh-repasse">Seu bônus: R$${p.repasse.toFixed(2).replace('.',',')}/vaga</div>
       <div class="wh-academias">${p.academias}</div>
     </div>`).join('')
 }
@@ -809,7 +809,7 @@ function popularSelects(){
   // Info box
   const vagasMax=planoAtual?.vagas||3
   const lucroCheia=tipoSelecionado==='corporativo'?svc.repasse*vagasMax:(svc.repasse*vagasMax)-(planoAtual?.custo||0)
-  document.getElementById('info-preco-svc').innerHTML=`<strong>${svc.nome}</strong> — Você recebe <strong style="color:#00875A">R$${Math.max(0,lucroCheia).toFixed(2).replace('.',',')}/mês</strong> quando a piscina estiver cheia.`
+  document.getElementById('info-preco-svc').innerHTML=`<strong>${svc.nome}</strong> — Seu bônus: <strong style="color:#00875A">R$${Math.max(0,lucroCheia).toFixed(2).replace('.',',')}/mês</strong> quando a piscina estiver cheia.`
 
   recalcularCalc()
   gerarDescricao()
