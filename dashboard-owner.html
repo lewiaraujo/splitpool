@@ -402,7 +402,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
       </div>
       <div class="extrato-aba-row" style="margin-top:10px;">
         <button class="extrato-aba act" onclick="trocarAbaExtrato('repasse',this)">💳 Repasses</button>
-        <button class="extrato-aba" onclick="trocarAbaExtrato('lucro',this)">💰 Lucro</button>
+        <button class="extrato-aba" onclick="trocarAbaExtrato('lucro',this)">💰 Bônus</button>
       </div>
       <!-- Aba Repasses -->
       <div class="extrato-aba-content act" id="extrato-aba-repasse">
@@ -1423,7 +1423,7 @@ async function carregarDashboard(){
     }
     card2HTML='<div class="fin-card">'
       +'<div class="fin-card-header" onclick="toggleFinCard(\'fin-body-2\',this)">'
-      +'<div><div class="fin-card-title green">💰 Seu lucro como dono</div>'
+      +'<div><div class="fin-card-title green">💰 Seu bônus como dono</div>'
       +'<div class="fin-card-sub">Margem dos membros ativos e confirmados</div></div>'
       +'<div class="fin-card-right">'
       +'<div class="fin-card-total green">'+fmt(lucroTotal)+'</div>'
@@ -1447,7 +1447,7 @@ async function carregarDashboard(){
   document.getElementById('resumo-bar').innerHTML=
     '<div class="resumo-item"><div class="resumo-val green">'+fmt(totalReceita)+'</div><div class="resumo-lbl">Receita do mês</div></div>'
     +'<div class="resumo-item"><div class="resumo-val green" id="resumo-recebido">R$0,00</div><div class="resumo-lbl">Já recebido</div></div>'
-    +'<div class="resumo-item"><div class="resumo-val blue" id="resumo-lucro-acum">R$0,00</div><div class="resumo-lbl">A receber</div></div>';
+    +'<div class="resumo-item"><div class="resumo-val blue" id="resumo-lucro-acum">R$0,00</div><div class="resumo-lbl">Bônus acumulado</div></div>';
 
   document.getElementById('pools-list').innerHTML=
     piscinas.map(function(p){return renderPool(p,assinsByPool[p.id]||[],vaultByPool[p.id],vaultByMembro,p.id);}).join('');
@@ -1867,10 +1867,10 @@ function renderExtratoLucro(){
       html+='<div style="font-size:12px;font-weight:700;color:var(--bluedark);">💰 '+(pisc.servico||'—')+'</div>';
       html+='<div style="font-size:14px;font-weight:800;color:#00875A;font-family:Nunito,sans-serif;">'+fmt(lucro)+'</div>';
       html+='</div>';
-      html+='<div style="font-size:11px;font-weight:600;color:var(--bluedark);opacity:.5;margin-top:3px;">Seu lucro nesta piscina</div>';
+      html+='<div style="font-size:11px;font-weight:600;color:var(--bluedark);opacity:.5;margin-top:3px;">Seu bônus nesta piscina</div>';
       html+='</div>';
     });
-    html+='<div class="repasse-total"><span>Lucro '+formatarMes(mes)+'</span><span class="repasse-val green">'+fmt(totalLucro)+'</span></div>';
+    html+='<div class="repasse-total"><span>Bônus '+formatarMes(mes)+'</span><span class="repasse-val green">'+fmt(totalLucro)+'</span></div>';
     html+='</div>';
   });
   el.innerHTML=html;
@@ -1944,7 +1944,7 @@ function renderExtrato(){
         var tipoLabel=r.tipo==='custo'?'💳 Custo':'💰 Margem';
         var tipoColor=r.tipo==='custo'?'var(--blue)':'var(--green)';
         html+='<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--bluedark);opacity:.7;padding:2px 0;">';
-        html+='<span>'+tipoLabel+(r.observacao?' <span style="opacity:.6;">'+r.observacao.split('·').slice(1).join('·')+'</span>':'')+'</span>';
+        html+='<span>'+tipoLabel+(r.observacao?' <span style="opacity:.6;">'+r.observacao.split('·').slice(1).join('·').replace(/Lucro dono/g,'Bônus do dono')+'</span>':'')+'</span>';
         html+='<span style="font-weight:700;color:'+tipoColor+';">'+fmt(r.valor)+'</span>';
         html+='</div>';
       });
