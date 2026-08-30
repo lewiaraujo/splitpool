@@ -1035,20 +1035,17 @@ async function publicarPiscina(){
   await sb.from('profiles').update({telefone:telDono,pix_chave:pixDono,cpf:cpfDono.replace(/\D/g,'')}).eq('id',userId)
 
   // Salva piscina com status pendente e dados do cartão
-  const {error}=await sb.from('piscinas').insert({
-    dono_id:userId,
-    servico:svc.nome,
-    descricao:desc,
-    vagas_total:vagas,
-    vagas_ocupadas:0,
-    preco_por_vaga:isWH?0:isTP?0:svc.precoVenda,
-    status:'pendente',
-    icone_url:(svcSelecionado&&svcSelecionado.img)||null,
-    cartao_vencimento:dia,
-    dia_fechamento_fatura:diaFechamento,
-    data_compra_ciclo:dataCompra,
-    comprovante_url:comprovanteUrl,
-    link_convite:linkConvite
+  // Cria a piscina via RPC segura: o servidor calcula preço/repasse/lucro/snapshot
+  // a partir do catálogo. O cliente não envia número financeiro (anti-adulteração).
+  const {error}=await sb.rpc('criar_piscina',{
+    p_servico:svc.nome,
+    p_vagas:vagas,
+    p_descricao:desc,
+    p_cartao_vencimento:dia,
+    p_dia_fechamento:diaFechamento,
+    p_data_compra:dataCompra,
+    p_comprovante_url:comprovanteUrl,
+    p_link_convite:linkConvite
   })
 
   if(error){
