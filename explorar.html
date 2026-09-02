@@ -517,7 +517,7 @@ async function carregarPiscinas() {
   todasPiscinas = data || []
   // Setup Fase 2: serviços do catálogo sem nenhuma piscina ainda ("Seja o primeiro")
   try{
-    const {data:cat}=await sb.from('catalogo_publico').select('*').eq('ativo',true)
+    const {data:cat}=await sb.from('catalogo_vigente').select('*').eq('ativo',true)
     CATALOGO_EX=cat||[]
   }catch(e){CATALOGO_EX=[]}
   // Serviços ocultos pelo admin
