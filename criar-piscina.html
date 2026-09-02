@@ -352,7 +352,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
           <div class="calc-row"><span>Vagas disponíveis</span><span class="val blue" id="wh-calc-vagas">2</span></div>
           <div class="calc-row"><span>Recebimento mínimo (planos básicos)</span><span class="val blue" id="wh-calc-min">R$19,20/mês</span></div>
           <div class="calc-row"><span>Recebimento máximo (planos premium)</span><span class="val blue" id="wh-calc-max">R$80,00/mês</span></div>
-          <div class="calc-row"><span>Seu custo mensal</span><span class="val green">R$0,00 — empresa paga ✓</span></div>
+          <div class="calc-row"><span>Seu custo mensal</span><span class="val green">R$0,00 no Splitpool — este plano já é seu benefício da empresa ✓</span></div>
           <div class="calc-row"><span>Recebimento líquido estimado</span><span class="val green" id="wh-calc-lucro">R$19–80/mês</span></div>
         </div>
       </div>
@@ -387,7 +387,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
           <div class="calc-row"><span>Vagas disponíveis</span><span class="val blue" id="tp-calc-vagas">2</span></div>
           <div class="calc-row"><span>Recebimento mínimo (TP GO)</span><span class="val blue" id="tp-calc-min">R$19,20/mês</span></div>
           <div class="calc-row"><span>Recebimento máximo (TP7)</span><span class="val blue" id="tp-calc-max">R$112,00/mês</span></div>
-          <div class="calc-row"><span>Seu custo mensal</span><span class="val green">R$0,00 — empresa paga ✓</span></div>
+          <div class="calc-row"><span>Seu custo mensal</span><span class="val green">R$0,00 no Splitpool — este plano já é seu benefício da empresa ✓</span></div>
           <div class="calc-row"><span>Recebimento líquido estimado</span><span class="val green" id="tp-calc-lucro">R$19–112/mês</span></div>
         </div>
       </div>
@@ -537,7 +537,7 @@ let SVCS_FAMILIA=[]
 let SVCS_CORP=[]
 let WH_PLANOS=[]
 let TP_PLANS=[]
-let whPlanosSel=new Set(['Starter','Basic','Basic+','Silver'])
+let whPlanosSel=new Set()
 let tpPlanosSel=new Set()
 
 // Textos de marketing (não-financeiro, não vem do banco) — só descreve a rede de parceiros por tier.
@@ -592,6 +592,9 @@ const catalogoPronto=sb.from('catalogo_vigente').select('*').eq('ativo',true).th
       })
     }
   })
+  // Seleção padrão: TODOS os tiers permitidos (era só 4 hardcoded antes — agora acompanha o catálogo)
+  if(WH_PLANOS.length) whPlanosSel=new Set(WH_PLANOS.map(p=>p.nome))
+  if(TP_PLANS.length) tpPlanosSel=new Set(TP_PLANS.map(p=>p.n))
 }).catch(function(e){console.error('Erro ao carregar catálogo vigente:',e)})
 
 sb.auth.getSession().then(({data})=>{
