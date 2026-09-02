@@ -529,101 +529,70 @@ let comprovanteFile=null
 
 const BASE=''
 
-// Base de dados completa dos serviços com planos oficiais
-const SVCS_FAMILIA=[
-  {
-    nome:'Microsoft 365',sub:'Family · até 6 pessoas',img:BASE+'microsoft_icon.png',
-    precoVenda:25.50,repasse:7.28,
-    planos:[
-      {nome:'Family Mensal',custo:0,vagas:5,desc:'Word, Excel, PowerPoint, Teams, OneDrive 1TB/pessoa'},
-      {nome:'Family Anual',custo:0,vagas:5,desc:'Mesmo conteúdo com desconto anual (R$599/ano)'},
-    ]
-  },
-  {
-    nome:'Duolingo Super',sub:'Família · até 6 pessoas',img:BASE+'duolingo_icon.png',
-    precoVenda:19.90,repasse:3.12,
-    planos:[
-      {nome:'Super Família Anual',custo:0,vagas:5,desc:'Sem anúncios, vidas ilimitadas, modo offline (R$649,90/ano)'},
-    ]
-  },
-  {
-    nome:'Canva Teams',sub:'Teams · até 4 pessoas',img:BASE+'Logo-Canva.png',
-    precoVenda:15.90,repasse:1.83,
-    planos:[
-      {nome:'Teams Anual',custo:0,vagas:4,desc:'Pro completo + Brand Kit + colaboração em equipe (R$470/ano)'},
-    ]
-  },
-  {
-    nome:'Notion Team',sub:'Seats avulsos',img:BASE+'Notion_icon.png',
-    precoVenda:25.00,repasse:16.70,
-    planos:[
-      {nome:'Team (por seat)',custo:0,vagas:3,desc:'Páginas ilimitadas, histórico de versões, convidados ilimitados'},
-    ]
-  },
-]
-const TP_PLANS=[
-  {n:'TP GO',of:39.90,sp:51.90,rep:8.05,desc:'2.000+ academias e parceiros'},
-  {n:'TP1',of:59.90,sp:74.90,rep:9.90,desc:'6.000+ academias e parceiros'},
-  {n:'TP1+',of:89.90,sp:109.90,rep:13.06,desc:'13.000+ academias + Smart Fit'},
-  {n:'TP2',of:119.90,sp:144.90,rep:16.22,desc:'20.000+ academias + Smart Fit + terapia'},
-  {n:'TP3',of:199.90,sp:234.90,rep:22.07,desc:'28.000+ academias + saude integrada'},
-  {n:'TP4',of:299.90,sp:344.90,rep:27.44,desc:'30.000+ academias + espacos premium'},
-  {n:'TP5',of:399.90,sp:449.90,rep:28.93,desc:'32.000+ academias + premium'},
-  {n:'TP5+',of:499.90,sp:554.90,rep:30.41,desc:'33.000+ academias + premium'},
-  {n:'TP6',of:599.90,sp:659.90,rep:31.90,desc:'34.500+ academias + premium'},
-  {n:'TP7',of:699.90,sp:769.90,rep:37.27,desc:'35.000+ academias + premium'}
-]
-const SVCS_CORP=[
-  {nome:'Wellhub',sub:'Benefício corporativo',img:BASE+'wellhub_gympass_icon.png',especial:'wellhub'},
-  {
-    nome:'TotalPass',sub:'Beneficio corporativo',img:BASE+'logo_totalpass_icon_fundo%20transparente.png',
-    precoVenda:51.90,repasse:8.00,especial:'totalpass',
-    planos:[{nome:'TP GO',custo:0,vagas:2,desc:'Membro escolhe o plano no checkout — acesso livre sem vinculo'}]
-  },
-  {
-    nome:'Alura',sub:'Educação corporativa',img:BASE+'logo_alura.png',
-    precoVenda:39.90,repasse:25.00,
-    planos:[{nome:'Corporativo (vaga de dependente)',custo:0,vagas:2,desc:'1.500+ cursos de tecnologia, certificados e formações'}]
-  },
-]
-
-// Setup Fase 2: serviços cadastrados dinamicamente pelo admin (Setup) que ainda não têm
-// lógica hardcoded aqui. Só ENTRAM se o nome não existir nas listas acima (nunca sobrescrevem).
-// Atenção: repasses gerados no dashboard-owner/admin ainda dependem dos mapas hardcoded
-// (LUCRO_SP_MAP/REPASSE_MAP/LUCRO_DONO_MAP) — ao promover um serviço do catálogo pra produção
-// real, adicionar as mesmas chaves nesses mapas para o cálculo de repasse funcionar.
-sb.from('catalogo_publico').select('*').eq('ativo',true).then(({data:catalogo})=>{
-  (catalogo||[]).forEach(function(s){
-    var jaExisteFamilia=SVCS_FAMILIA.some(function(x){return x.nome===s.nome})
-    var jaExisteCorp=SVCS_CORP.some(function(x){return x.nome===s.nome})
-    if(jaExisteFamilia||jaExisteCorp) return
-    var novoItem={
-      nome:s.nome,
-      sub:s.descricao||(s.tipo==='wellness'?'Benefício corporativo':'Plano família'),
-      img:s.icone_url||(BASE+'SplitPool_Icon.png'),
-      precoVenda:Number(s.preco_por_vaga||0),
-      repasse:Number(s.repasse_dono||0),
-      planos:[{nome:s.nome,custo:0,vagas:Number(s.vagas_max||4),desc:s.descricao||''}]
-    }
-    if(s.tipo==='wellness') SVCS_CORP.push(novoItem)
-    else SVCS_FAMILIA.push(novoItem)
-  })
-  if(tipoSelecionado) renderSvcs()
-}).catch(function(){})
-
-const WH_PLANOS=[
-  {nome:'Starter',preco:39.99,repasse:8.04,academias:'6.000+ academias parceiras',popular:false},
-  {nome:'Basic',preco:69.99,repasse:7.33,academias:'SmartFit, CrossFit e parceiros',popular:false},
-  {nome:'Basic+',preco:99.99,repasse:7.39,academias:'Pratique Fitness e mais academias',popular:true},
-  {nome:'Silver',preco:149.99,repasse:11.62,academias:'Pure Pilates, TemBici e parceiros',popular:false},
-  {nome:'Silver+',preco:199.99,repasse:15.08,academias:'Bluefit, Selfit e academias premium',popular:false},
-  {nome:'Gold',preco:319.99,repasse:24.63,academias:"Spin'n Soul e academias top",popular:false},
-  {nome:'Gold+',preco:439.99,repasse:27.97,academias:'Cia Athletica, Bodytech',popular:false},
-  {nome:'Platinum',preco:599.99,repasse:24.14,academias:'Competition e clubes premium',popular:false},
-  {nome:'Diamond',preco:699.99,repasse:21.75,academias:'Buddha Spha, Care Club',popular:false},
-  {nome:'Diamond+',preco:779.99,repasse:19.83,academias:'Reebok, Tennis & Beach Club',popular:false},
-]
+// ===== Catálogo v2 — fonte única de preço =====
+// Preço/repasse/tiers vêm da view catalogo_vigente (Postgres — sem lucro_sp).
+// O servidor já calcula tudo (taxa de cartão, lucro SP, versionamento); o front só exibe.
+// Listas começam vazias e são preenchidas por carregarCatalogo() antes do primeiro render.
+let SVCS_FAMILIA=[]
+let SVCS_CORP=[]
+let WH_PLANOS=[]
+let TP_PLANS=[]
 let whPlanosSel=new Set(['Starter','Basic','Basic+','Silver'])
+let tpPlanosSel=new Set()
+
+// Textos de marketing (não-financeiro, não vem do banco) — só descreve a rede de parceiros por tier.
+// Se um tier novo entrar no catálogo sem entrada aqui, cai em string vazia (grid não quebra).
+const WH_META={
+  'Starter':{academias:'6.000+ academias parceiras',popular:false},
+  'Basic':{academias:'SmartFit, CrossFit e parceiros',popular:false},
+  'Basic+':{academias:'Pratique Fitness e mais academias',popular:true},
+  'Silver':{academias:'Pure Pilates, TemBici e parceiros',popular:false},
+  'Silver+':{academias:'Bluefit, Selfit e academias premium',popular:false},
+  'Gold':{academias:"Spin'n Soul e academias top",popular:false},
+  'Gold+':{academias:'Cia Athletica, Bodytech',popular:false},
+  'Platinum':{academias:'Competition e clubes premium',popular:false},
+  'Diamond':{academias:'Buddha Spha, Care Club',popular:false},
+  'Diamond+':{academias:'Reebok, Tennis & Beach Club',popular:false},
+}
+const TP_META={
+  'TP GO':'2.000+ academias e parceiros','TP1':'6.000+ academias e parceiros',
+  'TP1+':'13.000+ academias + Smart Fit','TP2':'20.000+ academias + Smart Fit + terapia',
+  'TP3':'28.000+ academias + saude integrada','TP4':'30.000+ academias + espacos premium',
+  'TP5':'32.000+ academias + premium','TP5+':'33.000+ academias + premium',
+  'TP6':'34.500+ academias + premium','TP7':'35.000+ academias + premium',
+}
+
+// Promise resolvida quando o catálogo já está montado — o fluxo de auth aguarda antes de renderizar.
+const catalogoPronto=sb.from('catalogo_vigente').select('*').eq('ativo',true).then(({data:catalogo,error})=>{
+  if(error||!catalogo){console.error('Erro ao carregar catálogo vigente:',error);return}
+  catalogo.forEach(function(s){
+    const img=s.icone_url?(/^https?:\/\//.test(s.icone_url)?s.icone_url:BASE+s.icone_url):(BASE+'SplitPool_Icon.png')
+    if(s.tipo==='wellness'){
+      const nomeL=s.nome.toLowerCase()
+      const especial=nomeL.includes('wellhub')?'wellhub':nomeL.includes('totalpass')?'totalpass':null
+      SVCS_CORP.push({nome:s.nome,sub:s.descricao||'Benefício corporativo',img:img,especial:especial})
+      const tiers=Array.isArray(s.planos_financeiros)?s.planos_financeiros:[]
+      if(especial==='wellhub'){
+        // oficial = preço cobrado pela Wellhub; repasse = total ao dono (oficial+bônus); preco = o que o membro paga (já líquido)
+        WH_PLANOS=tiers.map(function(t){
+          const meta=WH_META[t.nome]||{academias:'',popular:false}
+          return{nome:t.nome,preco:Number(t.oficial||0),precoMembro:Number(t.preco||0),repasse:Number(t.repasse||0)-Number(t.oficial||0),academias:meta.academias,popular:meta.popular}
+        })
+      }else if(especial==='totalpass'){
+        TP_PLANS=tiers.map(function(t){
+          return{n:t.nome,of:Number(t.oficial||0),sp:Number(t.preco||0),rep:Number(t.repasse||0)-Number(t.oficial||0),desc:TP_META[t.nome]||''}
+        })
+      }
+    }else{
+      SVCS_FAMILIA.push({
+        nome:s.nome,sub:s.descricao||'Plano família',img:img,
+        precoVenda:Number(s.preco_por_vaga||0),
+        repasse:Number(s.repasse_dono||0),
+        planos:[{nome:s.nome,custo:Number(s.custo_plano||0),vagas:Number(s.vagas_max||4),desc:s.descricao||''}]
+      })
+    }
+  })
+}).catch(function(e){console.error('Erro ao carregar catálogo vigente:',e)})
 
 sb.auth.getSession().then(({data})=>{
   if(!data.session){window.location.href='cadastro.html?modo=login&next=criar-piscina';return}
@@ -647,13 +616,15 @@ sb.auth.getSession().then(({data})=>{
       }
     }
   })
-  // Renderiza grid vazio logo (sem bloqueios ainda)
-  renderSvcs()
-  // Carrega piscinas existentes para bloquear duplicatas
-  sb.from('piscinas').select('servico').eq('dono_id',userId).neq('status','encerrada').then(({data:d})=>{
-    piscinasExistentes=(d||[]).map(p=>p.servico.toLowerCase())
-    renderSvcs() // re-renderiza com bloqueios
-  }).catch(()=>{ /* mantém grid sem bloqueios */ })
+  // Aguarda o catálogo (preço vigente) carregar antes do primeiro render
+  catalogoPronto.then(()=>{
+    renderSvcs()
+    // Carrega piscinas existentes para bloquear duplicatas
+    sb.from('piscinas').select('servico').eq('dono_id',userId).neq('status','encerrada').then(({data:d})=>{
+      piscinasExistentes=(d||[]).map(p=>p.servico.toLowerCase())
+      renderSvcs() // re-renderiza com bloqueios
+    }).catch(()=>{ /* mantém grid sem bloqueios */ })
+  })
 })
 
 function renderSvcs(){
@@ -680,8 +651,6 @@ function onComprovanteSelected(input){
   document.getElementById('upload-ok').style.display='block'
   document.getElementById('upload-ok').textContent='✓ '+file.name+' selecionado'
 }
-
-let tpPlanosSel=new Set()
 
 function renderTotalPassGrid(){
   document.getElementById('totalpass-grid').innerHTML=TP_PLANS.map(p=>`
@@ -728,7 +697,7 @@ function renderWellhubGrid(){
     <div class="wh-card ${whPlanosSel.has(p.nome)?'sel':''} ${p.popular?'popular':''}" onclick="toggleWHPlano('${p.nome}',this)">
       <div class="wh-plan">${p.nome}</div>
       <div class="wh-price-official">R$${p.preco.toFixed(2).replace('.',',')} /mês (Wellhub)</div>
-      <div class="wh-price-final">R$${(p.preco+(p.repasse*1.3)).toFixed(2).replace('.',',')}<span style="font-size:11px;font-weight:500;opacity:.6">/mês</span></div>
+      <div class="wh-price-final">R$${p.precoMembro.toFixed(2).replace('.',',')}<span style="font-size:11px;font-weight:500;opacity:.6">/mês</span></div>
       <div class="wh-repasse">Seu bônus: R$${p.repasse.toFixed(2).replace('.',',')}/vaga</div>
       <div class="wh-academias">${p.academias}</div>
     </div>`).join('')
@@ -969,8 +938,8 @@ function renderResumo(){
   const isTP=svc?.especial==='totalpass'
   const vagas=isWH?document.getElementById('wh-vagas').value:isTP?document.getElementById('tp-vagas').value:document.getElementById('vagas-total').value
   const custo=planoAtual?.custo||0
-  const ganho=isWH?`R$${(parseInt(vagas)*8).toFixed(0)}–R$${(parseInt(vagas)*35).toFixed(0)}/mês`:
-    isTP?`R$${(parseInt(vagas)*8).toFixed(0)}–R$${(parseInt(vagas)*46).toFixed(0)}/mês`:
+  const ganho=isWH?(()=>{const v=parseInt(vagas);const sel=WH_PLANOS.filter(p=>whPlanosSel.has(p.nome));if(!sel.length)return'—';const minR=Math.min(...sel.map(p=>p.repasse))*v;const maxR=Math.max(...sel.map(p=>p.repasse))*v;return`R$${minR.toFixed(0)}–R$${maxR.toFixed(0)}/mês`})():
+    isTP?(()=>{const v=parseInt(vagas);const sel=TP_PLANS.filter(p=>tpPlanosSel.has(p.n));if(!sel.length)return'—';const minR=Math.min(...sel.map(p=>p.rep))*v;const maxR=Math.max(...sel.map(p=>p.rep))*v;return`R$${minR.toFixed(0)}–R$${maxR.toFixed(0)}/mês`})():
     (()=>{const v=parseInt(vagas);const l=tipoSelecionado==='corporativo'?svc.repasse*v:(svc.repasse*v)-custo;return`R$${Math.max(0,l).toFixed(2).replace('.',',')}/mês (estimado)`})()
   const planoNome=planoAtual?.nome||'—'
   document.getElementById('resumo-grid').innerHTML=`
