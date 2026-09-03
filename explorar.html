@@ -565,7 +565,19 @@ function setCategoria(cat, el) {
 const BLOCKLIST = ['spotify','youtube','apple one','netflix','claude pro']
 
 async function renderizar() {
-  const busca = document.getElementById('busca').value.toLowerCase()
+  const buscaRaw = document.getElementById('busca').value.trim()
+  const busca = buscaRaw.toLowerCase()
+
+  // BUSCA POR CÓDIGO SP-XXXX: se o texto parece um código de piscina, filtra pela piscina exata
+  // (o poolCode é derivado do id). Sem isso, a busca por código caía no fallback de catálogo.
+  const codigoBusca = buscaRaw.toUpperCase().replace(/\s/g,'')
+  if(/^SP-?[A-Z0-9]{2,4}$/i.test(codigoBusca)){
+    const alvo = codigoBusca.startsWith('SP-') ? codigoBusca : ('SP-'+codigoBusca.replace(/^SP/,''))
+    const achada = todasPiscinas.filter(p => poolCode(p.id) === alvo && !servicoOcultoEx(p.servico) && !BLOCKLIST.some(b=>p.servico.toLowerCase().includes(b)))
+    await renderResultadoPiscinas(achada, true)
+    return
+  }
+
   let lista = todasPiscinas.filter(p => {
     const matchBusca = !busca || p.servico.toLowerCase().includes(busca) || (p.descricao||'').toLowerCase().includes(busca)
     const matchCat = categoriaAtual === 'todos' || getCategoria(p.servico) === categoriaAtual
@@ -581,7 +593,11 @@ async function renderizar() {
   }
   // ETAPA 2: só as piscinas do serviço escolhido
   lista = lista.filter(p => p.servico === servicoSelecionado)
+  await renderResultadoPiscinas(lista, false)
+}
 
+// Renderiza a lista de piscinas (ordenada) — extraído para ser reusado pela busca por código.
+async function renderResultadoPiscinas(lista, viaCodigo) {
   // Buscar dados dos donos (nome + avatar) em paralelo
   await Promise.all(lista.map(async p => {
     if(p.dono_info === undefined) p.dono_info = await buscarDono(p.dono_id)
@@ -606,7 +622,9 @@ async function renderizar() {
   document.getElementById('total-badge').textContent = `${lista.length} piscina${lista.length !== 1 ? 's' : ''} encontrada${lista.length !== 1 ? 's' : ''}`
 
   if (lista.length === 0) {
-    if (todasPiscinas.length === 0) {
+    if (viaCodigo) {
+      mostrarVazio('Nenhuma piscina com esse código', 'Confira o código SP-XXXX e tente de novo.')
+    } else if (todasPiscinas.length === 0) {
       mostrarVazio('Nenhuma piscina aberta ainda', 'Seja o primeiro a criar uma piscina e comece a ganhar!')
     } else {
       mostrarVazio('Nenhuma piscina encontrada', 'Tente outro filtro ou busca.')
