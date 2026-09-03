@@ -325,9 +325,20 @@ tbody td{padding:12px 16px;font-size:13px;}
           <option value="familia">Plano família</option><option value="wellness">Wellness (corporativo)</option>
         </select>
         <input id="svc-vagas" type="number" min="1" max="10" placeholder="Vagas máx" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
-        <input id="svc-preco" type="number" step="0.01" placeholder="Preço/vaga R$ (membro paga)" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
-        <input id="svc-lucro" type="number" step="0.01" placeholder="Lucro SP R$/vaga" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
-        <input id="svc-custo" type="number" step="0.01" placeholder="Custo do plano p/ dono R$ (opcional)" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;grid-column:span 2;">
+        <div style="grid-column:1/-1;height:1px;background:rgba(0,0,0,0.06);margin:2px 0;"></div>
+        <div style="grid-column:1/-1;font-size:11px;font-weight:800;color:#0A3080;opacity:.7;">💰 Preço inicial do serviço <span style="font-weight:500;opacity:.7;">(depois de criado, o preço só muda por reajuste na lista abaixo)</span></div>
+        <label style="grid-column:span 1;font-size:10px;font-weight:700;color:#555;display:flex;flex-direction:column;gap:3px;">
+          <span title="Valor que o membro paga por mês na Splitpool">Preço/vaga — membro paga R$</span>
+          <input id="svc-preco" type="number" step="0.01" placeholder="ex: 25.50" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        </label>
+        <label style="grid-column:span 1;font-size:10px;font-weight:700;color:#555;display:flex;flex-direction:column;gap:3px;">
+          <span title="Quanto a Splitpool retém de lucro por vaga (o repasse ao dono é o que sobra)">Lucro Splitpool R$/vaga</span>
+          <input id="svc-lucro" type="number" step="0.01" placeholder="ex: 7.09" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        </label>
+        <label style="grid-column:span 2;font-size:10px;font-weight:700;color:#555;display:flex;flex-direction:column;gap:3px;">
+          <span title="O que o dono já paga pela assinatura, por mês. Deixe vazio se o dono não tem custo (ex: benefício corporativo)">Custo do plano p/ dono R$/mês (opcional)</span>
+          <input id="svc-custo" type="number" step="0.01" placeholder="ex: 49.92 (deixe vazio se custo zero)" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
+        </label>
         <div style="grid-column:1/-1;font-size:11px;color:#8a5c00;background:#fff8e0;border-radius:6px;padding:8px 10px;line-height:1.5;">
           💡 <strong>Vagas máx</strong> = vagas OFERTADAS pro Splitpool vender — NÃO conte a vaga do próprio dono. Ex: plano de 6 pessoas, o dono usa 1 pra ele → preencher <strong>5</strong>.<br>
           💡 <strong>Custo do plano p/ dono</strong> = valor MENSAL total que o dono já paga (nunca anual). Se o plano é anual, divida por 12 antes de preencher. Ex: R$599,04/ano ÷ 12 = <strong>R$49,92</strong>.
@@ -358,6 +369,9 @@ tbody td{padding:12px 16px;font-size:13px;}
         <button class="btn-act" style="background:#eef2f7;color:#0A3080;font-size:11px;" onclick="addPlanoFin()">➕ Adicionar plano</button>
       </div>
 
+      <div id="aviso-edicao" style="display:none;font-size:11px;color:#8a5c00;background:#fff8e0;border:1px solid rgba(234,165,9,0.3);border-radius:8px;padding:9px 12px;margin-bottom:10px;line-height:1.5;">
+        ✏️ <strong>Editando serviço existente.</strong> Salvar aqui atualiza só os metadados (nome, categoria, ícone, descrição, vagas). O <strong>preço não é alterado</strong> — para reajustar preço, use o botão <strong>💰 Reajuste</strong> na linha do serviço abaixo (mantém histórico e não afeta piscinas já criadas).
+      </div>
       <div style="display:flex;gap:8px;margin-bottom:16px;">
         <button class="btn-act btn-aprovar" onclick="salvarServico()">💾 Salvar serviço</button>
         <button class="btn-act" style="background:#eef2f7;color:#0A3080;" onclick="limparFormServico()">Limpar</button>
@@ -1187,10 +1201,189 @@ function renderCatalogo(){
         +'<td style="padding:8px 10px;font-size:12px;">'+fmt(Number(s.lucro_sp))+'</td>'
         +'<td style="padding:8px 10px;">'+(s.ativo?'<span class="pill aberta">ativo</span>':'<span class="pill pausada">inativo</span>')+'</td>'
         +'<td style="padding:8px 10px;white-space:nowrap;">'
-          +'<button class="btn-act btn-abrir" onclick="editarServico('+s.id+')">✏️</button> '
+          +'<button class="btn-act btn-abrir" onclick="editarServico('+s.id+')" title="Editar metadados">✏️</button> '
+          +'<button class="btn-act" style="background:#fef3c7;color:#92400e;" onclick="abrirReajuste('+"'"+escapeHtml(s.nome).replace(/'/g,"\\'")+"'"+',this)" title="Reajustar preço / ver histórico">💰 Reajuste</button> '
           +'<button class="btn-act '+(s.ativo?'btn-pausar':'btn-reativar')+'" onclick="toggleServico('+s.id+','+(!s.ativo)+')">'+(s.ativo?'Desativar':'Ativar')+'</button>'
-        +'</td></tr>';
+        +'</td></tr>'
+        +'<tr class="reajuste-row" data-svc="'+escapeHtml(s.nome)+'" style="display:none;"><td colspan="9" style="padding:0 10px 12px;"><div class="reajuste-painel"></div></td></tr>';
     }).join('')+'</tbody></table>';
+}
+
+/* ── FATIA 3: Reajuste de preço com histórico ── */
+// Estado do reajuste em edição, por serviço (para os tiers wellness)
+var reajusteTiers=[];
+var reajusteServicoAtual=null;
+
+function abrirReajuste(nome,btn){
+  var linha=btn.closest('tr');
+  var painelRow=linha.nextElementSibling;
+  if(!painelRow||!painelRow.classList.contains('reajuste-row')) return;
+  var jaAberto=painelRow.style.display!=='none';
+  // Fecha todos os outros painéis
+  document.querySelectorAll('.reajuste-row').forEach(function(r){r.style.display='none';});
+  if(jaAberto){reajusteServicoAtual=null;return;}
+  painelRow.style.display='table-row';
+  reajusteServicoAtual=nome;
+  var svc=catalogoData.find(function(x){return x.nome===nome;});
+  reajusteTiers=(svc&&svc.planos_financeiros)?svc.planos_financeiros.map(function(p){return {nome:p.nome||'',preco:Number(p.preco)||0,oficial:Number(p.oficial)||0,lucro_sp:Number(p.lucro_sp)||0};}):[];
+  var painel=painelRow.querySelector('.reajuste-painel');
+  var ehWellness=svc&&svc.tipo==='wellness';
+  var hoje=new Date().toISOString().slice(0,10);
+  painel.innerHTML=
+    '<div style="background:#fafcff;border:1px solid rgba(18,85,204,0.15);border-radius:10px;padding:14px 16px;margin-top:6px;">'
+    +'<div style="font-size:13px;font-weight:800;color:#0A3080;margin-bottom:2px;">💰 Reajustar preço — '+escapeHtml(nome)+'</div>'
+    +'<div style="font-size:11px;color:#777;margin-bottom:12px;line-height:1.5;">Um reajuste cria uma <strong>nova linha com data de vigência</strong> — não altera piscinas já criadas (elas mantêm o preço congelado). Para corrigir um erro de digitação de um preço já cadastrado, use o lápis no histórico (não gera linha nova).</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px;">'
+      +'<label style="font-size:10px;font-weight:700;color:#555;display:flex;flex-direction:column;gap:3px;">Vigente a partir de<input type="date" id="rj-data" value="'+hoje+'" style="padding:8px 10px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;"></label>'
+      +'<label style="font-size:10px;font-weight:700;color:#555;display:flex;flex-direction:column;gap:3px;"><span title="Valor que o membro paga por mês">Preço/vaga — membro paga R$</span><input type="number" step="0.01" id="rj-preco" placeholder="ex: 26.90" oninput="calcReajuste()" style="padding:8px 10px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;"></label>'
+      +'<label style="font-size:10px;font-weight:700;color:#555;display:flex;flex-direction:column;gap:3px;"><span title="Quanto a Splitpool retém por vaga">Lucro Splitpool R$/vaga</span><input type="number" step="0.01" id="rj-lucro" placeholder="ex: 7.09" oninput="calcReajuste()" style="padding:8px 10px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;"></label>'
+      +'<label style="font-size:10px;font-weight:700;color:#555;display:flex;flex-direction:column;gap:3px;"><span title="O que o dono paga pela assinatura, por mês. Vazio = custo zero">Custo p/ dono R$/mês (opcional)</span><input type="number" step="0.01" id="rj-custo" placeholder="ex: 49.92" oninput="calcReajuste()" style="padding:8px 10px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;"></label>'
+    +'</div>'
+    +(ehWellness?'<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:800;color:#0A3080;margin-bottom:6px;">Planos (tiers)</div><div id="rj-tiers"></div><button class="btn-act" style="background:#eef2f7;color:#0A3080;font-size:11px;margin-top:4px;" onclick="addTierReajuste()">➕ Adicionar tier</button></div>':'')
+    +'<div id="rj-sim" style="display:none;background:#f0f9ff;border:1px solid rgba(18,85,204,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.9;color:#0A3080;"></div>'
+    +'<button class="btn-act btn-aprovar" onclick="salvarReajuste()">💾 Aplicar reajuste</button>'
+    +'<div style="border-top:1px solid rgba(0,0,0,0.08);margin:14px 0 10px;"></div>'
+    +'<div style="font-size:12px;font-weight:800;color:#0A3080;margin-bottom:8px;">📜 Histórico de preços</div>'
+    +'<div id="rj-historico"><div style="font-size:11px;opacity:.5;">Carregando...</div></div>'
+    +'</div>';
+  if(ehWellness) renderTiersReajuste();
+  carregarHistoricoPrecos(nome);
+}
+
+function renderTiersReajuste(){
+  var el=document.getElementById('rj-tiers');
+  if(!el) return;
+  lerTaxaCampos();
+  var header='<div style="display:grid;grid-template-columns:1fr 90px 90px 90px 110px 30px;gap:5px;margin-bottom:4px;font-size:9px;font-weight:800;text-transform:uppercase;opacity:.5;">'
+    +'<span>Nome</span><span title="Membro paga">Preço membro</span><span title="Preço da academia/operadora">Oficial</span><span title="Lucro Splitpool">Lucro SP</span><span>Repasse (auto)</span><span></span></div>';
+  el.innerHTML=header+reajusteTiers.map(function(p,i){
+    var liq=liquidoPosTaxa(Number(p.preco)||0);
+    var rep=Math.max(0,liq-(Number(p.lucro_sp)||0));
+    var bonus=Math.max(0,rep-(Number(p.oficial)||0));
+    return '<div style="display:grid;grid-template-columns:1fr 90px 90px 90px 110px 30px;gap:5px;align-items:center;margin-bottom:5px;">'
+      +'<input value="'+(p.nome||'').replace(/"/g,'&quot;')+'" placeholder="ex: Silver" oninput="reajusteTiers['+i+'].nome=this.value" style="padding:6px 8px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
+      +'<input type="number" step="0.01" value="'+(p.preco||'')+'" placeholder="R$" oninput="reajusteTiers['+i+'].preco=parseFloat(this.value)||0;renderTiersReajuste()" style="padding:6px 8px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
+      +'<input type="number" step="0.01" value="'+(p.oficial||'')+'" placeholder="R$" oninput="reajusteTiers['+i+'].oficial=parseFloat(this.value)||0;renderTiersReajuste()" style="padding:6px 8px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
+      +'<input type="number" step="0.01" value="'+(p.lucro_sp||'')+'" placeholder="R$" oninput="reajusteTiers['+i+'].lucro_sp=parseFloat(this.value)||0;renderTiersReajuste()" style="padding:6px 8px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
+      +'<span style="font-size:10px;color:#0A5C36;font-weight:700;">'+fmt(rep)+'<br><span style="font-size:9px;opacity:.7;">bônus: '+fmt(bonus)+'</span></span>'
+      +'<button onclick="reajusteTiers.splice('+i+',1);renderTiersReajuste()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-weight:800;">×</button>'
+      +'</div>';
+  }).join('');
+}
+
+function addTierReajuste(){
+  reajusteTiers.push({nome:'',preco:0,oficial:0,lucro_sp:0});
+  renderTiersReajuste();
+}
+
+function calcReajuste(){
+  lerTaxaCampos();
+  var preco=parseFloat(document.getElementById('rj-preco').value)||0;
+  var lucroSP=parseFloat(document.getElementById('rj-lucro').value)||0;
+  var custo=parseFloat(document.getElementById('rj-custo').value)||0;
+  var el=document.getElementById('rj-sim');
+  if(!preco){el.style.display='none';return;}
+  var liquido=liquidoPosTaxa(preco);
+  var repasse=Math.max(0,liquido-lucroSP);
+  var custoVaga=custo>0?custo/1:0; // custo já é mensal total; mostrado como referência
+  var alerta=lucroSP>=liquido?'<div style="color:#dc2626;font-weight:800;">⚠️ Lucro SP maior/igual que o líquido pós-taxa — inviável!</div>':'';
+  el.style.display='block';
+  el.innerHTML=alerta
+    +'Membro paga <strong>'+fmt(preco)+'</strong> → taxa ('+TAXA_CARTAO.pct+'% + R$'+TAXA_CARTAO.fixo.toFixed(2)+'): <strong style="color:#b45309;">−'+fmt(preco-liquido)+'</strong> → líquido <strong>'+fmt(liquido)+'</strong><br>'
+    +'Repasse ao dono (calculado): <strong style="color:#0A5C36;">'+fmt(repasse)+'</strong> · Lucro SP: <strong style="color:#1255CC;">'+fmt(Math.min(lucroSP,liquido))+'</strong>'
+    +(custo>0?'<br>Custo p/ dono (mensal): '+fmt(custo)+' → lucro do dono/vaga: <strong style="color:'+((repasse-custo)>=0?'#0A5C36':'#dc2626')+';">'+fmt(repasse-custo)+'</strong>':'');
+}
+
+async function salvarReajuste(){
+  if(!reajusteServicoAtual){showToast('Serviço não identificado.','error');return;}
+  lerTaxaCampos();
+  var data=document.getElementById('rj-data').value;
+  var preco=parseFloat(document.getElementById('rj-preco').value)||0;
+  var lucro=parseFloat(document.getElementById('rj-lucro').value)||0;
+  var custo=parseFloat(document.getElementById('rj-custo').value)||0;
+  if(!data){showToast('Informe a data de vigência.','error');return;}
+  if(preco<=0){showToast('Informe o novo preço.','error');return;}
+  var liquido=liquidoPosTaxa(preco);
+  if(lucro>=liquido){showToast('Lucro SP não pode ser maior que o líquido pós-taxa.','error');return;}
+  // Monta tiers com oficial + repasse calculado
+  var tiersEl=document.getElementById('rj-tiers');
+  var planos=null;
+  if(tiersEl&&reajusteTiers.length){
+    planos=reajusteTiers.filter(function(p){return p.nome&&p.preco>0;}).map(function(p){
+      var liqP=liquidoPosTaxa(Number(p.preco));
+      var o={nome:p.nome.trim(),preco:Number(p.preco),lucro_sp:Number(p.lucro_sp)||0,repasse:Number((liqP-(Number(p.lucro_sp)||0)).toFixed(2))};
+      if(p.oficial!==undefined&&Number(p.oficial)>0) o.oficial=Number(p.oficial);
+      return o;
+    });
+    if(!planos.length) planos=null;
+  }
+  var {error}=await sb.rpc('admin_add_reajuste',{
+    p_servico:reajusteServicoAtual,p_vigente_de:data,p_preco:preco,
+    p_custo:custo>0?custo:null,p_lucro_sp:lucro,p_planos:planos
+  });
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Reajuste aplicado! Vigente a partir de '+data+'.','success');
+  document.getElementById('rj-preco').value='';
+  document.getElementById('rj-lucro').value='';
+  document.getElementById('rj-custo').value='';
+  document.getElementById('rj-sim').style.display='none';
+  carregarHistoricoPrecos(reajusteServicoAtual);
+  await carregarSetup();
+}
+
+async function carregarHistoricoPrecos(nome){
+  var {data,error}=await sb.rpc('admin_listar_precos',{p_servico:nome});
+  var el=document.getElementById('rj-historico');
+  if(!el) return;
+  if(error){el.innerHTML='<div style="font-size:11px;color:#dc2626;">Erro ao carregar histórico: '+escapeHtml(error.message)+'</div>';return;}
+  if(!data||!data.length){el.innerHTML='<div style="font-size:11px;opacity:.5;">Nenhuma linha de preço registrada.</div>';return;}
+  var hoje=new Date().toISOString().slice(0,10);
+  el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr>'
+    +['Vigente de','Preço/vaga','Custo dono','Lucro SP','Repasse','',''].map(function(h){return '<th style="text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:4px 8px;">'+h+'</th>';}).join('')
+    +'</tr></thead><tbody>'
+    +data.map(function(r){
+      var vigente=r.vigente_de<=hoje;
+      var futura=r.vigente_de>hoje;
+      // Encontra a linha vigente hoje (a mais recente com vigente_de <= hoje)
+      var badge=futura?'<span style="font-size:8px;background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:6px;font-weight:800;">AGENDADO</span>':'';
+      return '<tr class="hist-row" data-id="'+r.id+'" style="border-top:1px solid rgba(0,0,0,0.05);">'
+        +'<td style="padding:5px 8px;font-weight:700;">'+r.vigente_de+' '+badge+'</td>'
+        +'<td style="padding:5px 8px;">'+fmt(Number(r.preco_por_vaga))+'</td>'
+        +'<td style="padding:5px 8px;">'+(r.custo_plano?fmt(Number(r.custo_plano)):'—')+'</td>'
+        +'<td style="padding:5px 8px;">'+fmt(Number(r.lucro_sp))+'</td>'
+        +'<td style="padding:5px 8px;color:#0A5C36;font-weight:700;">'+fmt(Number(r.repasse_dono))+'</td>'
+        +'<td style="padding:5px 8px;">'+((r.planos_financeiros&&r.planos_financeiros.length)?'<span style="font-size:9px;background:#eef2ff;color:#3730a3;padding:1px 5px;border-radius:6px;font-weight:800;">'+r.planos_financeiros.length+' tiers</span>':'')+'</td>'
+        +'<td style="padding:5px 8px;"><button class="btn-act" style="background:#eef2f7;color:#0A3080;font-size:10px;" onclick=\'corrigirLinha('+r.id+','+JSON.stringify(JSON.stringify(r)).replace(/'/g,"&#39;")+')\' title="Corrigir erro de digitação (não gera nova linha)">✏️ Corrigir</button></td>'
+        +'</tr>';
+    }).join('')+'</tbody></table>'
+    +'<div style="font-size:10px;opacity:.5;margin-top:6px;line-height:1.5;">A linha vigente hoje é a mais recente com data ≤ hoje. Linhas marcadas <strong>AGENDADO</strong> entram em vigor na data. Corrigir edita a linha existente (para erro de digitação); reajustar cria linha nova.</div>';
+}
+
+function corrigirLinha(id,rJson){
+  var r=typeof rJson==='string'?JSON.parse(rJson):rJson;
+  var novaData=prompt('Corrigir "vigente a partir de" (AAAA-MM-DD):',r.vigente_de);
+  if(novaData===null) return;
+  var novoPreco=prompt('Corrigir preço/vaga (membro paga):',r.preco_por_vaga);
+  if(novoPreco===null) return;
+  var novoLucro=prompt('Corrigir Lucro SP R$/vaga:',r.lucro_sp);
+  if(novoLucro===null) return;
+  var novoCusto=prompt('Corrigir custo p/ dono R$/mês (vazio = sem custo):',r.custo_plano||'');
+  if(novoCusto===null) return;
+  aplicarCorrecao(id,novaData.trim(),parseFloat(novoPreco)||0,parseFloat(novoLucro)||0,novoCusto.trim()?parseFloat(novoCusto):null,r.planos_financeiros||null);
+}
+
+async function aplicarCorrecao(id,data,preco,lucro,custo,planos){
+  if(preco<=0){showToast('Preço inválido.','error');return;}
+  var liquido=liquidoPosTaxa(preco);
+  if(lucro>=liquido){showToast('Lucro SP não pode ser maior que o líquido pós-taxa.','error');return;}
+  var {error}=await sb.rpc('admin_corrigir_preco',{
+    p_id:id,p_vigente_de:data,p_preco:preco,
+    p_custo:custo,p_lucro_sp:lucro,p_planos:planos
+  });
+  if(error){showToast('Erro: '+error.message,'error');return;}
+  showToast('Linha corrigida.','success');
+  if(reajusteServicoAtual) carregarHistoricoPrecos(reajusteServicoAtual);
+  await carregarSetup();
 }
 
 function checarNovaCategoria(sel){
@@ -1279,23 +1472,36 @@ function calcSimulacao(){
 
 function renderPlanosFin(){
   var el=document.getElementById('planos-fin-lista');
+  var ehWellness=document.getElementById('svc-tipo')&&document.getElementById('svc-tipo').value==='wellness';
   if(!planosFin.length){el.innerHTML='<div style="font-size:11px;opacity:.45;margin-bottom:8px;">Nenhum plano extra — serviço de preço único.</div>';return;}
   lerTaxaCampos();
-  el.innerHTML=planosFin.map(function(p,i){
+  // Cabeçalho explicativo dos campos
+  var cols=ehWellness?'1fr 96px 96px 96px 120px 34px':'1fr 110px 110px 130px 34px';
+  var header='<div style="display:grid;grid-template-columns:'+cols+';gap:6px;margin-bottom:4px;font-size:9px;font-weight:800;text-transform:uppercase;opacity:.5;letter-spacing:.3px;">'
+    +'<span>Nome do plano</span>'
+    +'<span title="O que o membro paga por mês na Splitpool">Preço membro</span>'
+    +(ehWellness?'<span title="Preço que a academia/operadora cobra do dono (Wellhub/TotalPass). É o que o dono repassa pra academia — não fica com a Splitpool nem com o dono.">Preço oficial</span>':'')
+    +'<span title="Quanto a Splitpool retém de lucro por vaga neste plano">Lucro SP</span>'
+    +'<span title="Calculado: o que sobra pro dono depois da taxa e do lucro SP">Repasse (auto)</span>'
+    +'<span></span></div>';
+  el.innerHTML=header+planosFin.map(function(p,i){
     var liq=liquidoPosTaxa(Number(p.preco)||0);
     var rep=Math.max(0,liq-(Number(p.lucro_sp)||0));
-    return '<div style="display:grid;grid-template-columns:1fr 110px 110px 130px 34px;gap:6px;align-items:center;margin-bottom:6px;">'
-      +'<input value="'+(p.nome||'').replace(/"/g,'&quot;')+'" placeholder="Nome (ex: Silver)" oninput="planosFin['+i+'].nome=this.value" style="padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
-      +'<input type="number" step="0.01" value="'+(p.preco||'')+'" placeholder="Preço R$" oninput="planosFin['+i+'].preco=parseFloat(this.value)||0;renderPlanosFin()" style="padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
-      +'<input type="number" step="0.01" value="'+(p.lucro_sp||'')+'" placeholder="Lucro SP R$" oninput="planosFin['+i+'].lucro_sp=parseFloat(this.value)||0;renderPlanosFin()" style="padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
-      +'<span style="font-size:10.5px;color:#0A5C36;font-weight:700;">repasse: '+fmt(rep)+'</span>'
+    // Para wellness, o bônus real do dono = repasse − oficial (o resto vai pra academia)
+    var bonus=ehWellness?Math.max(0,rep-(Number(p.oficial)||0)):rep;
+    return '<div style="display:grid;grid-template-columns:'+cols+';gap:6px;align-items:center;margin-bottom:6px;">'
+      +'<input value="'+(p.nome||'').replace(/"/g,'&quot;')+'" placeholder="ex: Silver" oninput="planosFin['+i+'].nome=this.value" style="padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
+      +'<input type="number" step="0.01" value="'+(p.preco||'')+'" placeholder="R$" oninput="planosFin['+i+'].preco=parseFloat(this.value)||0;renderPlanosFin()" style="padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
+      +(ehWellness?'<input type="number" step="0.01" value="'+(p.oficial||'')+'" placeholder="R$" oninput="planosFin['+i+'].oficial=parseFloat(this.value)||0;renderPlanosFin()" style="padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">':'')
+      +'<input type="number" step="0.01" value="'+(p.lucro_sp||'')+'" placeholder="R$" oninput="planosFin['+i+'].lucro_sp=parseFloat(this.value)||0;renderPlanosFin()" style="padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:11px;font-family:inherit;">'
+      +'<span style="font-size:10.5px;color:#0A5C36;font-weight:700;">'+fmt(rep)+(ehWellness?'<br><span style="font-size:9px;opacity:.7;">bônus dono: '+fmt(bonus)+'</span>':'')+'</span>'
       +'<button onclick="planosFin.splice('+i+',1);renderPlanosFin()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;width:30px;height:30px;cursor:pointer;font-weight:800;">×</button>'
       +'</div>';
   }).join('');
 }
 
 function addPlanoFin(){
-  planosFin.push({nome:'',preco:0,lucro_sp:0});
+  planosFin.push({nome:'',preco:0,oficial:0,lucro_sp:0});
   renderPlanosFin();
 }
 
@@ -1305,6 +1511,7 @@ function limparFormServico(){
   if(prev){prev.src='';prev.style.display='none';}
   planosFin=[];renderPlanosFin();
   var sim=document.getElementById('sim-servico');if(sim)sim.style.display='none';
+  toggleAvisoEdicao(false);
 }
 
 function editarServico(id){
@@ -1318,7 +1525,7 @@ function editarServico(id){
   document.getElementById('svc-preco').value=s.preco_por_vaga;
   document.getElementById('svc-custo').value=s.custo_plano||'';
   document.getElementById('svc-lucro').value=s.lucro_sp;
-  planosFin=(s.planos_financeiros||[]).map(function(p){return {nome:p.nome||'',preco:Number(p.preco)||0,lucro_sp:Number(p.lucro_sp)||0};});
+  planosFin=(s.planos_financeiros||[]).map(function(p){return {nome:p.nome||'',preco:Number(p.preco)||0,oficial:Number(p.oficial)||0,lucro_sp:Number(p.lucro_sp)||0};});
   renderPlanosFin();
   calcSimulacao();
   document.getElementById('svc-icone').value=s.icone_url||'';
@@ -1329,7 +1536,14 @@ function editarServico(id){
   }
   document.getElementById('svc-icone-file').value='';
   document.getElementById('svc-descricao').value=s.descricao||'';
+  // Modo edição: preço não muda aqui (só por reajuste). Avisa o admin.
+  toggleAvisoEdicao(true);
   document.getElementById('setup-form').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function toggleAvisoEdicao(editando){
+  var el=document.getElementById('aviso-edicao');
+  if(el) el.style.display=editando?'block':'none';
 }
 
 async function salvarServico(){
@@ -1345,9 +1559,12 @@ async function salvarServico(){
   var liquido=liquidoPosTaxa(preco);
   if(lucro>=liquido){showToast('Lucro SP ('+fmt(lucro)+') não pode ser maior que o líquido pós-taxa ('+fmt(liquido)+').','error');return;}
   var repasse=Number((liquido-lucro).toFixed(2));
+  // Tiers (Wellhub/TotalPass): inclui 'oficial' (preço da academia) — necessário pro bônus no criar-piscina
   var planosLimpos=planosFin.filter(function(p){return p.nome&&p.preco>0;}).map(function(p){
     var liqP=liquidoPosTaxa(Number(p.preco));
-    return {nome:p.nome.trim(),preco:Number(p.preco),lucro_sp:Number(p.lucro_sp)||0,repasse:Number((liqP-(Number(p.lucro_sp)||0)).toFixed(2))};
+    var o={nome:p.nome.trim(),preco:Number(p.preco),lucro_sp:Number(p.lucro_sp)||0,repasse:Number((liqP-(Number(p.lucro_sp)||0)).toFixed(2))};
+    if(p.oficial!==undefined&&p.oficial!==null&&Number(p.oficial)>0) o.oficial=Number(p.oficial);
+    return o;
   });
   // Upload do ícone (se um arquivo foi escolhido)
   var fileEl=document.getElementById('svc-icone-file');
@@ -1358,6 +1575,8 @@ async function salvarServico(){
     }catch(e){showToast('Erro no upload do ícone: '+e.message,'error');return;}
   }
   var idVal=document.getElementById('svc-id').value;
+  var ehNovo=!idVal;
+  // 1) Metadados (+ preço legado em servicos_catalogo, mantido por compatibilidade com o snapshot antigo)
   var {data,error}=await sb.rpc('admin_salvar_servico',{
     p_id:idVal?Number(idVal):null,
     p_nome:nome,
@@ -1370,7 +1589,18 @@ async function salvarServico(){
     p_planos:planosLimpos.length?planosLimpos:null
   });
   if(error){showToast('Erro: '+error.message,'error');return;}
-  showToast('Serviço salvo!','success');
+  // 2) Só para serviço NOVO: cria a primeira linha de preço vigente (versionamento).
+  // Serviço existente NÃO tem preço alterado aqui — isso é feito por "💰 Reajuste" na lista.
+  if(ehNovo){
+    var hoje=new Date().toISOString().slice(0,10);
+    var {error:errPreco}=await sb.rpc('admin_add_reajuste',{
+      p_servico:nome,p_vigente_de:hoje,p_preco:preco,
+      p_custo:custo>0?custo:null,p_lucro_sp:lucro,
+      p_planos:planosLimpos.length?planosLimpos:null
+    });
+    if(errPreco){showToast('Serviço salvo, mas erro ao registrar preço: '+errPreco.message,'error');await carregarSetup();return;}
+  }
+  showToast(ehNovo?'Serviço criado com preço inicial!':'Metadados salvos! (preço não muda aqui — use 💰 Reajuste)','success');
   limparFormServico();
   await carregarSetup();
 }
