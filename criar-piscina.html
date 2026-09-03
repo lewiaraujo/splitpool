@@ -310,8 +310,7 @@ main{padding:90px 5% 60px;max-width:900px;margin:0 auto;}
           </div>
           <div class="vagas-visual" id="vagas-visual"></div>
           <div style="margin-top:1rem;">
-            <div class="calc-row"><span>Seu bônus por vaga preenchida</span><span class="val blue" id="calc-repasse-vaga">—</span></div>
-            <div class="calc-row" id="row-custo"><span>Custo do seu plano família</span><span class="val red" id="calc-custo">—</span></div>
+            <div class="calc-row"><span>Seu bônus por vaga (piscina cheia)</span><span class="val blue" id="calc-repasse-vaga">—</span></div>
             <div class="calc-row"><span id="calc-label-resultado">Com todas as vagas preenchidas</span><span class="val green" id="calc-resultado">—</span></div>
           </div>
         </div>
@@ -562,25 +561,40 @@ const TP_META={
   'TP6':'34.500+ academias + premium','TP7':'35.000+ academias + premium',
 }
 
+// Serviços que são BENEFÍCIO CORPORATIVO mas têm tipo='familia' no banco (preço flat, sem tiers).
+// Sem isso, cairiam na aba "Plano família" por engano — o campo `tipo` só diferencia
+// modelo de PREÇO (flat vs tiers), não a aba de exibição (família vs corporativo).
+const FORCA_CORPORATIVO=new Set(['Alura'])
+
 // Promise resolvida quando o catálogo já está montado — o fluxo de auth aguarda antes de renderizar.
 const catalogoPronto=sb.from('catalogo_vigente').select('*').eq('ativo',true).then(({data:catalogo,error})=>{
   if(error||!catalogo){console.error('Erro ao carregar catálogo vigente:',error);return}
   catalogo.forEach(function(s){
     const img=s.icone_url?(/^https?:\/\//.test(s.icone_url)?s.icone_url:BASE+s.icone_url):(BASE+'SplitPool_Icon.png')
-    if(s.tipo==='wellness'){
+    const ehCorporativo=s.tipo==='wellness'||FORCA_CORPORATIVO.has(s.nome)
+    if(ehCorporativo){
       const nomeL=s.nome.toLowerCase()
       const especial=nomeL.includes('wellhub')?'wellhub':nomeL.includes('totalpass')?'totalpass':null
-      SVCS_CORP.push({nome:s.nome,sub:s.descricao||'Benefício corporativo',img:img,especial:especial})
       const tiers=Array.isArray(s.planos_financeiros)?s.planos_financeiros:[]
       if(especial==='wellhub'){
+        SVCS_CORP.push({nome:s.nome,sub:s.descricao||'Benefício corporativo',img:img,especial:especial})
         // oficial = preço cobrado pela Wellhub; repasse = total ao dono (oficial+bônus); preco = o que o membro paga (já líquido)
         WH_PLANOS=tiers.map(function(t){
           const meta=WH_META[t.nome]||{academias:'',popular:false}
           return{nome:t.nome,preco:Number(t.oficial||0),precoMembro:Number(t.preco||0),repasse:Number(t.repasse||0)-Number(t.oficial||0),academias:meta.academias,popular:meta.popular}
         })
       }else if(especial==='totalpass'){
+        SVCS_CORP.push({nome:s.nome,sub:s.descricao||'Benefício corporativo',img:img,especial:especial})
         TP_PLANS=tiers.map(function(t){
           return{n:t.nome,of:Number(t.oficial||0),sp:Number(t.preco||0),rep:Number(t.repasse||0)-Number(t.oficial||0),desc:TP_META[t.nome]||''}
+        })
+      }else{
+        // Corporativo flat, sem tiers (ex: Alura) — mesma forma de família, sem custo pro dono
+        SVCS_CORP.push({
+          nome:s.nome,sub:s.descricao||'Benefício corporativo',img:img,
+          precoVenda:Number(s.preco_por_vaga||0),
+          repasse:Number(s.repasse_dono||0),
+          planos:[{nome:s.nome,custo:Number(s.custo_plano||0),vagas:Number(s.vagas_max||4),desc:s.descricao||''}]
         })
       }
     }else{
@@ -830,11 +844,12 @@ function recalcularCalc(){
   const repasse=svc.repasse*simVagas
   const lucro=tipoSelecionado==='corporativo'?repasse:repasse-custo
   const lucroFull=tipoSelecionado==='corporativo'?svc.repasse*vagas:(svc.repasse*vagas)-custo
+  // Bônus médio por vaga QUANDO CHEIA, já líquido do custo do plano — nunca o repasse bruto,
+  // pra não divergir do total mostrado logo abaixo (era o bug: 17,26/vaga x 5 ≠ 36,38 exibido).
+  const bonusPorVagaCheia=vagas>0?Math.max(0,lucroFull)/vagas:0
   if(document.getElementById('calc-repasse-vaga')){
-    document.getElementById('calc-repasse-vaga').textContent=`R$${svc.repasse.toFixed(2).replace('.',',')}/vaga`
-    document.getElementById('row-custo').style.display=(tipoSelecionado==='corporativo'||custo===0)?'none':'flex'
-    document.getElementById('calc-custo').textContent=`- R$${custo.toFixed(2).replace('.',',')}`
-    document.getElementById('calc-label-resultado').textContent=simVagas===vagas?'Piscina cheia — seu recebimento':`Com ${simVagas} de ${vagas} vagas`
+    document.getElementById('calc-repasse-vaga').textContent=`R$${bonusPorVagaCheia.toFixed(2).replace('.',',')}/vaga`
+    document.getElementById('calc-label-resultado').textContent=simVagas===vagas?'Piscina cheia — seu Bônus':`Com ${simVagas} de ${vagas} vagas`
     const res=document.getElementById('calc-resultado')
     res.textContent=`R$${Math.max(0,lucro).toFixed(2).replace('.',',')}/mês`
     res.className='val '+(lucro>=0?'green':'red')
@@ -844,8 +859,8 @@ function recalcularCalc(){
     const faltam=vagas-simVagas
     if(simVagas===0){mot.textContent='Publique e comece a ofertar vagas! 🚀';mot.className='motivacao mot-0'}
     else if(lucro<0){mot.textContent=`Faltam ${faltam} membro${faltam>1?'s':''} para cobrir o custo do plano 🎯`;mot.className='motivacao mot-50'}
-    else if(simVagas<vagas){mot.textContent=`Cada nova vaga preenchida = +R$${svc.repasse.toFixed(2).replace('.',',')} 🔥`;mot.className='motivacao mot-80'}
-    else{mot.textContent=`Piscina cheia! Recebimento estimado: R$${Math.max(0,lucroFull).toFixed(2).replace('.',',')}/mês 🎉`;mot.className='motivacao mot-100'}
+    else if(simVagas<vagas){mot.textContent=`Continue preenchendo — piscina cheia rende R$${Math.max(0,lucroFull).toFixed(2).replace('.',',')}/mês 🔥`;mot.className='motivacao mot-80'}
+    else{mot.textContent=`Piscina cheia! Seu bônus: R$${Math.max(0,lucroFull).toFixed(2).replace('.',',')}/mês 🎉`;mot.className='motivacao mot-100'}
   }
 }
 
