@@ -328,6 +328,10 @@ tbody td{padding:12px 16px;font-size:13px;}
         <input id="svc-preco" type="number" step="0.01" placeholder="Preço/vaga R$ (membro paga)" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
         <input id="svc-lucro" type="number" step="0.01" placeholder="Lucro SP R$/vaga" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;">
         <input id="svc-custo" type="number" step="0.01" placeholder="Custo do plano p/ dono R$ (opcional)" oninput="calcSimulacao()" style="padding:9px 12px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:12px;font-family:inherit;grid-column:span 2;">
+        <div style="grid-column:1/-1;font-size:11px;color:#8a5c00;background:#fff8e0;border-radius:6px;padding:8px 10px;line-height:1.5;">
+          💡 <strong>Vagas máx</strong> = vagas OFERTADAS pro Splitpool vender — NÃO conte a vaga do próprio dono. Ex: plano de 6 pessoas, o dono usa 1 pra ele → preencher <strong>5</strong>.<br>
+          💡 <strong>Custo do plano p/ dono</strong> = valor MENSAL total que o dono já paga (nunca anual). Se o plano é anual, divida por 12 antes de preencher. Ex: R$599,04/ano ÷ 12 = <strong>R$49,92</strong>.
+        </div>
         <div style="grid-column:span 2;display:flex;align-items:center;gap:8px;">
           <input type="hidden" id="svc-icone">
           <img id="svc-icone-prev" src="" style="display:none;width:32px;height:32px;border-radius:6px;object-fit:contain;background:#f4f8fc;border:1px solid rgba(0,0,0,0.08);">
@@ -1269,7 +1273,7 @@ function calcSimulacao(){
     +' → líquido: <strong>'+fmt(liquido)+'</strong><br>'
     +'Repasse ao dono (calculado): <strong style="color:#0A5C36;">'+fmt(repasse)+'</strong>'
     +' · Lucro SP líquido: <strong style="color:#1255CC;">'+fmt(Math.min(lucroSP,liquido))+'</strong><br>'
-    +(custo>0?('Custo do plano p/ dono: '+fmt(custo)+' ('+fmt(custoVaga)+'/vaga) → lucro do dono/vaga: <strong style="color:'+(lucroDonoVaga>=0?'#0A5C36':'#dc2626')+';">'+fmt(lucroDonoVaga)+'</strong><br>'):'')
+    +(custo>0?('Custo do plano p/ dono (mensal): '+fmt(custo)+' ('+fmt(custoVaga)+'/vaga) → lucro do dono/vaga: <strong style="color:'+(lucroDonoVaga>=0?'#0A5C36':'#dc2626')+';">'+fmt(lucroDonoVaga)+'</strong><br>'):'')
     +'<div style="border-top:1px solid rgba(18,85,204,0.15);margin-top:4px;padding-top:4px;">Piscina cheia ('+vagas+' vagas): membros pagam <strong>'+fmt(preco*vagas)+'</strong> · dono recebe <strong>'+fmt(repasse*vagas)+'</strong>'+(custo>0?' (lucro '+fmt(lucroDonoVaga*vagas)+')':'')+' · SP lucra <strong>'+fmt(Math.min(lucroSP,liquido)*vagas)+'</strong>/mês</div>';
 }
 
