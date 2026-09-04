@@ -1957,10 +1957,18 @@ function renderExtrato(){
       html+='<div style="font-size:12px;font-weight:800;color:var(--green);">'+fmt(totalPisc)+'</div>';
       html+='</div>';
       itens.forEach(function(r){
-        var tipoLabel=r.tipo==='custo'?'💳 Custo':'💰 Margem';
+        var tipoLabel=r.tipo==='custo'?'💳 Custo':'💰 Repasse';
         var tipoColor=r.tipo==='custo'?'var(--blue)':'var(--green)';
+        // Aba Repasses fala só do repasse integral: remove o trecho "Lucro dono R$X"
+        // (isso é o bônus do dono, exibido na aba Bônus). Mantém "N membros" e data.
+        var obsRepasse='';
+        if(r.observacao){
+          obsRepasse=r.observacao.split('·').slice(1)
+            .filter(function(parte){return parte.indexOf('Lucro dono')===-1;})
+            .join('·').trim();
+        }
         html+='<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--bluedark);opacity:.7;padding:2px 0;">';
-        html+='<span>'+tipoLabel+(r.observacao?' <span style="opacity:.6;">'+r.observacao.split('·').slice(1).join('·').replace(/Lucro dono/g,'Bônus do dono')+'</span>':'')+'</span>';
+        html+='<span>'+tipoLabel+(obsRepasse?' <span style="opacity:.6;">'+obsRepasse.replace(/[<>&]/g,function(c){return c==='<'?'&lt;':c==='>'?'&gt;':'&amp;';})+'</span>':'')+'</span>';
         html+='<span style="font-weight:700;color:'+tipoColor+';">'+fmt(r.valor)+'</span>';
         html+='</div>';
       });
