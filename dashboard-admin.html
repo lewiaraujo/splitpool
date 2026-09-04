@@ -1167,7 +1167,23 @@ var configIndexData=null;
 
 async function carregarSetup(){
   var {data:svcs}=await sb.from('servicos_catalogo').select('*').order('nome');
-  catalogoData=svcs||[];
+  // Preço vigente vem do VERSIONAMENTO (catalogo_vigente), não do metadado legado.
+  // Mesclar evita a divergência: a tabela sempre reflete o preço realmente em vigor.
+  var {data:vigentes}=await sb.from('catalogo_vigente').select('nome,preco_por_vaga,repasse_dono,custo_plano,planos_financeiros,preco_vigente_de');
+  var mapVig={};
+  (vigentes||[]).forEach(function(v){mapVig[v.nome]=v;});
+  catalogoData=(svcs||[]).map(function(s){
+    var v=mapVig[s.nome];
+    if(v){
+      // Sobrepõe os campos de preço com os do versionamento (mantém id, categoria, tipo, ícone, etc.)
+      s.preco_por_vaga=(v.preco_por_vaga!=null)?v.preco_por_vaga:s.preco_por_vaga;
+      s.repasse_dono=(v.repasse_dono!=null)?v.repasse_dono:s.repasse_dono;
+      s.custo_plano=(v.custo_plano!=null)?v.custo_plano:s.custo_plano;
+      if(v.planos_financeiros!=null) s.planos_financeiros=v.planos_financeiros;
+      s._preco_vigente_de=v.preco_vigente_de||null;
+    }
+    return s;
+  });
   popularCategoriasCatalogo();
   renderCatalogo();
   var {data:cfgTx}=await sb.from('site_config').select('valor').eq('chave','taxa_cartao').maybeSingle();
@@ -1516,6 +1532,12 @@ function calcSimulacao(){
 
 function renderPlanosFin(){
   var el=document.getElementById('planos-fin-lista');
+  if(!el) return;
+  // Na edição de serviço existente, tiers não são editáveis aqui — só por reajuste.
+  if(_bloqueiaTiersEdicao){
+    el.innerHTML='<div style="font-size:11px;color:#8a5c00;background:#fff8e0;border-radius:6px;padding:8px 10px;line-height:1.5;">🔒 Os planos/tiers e preços deste serviço só mudam por <strong>💰 Reajuste</strong> (na lista abaixo), que mantém histórico. A edição aqui altera apenas metadados.</div>';
+    return;
+  }
   var ehWellness=document.getElementById('svc-tipo')&&document.getElementById('svc-tipo').value==='wellness';
   if(!planosFin.length){el.innerHTML='<div style="font-size:11px;opacity:.45;margin-bottom:8px;">Nenhum plano extra — serviço de preço único.</div>';return;}
   lerTaxaCampos();
@@ -1588,7 +1610,23 @@ function editarServico(id){
 function toggleAvisoEdicao(editando){
   var el=document.getElementById('aviso-edicao');
   if(el) el.style.display=editando?'block':'none';
+  // Trava os campos de PREÇO na edição — preço só muda por reajuste (evita divergência
+  // entre servicos_catalogo e precos_catalogo/view). Na criação, ficam livres.
+  ['svc-preco','svc-lucro','svc-custo'].forEach(function(id){
+    var c=document.getElementById(id);
+    if(!c) return;
+    c.readOnly=editando;
+    c.style.background=editando?'#f0f0f0':'';
+    c.style.cursor=editando?'not-allowed':'';
+    c.title=editando?'Preço só muda por reajuste (💰 Reajuste na lista abaixo)':'';
+  });
+  // Trava também o editor de tiers na edição
+  var addTierBtn=document.querySelector('[onclick="addPlanoFin()"]');
+  if(addTierBtn) addTierBtn.style.display=editando?'none':'';
+  _bloqueiaTiersEdicao=editando;
+  renderPlanosFin();
 }
+var _bloqueiaTiersEdicao=false;
 
 async function salvarServico(){
   lerTaxaCampos();
@@ -1620,17 +1658,32 @@ async function salvarServico(){
   }
   var idVal=document.getElementById('svc-id').value;
   var ehNovo=!idVal;
+  // Na EDIÇÃO, os valores financeiros vêm do registro ORIGINAL (não do formulário).
+  // Isso garante que editar metadados nunca altere preço em servicos_catalogo —
+  // preço só muda por reajuste (precos_catalogo). Fecha a divergência na raiz,
+  // mesmo que alguém contorne o readonly dos campos.
+  var precoFin=preco, repasseFin=repasse, lucroFin=lucro, custoFin=custo, planosFin_env=planosLimpos;
+  if(!ehNovo){
+    var orig=catalogoData.find(function(x){return x.id===Number(idVal);});
+    if(orig){
+      precoFin=Number(orig.preco_por_vaga)||preco;
+      repasseFin=Number(orig.repasse_dono)||repasse;
+      lucroFin=Number(orig.lucro_sp)||lucro;
+      custoFin=(orig.custo_plano!=null)?Number(orig.custo_plano):null;
+      planosFin_env=(orig.planos_financeiros&&orig.planos_financeiros.length)?orig.planos_financeiros:null;
+    }
+  }
   // 1) Metadados (+ preço legado em servicos_catalogo, mantido por compatibilidade com o snapshot antigo)
   var {data,error}=await sb.rpc('admin_salvar_servico',{
     p_id:idVal?Number(idVal):null,
     p_nome:nome,
     p_categoria:document.getElementById('svc-categoria').value,
     p_tipo:document.getElementById('svc-tipo').value,
-    p_vagas:vagas,p_preco:preco,p_repasse:repasse,p_lucro:lucro,
+    p_vagas:vagas,p_preco:precoFin,p_repasse:repasseFin,p_lucro:lucroFin,
     p_icone:document.getElementById('svc-icone').value.trim(),
     p_descricao:document.getElementById('svc-descricao').value.trim(),
-    p_custo:custo>0?custo:null,
-    p_planos:planosLimpos.length?planosLimpos:null
+    p_custo:(custoFin&&custoFin>0)?custoFin:null,
+    p_planos:(planosFin_env&&planosFin_env.length)?planosFin_env:null
   });
   if(error){showToast('Erro: '+error.message,'error');return;}
   // 2) Só para serviço NOVO: cria a primeira linha de preço vigente (versionamento).
