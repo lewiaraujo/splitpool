@@ -1291,20 +1291,29 @@ function calcReajuste(){
   var custo=parseFloat(document.getElementById('rj-custo').value)||0;
   var el=document.getElementById('rj-sim');
   if(!preco){el.style.display='none';return;}
-  // Vagas vêm do serviço (metadado) — não muda em reajuste. Mesma base do cadastro.
   var svc=catalogoData.find(function(x){return x.nome===reajusteServicoAtual;});
   var vagas=(svc&&Number(svc.vagas_max))||1;
   var liquido=liquidoPosTaxa(preco);
   var repasse=Math.max(0,liquido-lucroSP);
-  var custoVaga=custo>0?custo/vagas:0;               // custo mensal total ÷ vagas vendáveis
-  var lucroDonoVaga=repasse-custoVaga;               // lucro do dono por vaga (já pós-taxa)
+  var custoVaga=custo>0?custo/vagas:0;
+  var recebeCheia=repasse*vagas;
+  var saldoDono=recebeCheia-custo;
+  var custoVagaDono=custo>0?Math.max(0,custo-recebeCheia):0;
   var alerta=lucroSP>=liquido?'<div style="color:#dc2626;font-weight:800;">⚠️ Lucro SP maior/igual que o líquido pós-taxa — inviável!</div>':'';
+  var linhaDono='';
+  if(custo>0){
+    if(saldoDono>=0){
+      linhaDono='Custo do plano (mensal): '+fmt(custo)+' ('+fmt(custoVaga)+'/vaga) → cheia, o dono <strong style="color:#0A5C36;">lucra '+fmt(saldoDono)+'/mês</strong>';
+    } else {
+      linhaDono='Custo do plano (mensal): '+fmt(custo)+' ('+fmt(custoVaga)+'/vaga) → cheia, <strong style="color:#0A5C36;">a vaga do dono sairá por '+fmt(custoVagaDono)+'/mês</strong> (não lucra, mas paga menos)';
+    }
+  }
   el.style.display='block';
   el.innerHTML=alerta
     +'Membro paga <strong>'+fmt(preco)+'</strong> → taxa ('+TAXA_CARTAO.pct+'% + R$'+TAXA_CARTAO.fixo.toFixed(2)+'): <strong style="color:#b45309;">−'+fmt(preco-liquido)+'</strong> → líquido <strong>'+fmt(liquido)+'</strong><br>'
     +'Repasse ao dono (calculado): <strong style="color:#0A5C36;">'+fmt(repasse)+'</strong> · Lucro SP: <strong style="color:#1255CC;">'+fmt(Math.min(lucroSP,liquido))+'</strong>'
-    +(custo>0?'<br>Custo do plano p/ dono (mensal): '+fmt(custo)+' ('+fmt(custoVaga)+'/vaga) → lucro do dono/vaga: <strong style="color:'+(lucroDonoVaga>=0?'#0A5C36':'#dc2626')+';">'+fmt(lucroDonoVaga)+'</strong>':'')
-    +'<div style="border-top:1px solid rgba(18,85,204,0.15);margin-top:4px;padding-top:4px;">Piscina cheia ('+vagas+' vagas): membros pagam <strong>'+fmt(preco*vagas)+'</strong> · dono recebe <strong>'+fmt(repasse*vagas)+'</strong>'+(custo>0?' (lucro '+fmt(lucroDonoVaga*vagas)+')':'')+' · SP lucra <strong>'+fmt(Math.min(lucroSP,liquido)*vagas)+'</strong>/mês</div>';
+    +(linhaDono?'<br>'+linhaDono:'')
+    +'<div style="border-top:1px solid rgba(18,85,204,0.15);margin-top:4px;padding-top:4px;">Piscina cheia ('+vagas+' vagas): membros pagam <strong>'+fmt(preco*vagas)+'</strong> · SP lucra <strong>'+fmt(Math.min(lucroSP,liquido)*vagas)+'</strong>/mês</div>';
 }
 
 async function salvarReajuste(){
@@ -1463,14 +1472,30 @@ function calcSimulacao(){
   var preco=parseFloat(document.getElementById('svc-preco').value)||0;
   var lucroSP=parseFloat(document.getElementById('svc-lucro').value)||0;
   var custo=parseFloat(document.getElementById('svc-custo').value)||0;
-  var vagas=parseInt(document.getElementById('svc-vagas').value)||0;
+  var vagas=parseInt(document.getElementById('svc-vagas').value)||0;  // vagas VENDÁVEIS (sem a do dono)
   var el=document.getElementById('sim-servico');
   if(!preco||!vagas){el.style.display='none';return;}
   var liquido=liquidoPosTaxa(preco);
   var repasse=Math.max(0, liquido-lucroSP);
-  var custoVaga=custo>0&&vagas>0?custo/vagas:0;
-  var lucroDonoVaga=repasse-custoVaga;
+  // Custo rateado pelas vagas VENDÁVEIS — consistente com vagas_max no resto do sistema.
+  var custoVaga=custo>0?custo/vagas:0;
+  // Piscina cheia: dono recebe o repasse de todas as vendáveis; o saldo contra o custo total
+  // define se ele LUCRA ou se apenas paga barato pela própria vaga (nunca "lucro negativo").
+  var recebeCheia=repasse*vagas;
+  var saldoDono=recebeCheia-custo;                              // >0 = lucra ; <0 = subsidia própria vaga
+  var custoVagaDono=custo>0?Math.max(0,custo-recebeCheia):0;    // quanto o dono paga do bolso (cheia)
   var alerta=lucroSP>liquido?'<div style="color:#dc2626;font-weight:800;">⚠️ Lucro SP maior que o líquido pós-taxa — inviável!</div>':'';
+
+  // Linha do dono (contexto: quem preenche é a equipe SP, texto em 3ª pessoa "o dono").
+  var linhaDono='';
+  if(custo>0){
+    if(saldoDono>=0){
+      linhaDono='Custo do plano (mensal, todas as vagas): '+fmt(custo)+' ('+fmt(custoVaga)+'/vaga vendável) → com a piscina cheia o dono <strong style="color:#0A5C36;">lucra '+fmt(saldoDono)+'/mês</strong> e ainda usa o plano de graça.';
+    } else {
+      linhaDono='Custo do plano (mensal, todas as vagas): '+fmt(custo)+' ('+fmt(custoVaga)+'/vaga vendável). Com a piscina cheia, os '+vagas+' membros abatem quase tudo → <strong style="color:#0A5C36;">a vaga do dono sairá por só '+fmt(custoVagaDono)+'/mês</strong>. O dono não lucra, mas paga bem menos pelo próprio acesso.';
+    }
+  }
+
   el.style.display='block';
   el.innerHTML='<div style="font-weight:800;margin-bottom:4px;">📊 Simulação por vaga (base: mesma do plano financeiro)</div>'
     +alerta
@@ -1479,8 +1504,14 @@ function calcSimulacao(){
     +' → líquido: <strong>'+fmt(liquido)+'</strong><br>'
     +'Repasse ao dono (calculado): <strong style="color:#0A5C36;">'+fmt(repasse)+'</strong>'
     +' · Lucro SP líquido: <strong style="color:#1255CC;">'+fmt(Math.min(lucroSP,liquido))+'</strong><br>'
-    +(custo>0?('Custo do plano p/ dono (mensal): '+fmt(custo)+' ('+fmt(custoVaga)+'/vaga) → lucro do dono/vaga: <strong style="color:'+(lucroDonoVaga>=0?'#0A5C36':'#dc2626')+';">'+fmt(lucroDonoVaga)+'</strong><br>'):'')
-    +'<div style="border-top:1px solid rgba(18,85,204,0.15);margin-top:4px;padding-top:4px;">Piscina cheia ('+vagas+' vagas): membros pagam <strong>'+fmt(preco*vagas)+'</strong> · dono recebe <strong>'+fmt(repasse*vagas)+'</strong>'+(custo>0?' (lucro '+fmt(lucroDonoVaga*vagas)+')':'')+' · SP lucra <strong>'+fmt(Math.min(lucroSP,liquido)*vagas)+'</strong>/mês</div>';
+    +(linhaDono?linhaDono+'<br>':'')
+    +'<div style="border-top:1px solid rgba(18,85,204,0.15);margin-top:4px;padding-top:4px;">'
+    +'<strong>Piscina cheia ('+vagas+' vagas vendidas):</strong> membros pagam <strong>'+fmt(preco*vagas)+'</strong>'
+    +' · SP lucra <strong style="color:#1255CC;">'+fmt(Math.min(lucroSP,liquido)*vagas)+'</strong>/mês'
+    +' · '+(custo>0
+        ? (saldoDono>=0?'dono lucra <strong style="color:#0A5C36;">'+fmt(saldoDono)+'</strong>/mês':'a vaga do dono sairá por <strong style="color:#0A5C36;">'+fmt(custoVagaDono)+'</strong>/mês')
+        : 'dono recebe <strong style="color:#0A5C36;">'+fmt(recebeCheia)+'</strong>/mês (custo zero)')
+    +'</div>';
 }
 
 function renderPlanosFin(){
