@@ -453,16 +453,34 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 
 const BASE='';
-const SVCS=[
+// Escape de HTML — OBRIGATÓRIO em todo dado que vem do banco antes de ir pro innerHTML.
+// O index é página pública e o catálogo é editado pela equipe SP; sem isso, um valor
+// malicioso num campo do catálogo (nome/descrição) viraria XSS armazenado.
+function escapeHtml(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+// FALLBACK hardcoded — usado só se o fetch do catálogo falhar (offline/erro de rede).
+// A fonte real é catalogo_vigente (carregada em carregarCatalogoIndex()).
+const SVCS_FALLBACK=[
   {n:"Microsoft 365 Family",m:"até 5 vagas · Word, Excel, OneDrive 1TB",p:"R$25,50",cat:"ia",img:BASE+'microsoft_icon.png'},
   {n:"Duolingo Super Família",m:"até 5 vagas · Plano família anual",p:"R$19,90",cat:"ia",img:BASE+'duolingo_icon.png'},
   {n:"Canva Teams",m:"até 4 vagas · Design Pro completo",p:"R$15,90",cat:"ia",img:BASE+'Logo-Canva.png'},
-  {n:"Claude Pro",m:"seats avulsos · IA avançada",p:"R$50,00",cat:"ia",img:BASE+'claude-ai_icon.jpg'},
   {n:"Notion Team",m:"seats avulsos · Produtividade",p:"R$25,00",cat:"ia",img:BASE+'Notion_icon.png'},
   {n:"Wellhub",m:"vagas corporativas · Fitness premium",p:"A partir de R$51,99",cat:"wellness",img:BASE+'wellhub_gympass_icon.png'},
-  {n:"TotalPass",m:"vagas corporativas · 35k+ academias",p:"A partir de R$51,90",cat:"wellness",img:BASE+'logo_totalpass_icon_fundo%20transparente.png'},
   {n:"Alura",m:"vagas corporativas · Educação tech",p:"R$39,90",cat:"ia",img:BASE+'logo_alura.png'},
 ];
+let SVCS=SVCS_FALLBACK.slice();
+
+// Mapeia a categoria do catálogo para o filtro do index (todos/streaming/ia/wellness)
+function catIndex(categoria,tipo){
+  var c=(categoria||'').toLowerCase();
+  if((tipo||'').toLowerCase()==='wellness'||c==='wellness') return 'wellness';
+  if(c==='streaming'||c==='musica') return 'streaming';
+  return 'ia'; // produtividade, educacao, design, ia → agrupados no filtro "IA & Produt."
+}
+function fmtPrecoIndex(v){return 'R$'+Number(v||0).toFixed(2).replace('.',',');}
 
 let SVC_OCULTOS=[];
 let _fAtualSvc='all';
@@ -474,7 +492,17 @@ function renderSvcs(f){
   _fAtualSvc=f;
   const g=document.getElementById('svc-grid');
   const d=(f==='all'?SVCS:SVCS.filter(s=>s.cat===f)).filter(s=>!svcOculto(s.n));
-  g.innerHTML=d.map(s=>`<div class="svc-card" onclick="ir('explorar')"><div class="svc-ico"><img src="${s.img}" alt="${s.n}" style="width:52px;height:52px;object-fit:cover;border-radius:12px;display:block;" onerror="this.parentElement.innerHTML='<div style=\\'width:52px;height:52px;border-radius:12px;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:22px;\\'>${s.n[0]}</div>'"></div><div style="flex:1;min-width:0;"><div class="svc-name">${s.n}</div><div class="svc-meta">${s.m}</div></div><div style="text-align:right;flex-shrink:0;"><div class="svc-price${s.p.length>8?' small':''}">${s.p}</div><div class="svc-mo">/mês por vaga</div></div></div>`).join('');
+  // TODO valor vindo do catálogo é escapado antes de entrar no innerHTML (proteção XSS).
+  g.innerHTML=d.map(function(s){
+    var nome=escapeHtml(s.n), meta=escapeHtml(s.m), preco=escapeHtml(s.p);
+    var img=encodeURI(String(s.img||'')), inicial=escapeHtml((s.n||'?').charAt(0));
+    var small=(s.p&&s.p.length>8)?' small':'';
+    return '<div class="svc-card" onclick="ir(\'explorar\')">'
+      +'<div class="svc-ico"><img src="'+img+'" alt="'+nome+'" style="width:52px;height:52px;object-fit:cover;border-radius:12px;display:block;" onerror="this.parentElement.innerHTML=\'<div style=&quot;width:52px;height:52px;border-radius:12px;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:22px;&quot;>'+inicial+'</div>\'"></div>'
+      +'<div style="flex:1;min-width:0;"><div class="svc-name">'+nome+'</div><div class="svc-meta">'+meta+'</div></div>'
+      +'<div style="text-align:right;flex-shrink:0;"><div class="svc-price'+small+'">'+preco+'</div><div class="svc-mo">/mês por vaga</div></div>'
+      +'</div>';
+  }).join('');
 }
 function fSvc(f,el){document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('act'));el.classList.add('act');renderSvcs(f);}
 function isLogado(){
@@ -503,6 +531,33 @@ function irLogin(){
 function closeM(id){document.getElementById('m-'+id).classList.remove('open');}
 document.querySelectorAll('.mov').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 renderSvcs('all');
+
+// ── Grade de serviços do index: fonte = catalogo_vigente (view pública, sem lucro_sp) ──
+// SEGURANÇA: colunas explícitas (nunca select=*), só dados públicos, tudo escapado no render.
+// Só o preço "a partir de" usa o menor 'preco' dos tiers — nunca repasse/lucro interno.
+function carregarCatalogoIndex(){
+  var cols='nome,descricao,preco_por_vaga,icone_url,categoria,tipo,ativo,planos_financeiros';
+  fetch('https://eawfweuamtwlsilrkgoo.supabase.co/rest/v1/catalogo_vigente?select='+encodeURIComponent(cols),{
+    headers:{'apikey':'sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ'}
+  }).then(function(r){return r.json();}).then(function(rows){
+    if(!Array.isArray(rows)||!rows.length) return; // mantém o fallback hardcoded
+    SVCS=rows.filter(function(s){return s&&s.ativo!==false;}).map(function(s){
+      // Preço: se tem tiers, "A partir de" o MENOR preço de membro; senão, o preço da vaga.
+      var preco;
+      var tiers=Array.isArray(s.planos_financeiros)?s.planos_financeiros:[];
+      if(tiers.length){
+        var min=Math.min.apply(null,tiers.map(function(t){return Number(t.preco)||Infinity;}));
+        preco=isFinite(min)?('A partir de '+fmtPrecoIndex(min)):fmtPrecoIndex(s.preco_por_vaga);
+      }else{
+        preco=fmtPrecoIndex(s.preco_por_vaga);
+      }
+      var img=s.icone_url?(/^https?:\/\//.test(s.icone_url)?s.icone_url:(BASE+s.icone_url)):(BASE+'SplitPool_Icon.png');
+      return {n:s.nome,m:s.descricao||'',p:preco,cat:catIndex(s.categoria,s.tipo),img:img};
+    });
+    renderSvcs(_fAtualSvc); // re-render com o catálogo real (ocultos já são filtrados no render)
+  }).catch(function(){ /* falha de rede: mantém o fallback hardcoded, sem quebrar a página */ });
+}
+carregarCatalogoIndex();
 
 // Setup Fase 2: conteúdo dinâmico do index (boias e stats) via admin, com fallback pro hardcoded
 fetch('https://eawfweuamtwlsilrkgoo.supabase.co/rest/v1/site_config?chave=eq.index&select=valor',{
