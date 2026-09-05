@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splitpool — Saúde da Infra</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1255CC;--bluedark:#0A3080;--teal:#00C8D7;--green:#00A878;--amber:#e6a509;--red:#e74c3c;--bg:#f0f4ff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--bluedark);min-height:100vh;padding-bottom:60px;}
+.topbar{background:var(--bluedark);color:#fff;padding:14px 24px;display:flex;align-items:center;gap:14px;}
+.topbar .logo{font-family:'Nunito',sans-serif;font-weight:900;font-size:18px;}
+.topbar .badge{background:var(--red);font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.05em;}
+.topbar a{color:#fff;opacity:.75;text-decoration:none;font-size:13px;font-weight:600;margin-left:auto;}
+.wrap{max-width:1100px;margin:0 auto;padding:24px;}
+.head{margin-bottom:20px;display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.h1{font-family:'Nunito',sans-serif;font-size:24px;font-weight:900;}
+.sub{font-size:13px;opacity:.5;margin-top:2px;}
+.refresh{margin-left:auto;padding:8px 16px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+.refresh:disabled{opacity:.5;cursor:wait;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:18px;}
+.card{background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 1px 3px rgba(10,48,128,0.06);}
+.card h3{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;opacity:.5;margin-bottom:10px;}
+.big{font-size:30px;font-weight:900;font-family:'Nunito',sans-serif;line-height:1;}
+.big small{font-size:14px;font-weight:700;opacity:.5;}
+.bar{height:12px;border-radius:8px;background:#eef2fb;overflow:hidden;margin:10px 0 6px;}
+.bar>div{height:100%;border-radius:8px;transition:width .4s;}
+.bar-verde>div{background:var(--green);} .bar-amarelo>div{background:var(--amber);} .bar-vermelho>div{background:var(--red);}
+.pill{display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;}
+.pill.verde{background:#d4f5ea;color:#046b4e;} .pill.amarelo{background:#fdf0d0;color:#8a6100;} .pill.vermelho{background:#fbe0dd;color:#992418;}
+.mut{font-size:11px;opacity:.55;line-height:1.5;}
+.counters{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;}
+.counter{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(10,48,128,0.06);text-align:center;}
+.counter .n{font-size:24px;font-weight:900;font-family:'Nunito',sans-serif;}
+.counter .l{font-size:11px;opacity:.5;font-weight:700;text-transform:uppercase;margin-top:2px;}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(10,48,128,0.06);}
+th{font-size:10px;font-weight:800;text-transform:uppercase;opacity:.4;padding:10px 14px;text-align:left;}
+td{padding:8px 14px;font-size:13px;border-top:1px solid rgba(18,85,204,0.06);}
+.sec-h{font-family:'Nunito',sans-serif;font-size:16px;font-weight:900;margin:22px 0 10px;}
+.info-box{background:#eef4ff;border:1px solid rgba(18,85,204,0.15);border-radius:12px;padding:14px 18px;font-size:13px;line-height:1.6;}
+.warn-box{background:#fff8e6;border:1px solid rgba(230,165,9,0.3);border-radius:12px;padding:14px 18px;font-size:13px;line-height:1.6;}
+.linkbtn{display:inline-block;margin-top:8px;padding:7px 14px;border-radius:8px;background:var(--blue);color:#fff;text-decoration:none;font-size:12px;font-weight:700;}
+.loading{text-align:center;padding:40px;opacity:.5;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="logo">SplitPool</span><span class="badge">INFRA</span>
+  <a href="dashboard-admin.html">← Voltar ao Admin</a>
+</div>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="h1">🩺 Saúde da Infraestrutura</div>
+      <div class="sub">Monitoramento em tempo real dos limites do plano — atualizado ao abrir/atualizar</div>
+    </div>
+    <button class="refresh" id="btn-refresh" onclick="carregar()">↻ Atualizar</button>
+  </div>
+
+  <div id="conteudo"><div class="loading">Carregando métricas…</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
+const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
+// Sessão isolada do admin (mesma storageKey do dashboard-admin)
+const sb=supabase.createClient(SBU,SBK,{auth:{storageKey:'sp-admin-auth'}});
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtBytes(b){b=Number(b)||0;if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(0)+' kB';if(b<1073741824)return (b/1048576).toFixed(1)+' MB';return (b/1073741824).toFixed(2)+' GB';}
+
+async function init(){
+  // Auth admin — mesmo guard do dashboard
+  try{
+    var {data:sess}=await sb.auth.getSession();
+    if(!sess||!sess.session){window.location.replace('admin-login.html');return;}
+    var {data:ehAdmin,error:admErr}=await sb.rpc('is_admin');
+    if(admErr||!ehAdmin){await sb.auth.signOut();window.location.replace('admin-login.html');return;}
+  }catch(e){window.location.replace('admin-login.html');return;}
+  carregar();
+}
+
+async function carregar(){
+  var btn=document.getElementById('btn-refresh');
+  btn.disabled=true;
+  try{
+    var {data,error}=await sb.rpc('admin_metricas_infra');
+    if(error) throw error;
+    render(data);
+  }catch(e){
+    document.getElementById('conteudo').innerHTML='<div class="warn-box">Erro ao carregar métricas: '+esc(e.message||e)+'</div>';
+  }
+  btn.disabled=false;
+}
+
+function render(m){
+  var banco=m.banco||{};
+  var st=banco.status||'verde';
+  var pct=Number(banco.pct)||0;
+  var c=m.contadores||{};
+  var cr=m.crescimento||{};
+  var tabelas=m.tabelas||[];
+
+  var html='';
+
+  // ── Card principal: BANCO (o teto que estoura primeiro) ──
+  html+='<div class="grid">';
+  html+='<div class="card" style="grid-column:1/-1;">'
+    +'<h3>💾 Banco de dados <span class="pill '+st+'">'+(st==='verde'?'saudável':st==='amarelo'?'atenção':'crítico')+'</span></h3>'
+    +'<div class="big">'+esc(banco.usado_pretty||'—')+' <small>/ '+esc(banco.limite_pretty||'500 MB')+' ('+pct+'%)</small></div>'
+    +'<div class="bar bar-'+st+'"><div style="width:'+Math.min(100,pct)+'%"></div></div>'
+    +'<div class="mut">'+(st==='verde'?'Tranquilo — bastante espaço livre.':st==='amarelo'?'⚠️ Passou de 70%. Comece a planejar a migração pro plano Pro.':'🔴 Passou de 85%! Migre pro Pro ou limpe dados agora para evitar parada.')+'</div>'
+    +'</div>';
+  html+='</div>';
+
+  // ── Contadores ──
+  html+='<div class="sec-h">📊 Volume de dados</div>';
+  html+='<div class="counters" style="margin-bottom:18px;">';
+  [['usuarios','Usuários'],['piscinas','Piscinas'],['assinaturas','Assinaturas'],['repasses','Repasses'],['credenciais','Credenciais'],['notificacoes','Notificações']].forEach(function(k){
+    html+='<div class="counter"><div class="n">'+(c[k[0]]!=null?c[k[0]]:'—')+'</div><div class="l">'+k[1]+'</div></div>';
+  });
+  html+='</div>';
+
+  // ── Crescimento ──
+  html+='<div class="grid">';
+  html+='<div class="card"><h3>📈 Crescimento (7 dias)</h3>'
+    +'<div class="mut" style="font-size:13px;line-height:2;">'
+    +'Novos usuários: <strong>'+(cr.usuarios_7d!=null?cr.usuarios_7d:'—')+'</strong><br>'
+    +'Novas piscinas: <strong>'+(cr.piscinas_7d!=null?cr.piscinas_7d:'—')+'</strong><br>'
+    +'Novas assinaturas: <strong>'+(cr.assinaturas_7d!=null?cr.assinaturas_7d:'—')+'</strong></div></div>';
+  html+='<div class="card"><h3>📈 Usuários (30 dias)</h3>'
+    +'<div class="big">'+(cr.usuarios_30d!=null?cr.usuarios_30d:'—')+'</div>'
+    +'<div class="mut">novos cadastros no último mês</div></div>';
+  html+='</div>';
+
+  // ── MAU e Egress (não medível aqui) ──
+  html+='<div class="sec-h">🔌 Limites que só o painel Supabase mostra</div>';
+  html+='<div class="info-box">'
+    +'<strong>MAU (usuários ativos/mês)</strong> e <strong>Egress (banda)</strong> não são medíveis por aqui — vivem no billing do Supabase (exigem chave de administração que nunca vai pro navegador, por segurança).<br>'
+    +'Limites do plano free: <strong>50.000 MAU</strong> e <strong>5 GB de egress/mês</strong>.<br>'
+    +'👉 Confira semanalmente na página <em>Usage</em> do seu projeto.'
+    +'<br><a class="linkbtn" href="https://supabase.com/dashboard/project/eawfweuamtwlsilrkgoo/settings/billing/usage" target="_blank">Abrir Usage no Supabase →</a>'
+    +'</div>';
+
+  // ── Backup (honesto) ──
+  html+='<div class="sec-h">🛟 Backup</div>';
+  html+='<div class="warn-box">'
+    +'⚠️ <strong>O plano free NÃO faz backup automático.</strong> Para uma plataforma financeira, isso é um risco sério em produção.<br>'
+    +'<strong>No go-live:</strong> migre para o plano <strong>Pro (US$25/mês)</strong> — inclui backup diário automático retido por 7 dias, gerenciado pelo Supabase (zero trabalho manual).<br>'
+    +'<strong>Enquanto testa:</strong> dados são descartáveis, então o free serve. Se quiser um backup manual agora, exporte via <code>pg_dump</code> e guarde <em>fora</em> da conta Google.'
+    +'</div>';
+
+  // ── Tabelas por tamanho ──
+  html+='<div class="sec-h">🗂️ Tamanho por tabela</div>';
+  html+='<table><thead><tr><th>Tabela</th><th>Tamanho</th><th>% do banco</th></tr></thead><tbody>';
+  var totalBanco=Number(banco.usado_bytes)||1;
+  tabelas.forEach(function(t){
+    var p=((Number(t.bytes)/totalBanco)*100).toFixed(1);
+    html+='<tr><td><strong>'+esc(t.tabela)+'</strong></td><td>'+esc(t.tamanho)+'</td><td>'+p+'%</td></tr>';
+  });
+  html+='</tbody></table>';
+
+  html+='<div class="mut" style="margin-top:14px;text-align:center;">Gerado em '+new Date(m.gerado_em).toLocaleString('pt-BR')+'</div>';
+
+  document.getElementById('conteudo').innerHTML=html;
+}
+
+init();
+</script>
+</body>
+</html>
