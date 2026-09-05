@@ -1343,6 +1343,16 @@ async function salvarReajuste(){
   if(preco<=0){showToast('Informe o novo preço.','error');return;}
   var liquido=liquidoPosTaxa(preco);
   if(lucro>=liquido){showToast('Lucro SP não pode ser maior que o líquido pós-taxa.','error');return;}
+  // Aviso de data duplicada: já existe linha com essa vigência? Empilhar cria linha "morta".
+  var jaExiste=(_historicoPrecos||[]).some(function(r){return r.vigente_de===data;});
+  if(jaExiste){
+    var d=data.split('-'); var dBR=d.length===3?(d[2]+'/'+d[1]+'/'+d[0]):data;
+    var ok=confirm('Já existe uma linha de preço vigente a partir de '+dBR+'.\n\n'
+      +'Aplicar este reajuste vai criar uma SEGUNDA linha na mesma data — a cadastrada por último prevalece, e a anterior fica sem efeito.\n\n'
+      +'• OK = criar mesmo assim (empilha)\n'
+      +'• Cancelar = se era pra ajustar a linha existente, use o "✏️ Corrigir" no histórico (não gera linha nova).');
+    if(!ok) return;
+  }
   // Monta tiers com oficial + repasse calculado
   var tiersEl=document.getElementById('rj-tiers');
   var planos=null;
@@ -1369,32 +1379,52 @@ async function salvarReajuste(){
   await carregarSetup();
 }
 
+var _historicoPrecos=[];
 async function carregarHistoricoPrecos(nome){
   var {data,error}=await sb.rpc('admin_listar_precos',{p_servico:nome});
+  _historicoPrecos=data||[];
   var el=document.getElementById('rj-historico');
   if(!el) return;
   if(error){el.innerHTML='<div style="font-size:11px;color:#dc2626;">Erro ao carregar histórico: '+escapeHtml(error.message)+'</div>';return;}
   if(!data||!data.length){el.innerHTML='<div style="font-size:11px;opacity:.5;">Nenhuma linha de preço registrada.</div>';return;}
   var hoje=new Date().toISOString().slice(0,10);
+  // Descobre qual linha está VIGENTE HOJE: maior vigente_de <= hoje; empate de data → maior id.
+  var idVigente=null, melhorData='', melhorId=-1;
+  data.forEach(function(r){
+    if(r.vigente_de<=hoje && (r.vigente_de>melhorData || (r.vigente_de===melhorData && r.id>melhorId))){
+      melhorData=r.vigente_de; melhorId=r.id; idVigente=r.id;
+    }
+  });
+  function fmtDataHora(ts){
+    if(!ts) return '—';
+    var d=new Date(ts);
+    if(isNaN(d)) return '—';
+    var p=function(n){return (n<10?'0':'')+n;};
+    return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes());
+  }
   el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr>'
-    +['Vigente de','Preço/vaga','Custo dono','Lucro SP','Repasse','',''].map(function(h){return '<th style="text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:4px 8px;">'+h+'</th>';}).join('')
+    +['Vigente de','Preço/vaga','Custo dono','Lucro SP','Repasse','Cadastrado em','',''].map(function(h){return '<th style="text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;opacity:.4;padding:4px 8px;">'+h+'</th>';}).join('')
     +'</tr></thead><tbody>'
     +data.map(function(r){
-      var vigente=r.vigente_de<=hoje;
       var futura=r.vigente_de>hoje;
-      // Encontra a linha vigente hoje (a mais recente com vigente_de <= hoje)
-      var badge=futura?'<span style="font-size:8px;background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:6px;font-weight:800;">AGENDADO</span>':'';
-      return '<tr class="hist-row" data-id="'+r.id+'" style="border-top:1px solid rgba(0,0,0,0.05);">'
+      var ehVigente=(r.id===idVigente);
+      var corrigido=(r.atualizado_em && r.criado_em && r.atualizado_em!==r.criado_em);
+      var badge=futura
+        ?'<span style="font-size:8px;background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:6px;font-weight:800;">AGENDADO</span>'
+        :(ehVigente?'<span style="font-size:8px;background:#d4edda;color:#0a5c36;padding:1px 5px;border-radius:6px;font-weight:800;">VIGENTE HOJE</span>':'');
+      var rowBg=ehVigente?'background:#f0faf4;':'';
+      return '<tr class="hist-row" data-id="'+r.id+'" style="border-top:1px solid rgba(0,0,0,0.05);'+rowBg+'">'
         +'<td style="padding:5px 8px;font-weight:700;">'+r.vigente_de+' '+badge+'</td>'
         +'<td style="padding:5px 8px;">'+fmt(Number(r.preco_por_vaga))+'</td>'
         +'<td style="padding:5px 8px;">'+(r.custo_plano?fmt(Number(r.custo_plano)):'—')+'</td>'
         +'<td style="padding:5px 8px;">'+fmt(Number(r.lucro_sp))+'</td>'
         +'<td style="padding:5px 8px;color:#0A5C36;font-weight:700;">'+fmt(Number(r.repasse_dono))+'</td>'
+        +'<td style="padding:5px 8px;opacity:.7;white-space:nowrap;">'+fmtDataHora(r.criado_em)+(corrigido?' <span style="font-size:8px;color:#92400e;" title="Linha corrigida em '+fmtDataHora(r.atualizado_em)+'">(corrigido)</span>':'')+'</td>'
         +'<td style="padding:5px 8px;">'+((r.planos_financeiros&&r.planos_financeiros.length)?'<span style="font-size:9px;background:#eef2ff;color:#3730a3;padding:1px 5px;border-radius:6px;font-weight:800;">'+r.planos_financeiros.length+' tiers</span>':'')+'</td>'
         +'<td style="padding:5px 8px;"><button class="btn-act" style="background:#eef2f7;color:#0A3080;font-size:10px;" onclick=\'corrigirLinha('+r.id+','+JSON.stringify(JSON.stringify(r)).replace(/'/g,"&#39;")+')\' title="Corrigir erro de digitação (não gera nova linha)">✏️ Corrigir</button></td>'
         +'</tr>';
     }).join('')+'</tbody></table>'
-    +'<div style="font-size:10px;opacity:.5;margin-top:6px;line-height:1.5;">A linha vigente hoje é a mais recente com data ≤ hoje. Linhas marcadas <strong>AGENDADO</strong> entram em vigor na data. Corrigir edita a linha existente (para erro de digitação); reajustar cria linha nova.</div>';
+    +'<div style="font-size:10px;opacity:.5;margin-top:6px;line-height:1.5;">A linha <strong>VIGENTE HOJE</strong> é a mais recente com data ≤ hoje (empate de data → a cadastrada por último). <strong>AGENDADO</strong> entra em vigor na data. "Cadastrado em" é a hora do registro (desempata mesma data). Corrigir edita a linha (erro de digitação); reajustar cria linha nova.</div>';
 }
 
 function corrigirLinha(id,rJson){
