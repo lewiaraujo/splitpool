@@ -310,6 +310,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
 const SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
 const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
 const {createClient}=supabase;
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}
+function _storagePath(bucket,v){if(!v)return'';var m=String(v).match(new RegExp('/object/(?:public|sign)/'+bucket+'/([^?]+)'));if(m)return decodeURIComponent(m[1]);return String(v).replace(/^\/+/,'');}
+async function abrirArquivo(bucket,v){var p=_storagePath(bucket,v);if(!p)return;try{var r=await sb.storage.from(bucket).createSignedUrl(p,3600);if(r.error||!r.data){alert('Não foi possível abrir o arquivo.');return;}window.open(r.data.signedUrl,'_blank');}catch(e){alert('Não foi possível abrir o arquivo.');}}
 const sb=createClient(SBU,SBK);
 const BASE='';
 
@@ -473,8 +476,7 @@ async function enviarReporte(){
     const path=userId+'/'+Date.now()+'.'+ext;
     const {data:upData,error:upErr}=await sb.storage.from('evidencias').upload(path,file,{upsert:true});
     if(!upErr&&upData){
-      const {data:urlData}=sb.storage.from('evidencias').getPublicUrl(path);
-      evidenciaUrl=urlData.publicUrl;
+      evidenciaUrl=path;
     }
   }
   // Monta contexto rico para o admin (quem reportou, qual piscina, qual dono)
@@ -869,7 +871,7 @@ function renderPlano(a){
         <div style="font-size:13px;font-weight:800;color:#0F2C4C;">🔎 Acompanhamento do seu caso</div>
         <span style="font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 9px;border-radius:6px;background:${statusBg};color:${statusCor};">${statusLabel}</span>
       </div>
-      <div style="font-size:12px;color:#475569;margin-bottom:14px;">Motivo relatado: <strong>${tipoLabel}</strong>${disp.evidencia_url?' · <a href="'+disp.evidencia_url+'" target="_blank" style="color:#0A5CB8;font-weight:700;">ver anexo</a>':''}</div>
+      <div style="font-size:12px;color:#475569;margin-bottom:14px;">Motivo relatado: <strong>${tipoLabel}</strong>${disp.evidencia_url?' · <a href="#" data-b="evidencias" data-v="'+escapeHtml(disp.evidencia_url)+'" onclick="abrirArquivo(this.dataset.b,this.dataset.v);return false" target="_blank" style="color:#0A5CB8;font-weight:700;">ver anexo</a>':''}</div>
       <div style="display:flex;flex-direction:column;gap:12px;">
         ${passoDisputa(true,false,'Enviado',abertoEm?('Reportado em '+abertoEm):'')}
         ${passoDisputa(recebido,!recebido&&!resolvido,'Recebido pela Splitpool',!recebido?'Aguardando a equipe acusar o recebimento do seu caso.':'')}
