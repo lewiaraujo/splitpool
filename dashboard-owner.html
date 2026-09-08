@@ -790,7 +790,7 @@ async function enviarReporteDono(piscinaId, servico){
     var ext=file.name.split('.').pop();
     var path=userId+'/dono-'+Date.now()+'.'+ext;
     var up=await sb.storage.from('evidencias').upload(path,file,{upsert:true});
-    if(!up.error){ var u=sb.storage.from('evidencias').getPublicUrl(path); evidenciaUrl=u.data.publicUrl; }
+    if(!up.error){ evidenciaUrl=path; }
   }
   var perf=(await sb.from('profiles').select('nome').eq('id',userId).single()).data;
   var nomeDono=(perf&&perf.nome)||'Dono';
