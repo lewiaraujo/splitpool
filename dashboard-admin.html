@@ -528,6 +528,8 @@ function comprovanteHref(v){
   // Piscinas criadas antes da correção salvavam só o caminho interno do Storage — reconstrói a URL pública
   return SBU+'/storage/v1/object/public/comprovantes/'+v;
 }
+function _storagePath(bucket,v){if(!v)return'';var m=String(v).match(new RegExp('/object/(?:public|sign)/'+bucket+'/([^?]+)'));if(m)return decodeURIComponent(m[1]);return String(v).replace(/^\/+/,'');}
+async function abrirArquivo(bucket,v){var p=_storagePath(bucket,v);if(!p)return;try{var r=await sb.storage.from(bucket).createSignedUrl(p,3600);if(r.error||!r.data){alert('Não foi possível abrir o arquivo.');return;}window.open(r.data.signedUrl,'_blank');}catch(e){alert('Não foi possível abrir o arquivo.');}}
 const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
 // storageKey proprio: sessao do painel admin ISOLADA da sessao do site.
 // Precisa ser identico ao usado em admin-login.html.
@@ -841,8 +843,8 @@ function renderOcorrencias(){
       +'</div>'
       +(o.descricao?'<div style="font-size:13px;color:#444;margin-top:10px;line-height:1.55;">'+escapeHtml(o.descricao)+'</div>':'')
       +reembHTML
-      +(o.evidencia_url?'<div style="margin-top:10px;"><a href="'+o.evidencia_url+'" target="_blank" style="font-size:12px;font-weight:700;color:#1255CC;text-decoration:none;background:#eff6ff;border:1px solid rgba(18,85,204,0.2);padding:5px 12px;border-radius:7px;display:inline-flex;align-items:center;gap:5px;">📎 Ver evidência anexada</a></div>':'')
-      +(o.comprovante_reembolso_url?'<div style="margin-top:8px;"><a href="'+o.comprovante_reembolso_url+'" target="_blank" style="font-size:12px;font-weight:700;color:#00875A;text-decoration:none;background:#e6fff8;border:1px solid rgba(0,135,90,0.25);padding:5px 12px;border-radius:7px;display:inline-flex;align-items:center;gap:5px;">🧾 Ver comprovante do reembolso pago</a></div>':'')
+      +(o.evidencia_url?'<div style="margin-top:10px;"><a href="#" data-b="evidencias" data-v="'+escapeHtml(o.evidencia_url)+'" onclick="abrirArquivo(this.dataset.b,this.dataset.v);return false" target="_blank" style="font-size:12px;font-weight:700;color:#1255CC;text-decoration:none;background:#eff6ff;border:1px solid rgba(18,85,204,0.2);padding:5px 12px;border-radius:7px;display:inline-flex;align-items:center;gap:5px;">📎 Ver evidência anexada</a></div>':'')
+      +(o.comprovante_reembolso_url?'<div style="margin-top:8px;"><a href="#" data-b="evidencias" data-v="'+escapeHtml(o.comprovante_reembolso_url)+'" onclick="abrirArquivo(this.dataset.b,this.dataset.v);return false" target="_blank" style="font-size:12px;font-weight:700;color:#00875A;text-decoration:none;background:#e6fff8;border:1px solid rgba(0,135,90,0.25);padding:5px 12px;border-radius:7px;display:inline-flex;align-items:center;gap:5px;">🧾 Ver comprovante do reembolso pago</a></div>':'')
       +(o.decisao_admin?'<div style="font-size:12px;color:#777;margin-top:8px;">Decisão: '+o.decisao_admin+(o.resolvida_em?' ('+new Date(o.resolvida_em).toLocaleDateString('pt-BR')+')':'')+'</div>':'')
       +(acoes?'<div style="margin-top:12px;">'+acoes+'</div>':'')
       +'</div>';
@@ -883,7 +885,7 @@ async function confirmarPagamentoReembolso(){
   var path='comprovantes/'+id+'-'+Date.now()+'.'+ext;
   var {error:upErr}=await sb.storage.from('evidencias').upload(path,file,{upsert:true});
   if(upErr){btn.disabled=false;btn.textContent='Confirmar pagamento';erroEl.textContent='Erro no upload: '+upErr.message;erroEl.style.display='block';return;}
-  var urlComp=sb.storage.from('evidencias').getPublicUrl(path).data.publicUrl;
+  var urlComp=path;
   await sb.rpc('admin_anexar_comprovante_reembolso',{p_id:id,p_url:urlComp});
   var msg='Seu reembolso de '+fmt(o.valor_reembolso)+' foi pago via PIX'+(o&&o.pix_chave?' na chave '+o.pix_chave:'')+'. Obrigado por usar a Splitpool!';
   var {error}=await sb.rpc('resolver_ocorrencia',{p_id:id,p_status:'resolvida_reembolso',p_decisao:'Reembolso pago via PIX (comprovante anexado)',p_mensagem_notif:msg});
@@ -912,7 +914,7 @@ function recusarReembolso(id){
     '<strong>'+(o.servico||'—')+'</strong> · '+(o.aberto_por_nome||o.aberto_por_email||'membro')+'<br>'
     +'Valor pedido: <strong>'+fmt(o.valor_reembolso)+'</strong><br>'
     +(o.descricao?'<div style="margin-top:6px;">"'+escapeHtml(o.descricao)+'"</div>':'')
-    +(o.evidencia_url?'<div style="margin-top:8px;"><a href="'+o.evidencia_url+'" target="_blank" style="color:#1255CC;font-weight:700;">📎 Ver evidência anexada</a></div>':'<div style="margin-top:8px;color:#b45309;">⚠️ Nenhuma evidência anexada pelo membro.</div>');
+    +(o.evidencia_url?'<div style="margin-top:8px;"><a href="#" data-b="evidencias" data-v="'+escapeHtml(o.evidencia_url)+'" onclick="abrirArquivo(this.dataset.b,this.dataset.v);return false" target="_blank" style="color:#1255CC;font-weight:700;">📎 Ver evidência anexada</a></div>':'<div style="margin-top:8px;color:#b45309;">⚠️ Nenhuma evidência anexada pelo membro.</div>');
   document.getElementById('recusa-overlay').style.display='flex';
 }
 
@@ -1895,7 +1897,7 @@ function renderRepasses(){
         if(r.status==='pendente') acoes='<button class="btn-act btn-aprovar" onclick="aprovar(\''+r.id+'\')">Aprovar</button> <button class="btn-act" style="background:#dc2626;color:#fff;" onclick="recusarRepasse(\''+r.id+'\')">Recusar</button>';
         else if(r.status==='recusado') acoes='<span style="color:#991b1b;font-size:12px;font-weight:700;">✕ Recusado</span>';
         else if(r.status==='aprovado') acoes='<button class="btn-act btn-pago" onclick="marcarPago(\''+r.id+'\')">Pago</button>';
-        else acoes='<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Pago '+fmtData(r.pago_em)+'</span>'+(r.comprovante_url?' <a href="'+escapeHtml(r.comprovante_url)+'" target="_blank" style="font-size:11px;font-weight:700;color:#0A5CB8;text-decoration:none;background:#eef4fc;border:1px solid rgba(10,92,184,0.2);padding:3px 9px;border-radius:6px;margin-left:6px;">🧾 Comprovante</a>':'');
+        else acoes='<span style="color:var(--green);font-size:12px;font-weight:700;">✓ Pago '+fmtData(r.pago_em)+'</span>'+(r.comprovante_url?' <a href="#" data-b="evidencias" data-v="'+escapeHtml(r.comprovante_url)+'" onclick="abrirArquivo(this.dataset.b,this.dataset.v);return false" target="_blank" style="font-size:11px;font-weight:700;color:#0A5CB8;text-decoration:none;background:#eef4fc;border:1px solid rgba(10,92,184,0.2);padding:3px 9px;border-radius:6px;margin-left:6px;">🧾 Comprovante</a>':'');
         html+='<div class="rep-item">';
         html+='<div class="rep-info"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">';
         html+='<span class="pill '+r.status+'">'+r.status+'</span>';
@@ -1960,7 +1962,7 @@ async function confirmarRepassePago(){
   var path='repasses/'+id+'-'+Date.now()+'.'+ext;
   var {error:upErr}=await sb.storage.from('evidencias').upload(path,file,{upsert:true});
   if(upErr){btn.disabled=false;btn.textContent='Confirmar pagamento';erroEl.textContent='Erro no upload: '+upErr.message;erroEl.style.display='block';return;}
-  var urlComp=sb.storage.from('evidencias').getPublicUrl(path).data.publicUrl;
+  var urlComp=path;
   var {data:repArr,error}=await sb.rpc('admin_marcar_repasse_pago',{p_id:id,p_comprovante_url:urlComp});
   btn.disabled=false;btn.textContent='Confirmar pagamento';
   if(error){erroEl.textContent='Erro: '+error.message;erroEl.style.display='block';return;}
@@ -2178,7 +2180,7 @@ function renderPiscinas(){
       html+='<td style="padding:10px 12px;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;">'+comprouEm+'</td>';
       html+='<td style="padding:10px 12px;text-align:center;white-space:nowrap;"><span style="font-size:12px;font-weight:700;'+(venceCor?'color:'+venceCor+';background:'+venceBg+';border-radius:6px;padding:2px 7px;':'')+'">'+(venceCor?'⚠ ':'')+venceEm+'</span></td>';
       html+='<td style="padding:10px 12px;">'+linkHtml+'</td>';
-      html+='<td style="padding:10px 12px;text-align:center;white-space:nowrap;">'+(p.comprovante_url?'<a href="'+comprovanteHref(p.comprovante_url)+'" target="_blank" style="font-size:11px;font-weight:700;color:#1255CC;text-decoration:none;background:#eff6ff;border:1px solid rgba(18,85,204,0.2);padding:3px 9px;border-radius:6px;">📎 Ver</a>':'<span style="opacity:.35;font-size:11px;">—</span>')+'</td>';
+      html+='<td style="padding:10px 12px;text-align:center;white-space:nowrap;">'+(p.comprovante_url?'<a href="#" data-b="comprovantes" data-v="'+escapeHtml(p.comprovante_url)+'" onclick="abrirArquivo(this.dataset.b,this.dataset.v);return false" target="_blank" style="font-size:11px;font-weight:700;color:#1255CC;text-decoration:none;background:#eff6ff;border:1px solid rgba(18,85,204,0.2);padding:3px 9px;border-radius:6px;">📎 Ver</a>':'<span style="opacity:.35;font-size:11px;">—</span>')+'</td>';
       html+='<td style="padding:10px 12px;font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--green);text-align:right;white-space:nowrap;">'+fmt(receita)+'</td>';
       html+='<td style="padding:10px 12px;font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--blue);text-align:right;white-space:nowrap;">'+fmt(lucrodono)+'</td>';
       html+='<td style="padding:10px 12px;font-size:13px;font-weight:900;font-family:Nunito,sans-serif;color:var(--teal);text-align:right;white-space:nowrap;">'+fmt(lucroSP)+'</td>';
