@@ -536,10 +536,12 @@ function getIcone(servico, icone_url) {
 }
 
 // Avatar do dono para o card: usa foto (avatar_url) se existir, senão inicial do nome
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}
+function safeInicial(nome){var c=(nome&&nome[0])?String(nome[0]).toUpperCase():'?';return /[A-Z0-9]/.test(c)?c:'?';}
 function getOwnerAvatar(nome, avatar) {
-  const inicial = (nome && nome[0] ? nome[0] : '?').toUpperCase()
+  const inicial = safeInicial(nome)
   if (avatar) {
-    return `<img src="${avatar}" alt="${nome||''}" onerror="this.parentElement.textContent='${inicial}'"/>`
+    return `<img src="${escapeHtml(avatar)}" alt="${escapeHtml(nome||'')}" onerror="this.parentElement.textContent='${inicial}'"/>`
   }
   return inicial
 }
@@ -671,7 +673,7 @@ async function renderResultadoPiscinas(lista, viaCodigo) {
       </div>
       <div class="card-owner-row">
         <span class="card-owner-label">Dono(a) da piscina:</span>
-        <div class="card-owner"><div class="card-owner-av">${getOwnerAvatar(donoNome, donoAvatar)}</div><span class="card-owner-name">${donoNome}</span>${seloDono(p.dono_info&&p.dono_info.nivel)}</div>
+        <div class="card-owner"><div class="card-owner-av">${getOwnerAvatar(donoNome, donoAvatar)}</div><span class="card-owner-name">${escapeHtml(donoNome)}</span>${seloDono(p.dono_info&&p.dono_info.nivel)}</div>
       </div>
       <div class="card-stats">
         <div class="card-stat vagas${esgotado ? ' esgotado' : ''}">${esgotado ? 'Sem vagas' : `${disponiveis} vaga${disponiveis > 1 ? 's' : ''} livre${disponiveis > 1 ? 's' : ''}`}</div>
@@ -918,7 +920,7 @@ function abrirModal(id) {
   const donoNomeModal = dono.nome || 'Dono verificado'
   const avEl = document.getElementById('m-owner-av')
   if(dono.avatar){
-    avEl.innerHTML = `<img src="${dono.avatar}" alt="${donoNomeModal}" onerror="this.parentElement.textContent='${(donoNomeModal[0]||'?').toUpperCase()}'"/>`
+    avEl.innerHTML = `<img src="${escapeHtml(dono.avatar)}" alt="${escapeHtml(donoNomeModal)}" onerror="this.parentElement.textContent='${safeInicial(donoNomeModal)}'"/>`
   } else {
     avEl.textContent = (donoNomeModal[0] || '?').toUpperCase()
   }
