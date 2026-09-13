@@ -80,6 +80,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);b
     <div class="page-title">👤 Meu Perfil</div>
     <div class="page-sub">Veja e atualize seus dados. Eles são usados para comunicação, repasses e reembolsos.</div>
 
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin:6px 0 20px;">
+      <div id="pf-avatar" style="width:96px;height:96px;border-radius:50%;background:#EAF6FB;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#378ADD;overflow:hidden;"></div>
+      <input type="file" id="pf-foto-input" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="if(this.files&&this.files[0])uploadAvatar(this.files[0])">
+      <button type="button" onclick="document.getElementById('pf-foto-input').click()" style="background:none;border:1px solid #378ADD;color:#378ADD;padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">📷 Trocar foto</button>
+    </div>
+
     <div class="form-group">
       <label>Nome</label>
       <input type="text" id="pf-nome" placeholder="Seu nome">
@@ -147,6 +153,37 @@ const sb=createClient(SBU,SBK);
 
 let userId=null;
 
+function renderAvatar(url, nome){
+  var el=document.getElementById('pf-avatar');
+  el.innerHTML='';
+  if(url){
+    var img=document.createElement('img');
+    img.src=url;
+    img.style.cssText='width:100%;height:100%;object-fit:cover;';
+    img.onerror=function(){ el.textContent=(nome&&nome[0]?nome[0]:'?').toUpperCase(); };
+    el.appendChild(img);
+  } else {
+    el.textContent=(nome&&nome[0]?nome[0]:'?').toUpperCase();
+  }
+}
+
+async function uploadAvatar(file){
+  if(!userId) return;
+  var okTypes=['image/png','image/jpeg','image/webp'];
+  if(okTypes.indexOf(file.type)<0){ showToast('Use PNG, JPG ou WEBP.','error'); return; }
+  if(file.size > 5*1024*1024){ showToast('Imagem muito grande (máx 5MB).','error'); return; }
+  showToast('Enviando foto...','');
+  var ext = file.type==='image/png'?'png':(file.type==='image/webp'?'webp':'jpg');
+  var path = userId+'/'+Date.now()+'.'+ext;
+  var up = await sb.storage.from('avatares').upload(path, file, {contentType:file.type, upsert:false});
+  if(up.error){ showToast('Falha no upload: '+up.error.message,'error'); return; }
+  var url = sb.storage.from('avatares').getPublicUrl(path).data.publicUrl;
+  var upd = await sb.from('profiles').update({avatar_url:url}).eq('id',userId);
+  if(upd.error){ showToast('Foto enviada mas não salvou no perfil: '+upd.error.message,'error'); return; }
+  renderAvatar(url, document.getElementById('pf-nome').value);
+  showToast('Foto atualizada!','success');
+}
+
 function showToast(msg,tipo){
   const t=document.getElementById('toast');
   t.textContent=msg;
@@ -195,7 +232,7 @@ let updPendente=null;
 
 async function carregarPerfil(){
   const {data:pf,error}=await sb.from('profiles')
-    .select('nome,email,telefone,pix_chave,cpf')
+    .select('nome,email,telefone,pix_chave,cpf,avatar_url')
     .eq('id',userId).single();
   if(error){showToast('Erro ao carregar perfil: '+error.message,'error');return;}
   document.getElementById('pf-nome').value=pf.nome||'';
@@ -203,6 +240,7 @@ async function carregarPerfil(){
   document.getElementById('pf-telefone').value=pf.telefone||'';
   document.getElementById('pf-cpf').value=pf.cpf||'';
   document.getElementById('pf-pix').value=pf.pix_chave||'';
+  renderAvatar(pf.avatar_url, pf.nome);
   if(pf.cpf){
     travarCampoCpf();
   }
