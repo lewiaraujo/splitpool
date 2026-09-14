@@ -216,7 +216,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;backdrop-filter:blur(20px);-
 })();
 var SBU='https://eawfweuamtwlsilrkgoo.supabase.co';
 var SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
-var BASE='';
+var BASE='';var POOL_ID=null;
 var CAT={
   'Microsoft 365 Family':{icon:'microsoft_icon.png',tag:'Plano Família',mensal:51.00,anual:49.92,sp:25.50},
   'Microsoft 365':{icon:'microsoft_icon.png',tag:'Plano Família',mensal:51.00,anual:49.92,sp:25.50},
@@ -251,7 +251,7 @@ function code(id){var h=(id*2654435761)>>>0;var ch='ABCDEFGHJKLMNPQRSTUVWXYZ2345
 function showErr(){document.getElementById('loading-state').style.display='none';document.getElementById('error-state').style.display='flex';}
 function load(){
   var ps=new URLSearchParams(window.location.search);
-  var id=ps.get('id');
+  var id=ps.get('id');POOL_ID=id;
   if(!id){showErr();return;}
   fetch(SBU+'/rest/v1/piscinas?id=eq.'+id+'&select=*',{headers:{'apikey':SBK,'Authorization':'Bearer '+SBK}})
   .then(function(r){return r.json();})
@@ -323,7 +323,14 @@ function render(p,nomeOwner,nivel){
   var lv=document.getElementById('owner-level');
   var lm={iniciante:{c:'iniciante',l:'Iniciante'},verificado:{c:'verificado',l:'Verificado'},elite:{c:'elite',l:'Elite'}};
   var lvi=lm[nivel]||lm.iniciante;lv.className='owner-level '+lvi.c;lv.textContent=lvi.l;
+  montarDenuncia();
 }
+function _sess(){try{var raw=localStorage.getItem('sb-eawfweuamtwlsilrkgoo-auth-token');if(raw){var v=JSON.parse(raw);if(v&&v.user&&v.user.id&&v.access_token)return{uid:v.user.id,token:v.access_token};}}catch(e){}return null;}
+function _dtoast(msg,tipo){var t=document.getElementById('d-toast');if(!t){t=document.createElement('div');t.id='d-toast';t.style.cssText='position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:9999;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;max-width:90%;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.25);opacity:0;transition:opacity .25s;';document.body.appendChild(t);}t.style.background=(tipo==='error')?'#B02020':'#0F2C4C';t.textContent=msg;t.style.opacity='1';clearTimeout(t._h);t._h=setTimeout(function(){t.style.opacity='0';},3400);}
+function montarDenuncia(){var cs=document.getElementById('content-state');if(!cs||document.getElementById('d-link'))return;var a=document.createElement('div');a.id='d-link';a.style.cssText='text-align:center;padding:4px 0 96px;';a.innerHTML='<button type="button" style="background:none;border:none;color:#94A3B8;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;">\uD83D\uDEA9 Denunciar esta piscina</button>';a.querySelector('button').onclick=abrirDenuncia;cs.appendChild(a);}
+function fecharDenuncia(){var ov=document.getElementById('d-modal');if(ov)ov.style.display='none';}
+function abrirDenuncia(){var ov=document.getElementById('d-modal');if(!ov){ov=document.createElement('div');ov.id='d-modal';ov.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,20,50,.5);display:flex;align-items:center;justify-content:center;padding:20px;';ov.innerHTML='<div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.25);"><div style="font-size:17px;font-weight:800;color:#0F2C4C;margin-bottom:4px;">\uD83D\uDEA9 Denunciar piscina</div><div id="d-body"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',function(e){if(e.target===ov)fecharDenuncia();});}var s=_sess();var body=ov.querySelector('#d-body');if(!s){body.innerHTML='<p style="font-size:13px;color:#3A4A5C;line-height:1.6;margin:8px 0 16px;">Voce precisa estar logado para denunciar uma piscina.</p><a href="cadastro.html" style="display:block;text-align:center;background:#378ADD;color:#fff;text-decoration:none;padding:12px;border-radius:10px;font-weight:700;font-size:14px;">Entrar na minha conta</a><button type="button" onclick="fecharDenuncia()" style="display:block;width:100%;margin-top:8px;background:none;border:none;color:#94A3B8;font-size:13px;font-weight:600;cursor:pointer;">Cancelar</button>';}else{body.innerHTML='<p style="font-size:12px;color:#7A8898;line-height:1.5;margin:8px 0 12px;">Use este canal para reportar piscinas irregulares. A Splitpool analisa e pode tomar providencias.</p><select id="d-motivo" style="width:100%;padding:11px;border:1px solid #D4E0EC;border-radius:9px;font-size:14px;margin-bottom:10px;color:#0F2C4C;box-sizing:border-box;"><option value="">Selecione o motivo...</option><option>Acesso pirata ou irregular</option><option>Descricao nao confere com o servico</option><option>Viola os termos do servico</option><option>Conteudo improprio</option><option>Outro</option></select><textarea id="d-desc" rows="3" placeholder="Detalhe o que aconteceu (opcional)" style="width:100%;padding:11px;border:1px solid #D4E0EC;border-radius:9px;font-size:14px;resize:vertical;font-family:inherit;color:#0F2C4C;box-sizing:border-box;"></textarea><button type="button" id="d-send" style="display:block;width:100%;margin-top:12px;background:#E24B4A;color:#fff;border:none;padding:12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;">Enviar denuncia</button><button type="button" onclick="fecharDenuncia()" style="display:block;width:100%;margin-top:8px;background:none;border:none;color:#94A3B8;font-size:13px;font-weight:600;cursor:pointer;">Cancelar</button>';body.querySelector('#d-send').onclick=enviarDenuncia;}ov.style.display='flex';}
+function enviarDenuncia(){var s=_sess();if(!s){abrirDenuncia();return;}var motivo=(document.getElementById('d-motivo')||{}).value||'';var desc=(document.getElementById('d-desc')||{}).value||'';if(!motivo){_dtoast('Selecione um motivo.','error');return;}var btn=document.getElementById('d-send');if(btn){btn.disabled=true;btn.textContent='Enviando...';}fetch(SBU+'/rest/v1/rpc/denunciar_piscina',{method:'POST',headers:{'apikey':SBK,'Authorization':'Bearer '+s.token,'Content-Type':'application/json'},body:JSON.stringify({p_piscina_id:Number(POOL_ID),p_motivo:motivo,p_descricao:desc})}).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j};});}).then(function(res){fecharDenuncia();if(res.ok){if(res.j&&res.j.dup){_dtoast('Voce ja denunciou esta piscina.');}else{_dtoast('Denuncia enviada. Obrigado!');}}else{_dtoast('Nao foi possivel enviar. Tente novamente.','error');}}).catch(function(){fecharDenuncia();_dtoast('Nao foi possivel enviar. Tente novamente.','error');});}
 load();
 </script>
 <script src="notif.js"></script>
