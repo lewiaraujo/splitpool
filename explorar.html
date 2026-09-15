@@ -307,7 +307,7 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
   <div class="toolbar">
     <div class="search-wrap">
       <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="busca" placeholder="Buscar serviço..." oninput="filtrar()">
+      <input type="text" id="busca" placeholder="Buscar serviço ou dono..." oninput="filtrar()">
     </div>
     <div class="filtros">
       <button class="fbtn act" onclick="setCategoria('todos',this)">Todos</button>
@@ -588,6 +588,18 @@ async function renderizar() {
     return matchBusca && matchCat && !bloqueado && !oculto
   })
 
+  // BUSCA POR NOME DO DONO: se o texto não casou com nenhum serviço, tenta casar com o dono
+  if(!servicoSelecionado && busca && busca.length>=2 && lista.length===0){
+    const idsDono = await buscarPiscinasPorDono(buscaRaw)
+    if(idsDono.length){
+      const listaDono = todasPiscinas.filter(p => idsDono.includes(Number(p.id))
+        && (categoriaAtual==='todos'||getCategoria(p.servico)===categoriaAtual)
+        && !BLOCKLIST.some(b=>p.servico.toLowerCase().includes(b))
+        && !servicoOcultoEx(p.servico))
+      if(listaDono.length){ await renderResultadoPiscinas(listaDono, false); return }
+    }
+  }
+
   // ETAPA 1: sem serviço na URL → grade de planos
   if(!servicoSelecionado){
     renderServicos(lista)
@@ -802,6 +814,14 @@ function seloDono(nivel){
 const servicoSelecionado=new URLSearchParams(location.search).get('servico')
 
 let donosCache={}
+async function buscarPiscinasPorDono(termo){
+  try{
+    const {data}=await sb.rpc('buscar_piscinas_por_dono',{termo:termo})
+    if(Array.isArray(data)) return data.map(x=>Number(x.piscina_id))
+  }catch(e){}
+  return []
+}
+
 async function buscarDono(donoId){
   if(donosCache[donoId] !== undefined) return donosCache[donoId]
   try{
