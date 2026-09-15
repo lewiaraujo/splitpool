@@ -588,8 +588,10 @@ async function renderizar() {
     return matchBusca && matchCat && !bloqueado && !oculto
   })
 
-  // BUSCA POR NOME DO DONO: se o texto não casou com nenhum serviço, tenta casar com o dono
-  if(!servicoSelecionado && busca && busca.length>=2 && lista.length===0){
+  // BUSCA POR NOME DO DONO: aciona quando o texto NÃO é um nome de serviço
+  // (decouplado da descrição — senão o nome do dono na descrição bloqueava a busca).
+  const matchServicoNome = !!busca && todasPiscinas.some(p => p.servico.toLowerCase().includes(busca))
+  if(!servicoSelecionado && busca && busca.length>=2 && !matchServicoNome){
     const idsDono = await buscarPiscinasPorDono(buscaRaw)
     if(idsDono.length){
       const listaDono = todasPiscinas.filter(p => idsDono.includes(Number(p.id))
