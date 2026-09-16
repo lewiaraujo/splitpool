@@ -420,6 +420,7 @@ main{padding:90px 5% 60px;max-width:1240px;margin:0 auto;}
     </div>
     <div class="m-cta">
       <button class="modal-btn" id="m-btn" onclick="entrarPiscina()">Entrar nesta piscina 🏊</button>
+      <button type="button" onclick="abrirDenunciaModal()" style="display:block;width:100%;margin-top:10px;background:none;border:none;color:#94A3B8;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;">🚩 Denunciar esta piscina</button>
     </div>
   </div>
 </div>
@@ -988,6 +989,39 @@ function entrarPiscina() {
 async function logout() {
   await sb.auth.signOut()
   window.location.href = 'index.html'
+}
+
+let den_pid = null
+function abrirDenunciaModal(){
+  if(!piscinaAtual) return
+  den_pid = piscinaAtual.id
+  let ov=document.getElementById('den-modal')
+  if(!ov){
+    ov=document.createElement('div');ov.id='den-modal'
+    ov.style.cssText='position:fixed;inset:0;z-index:3000;background:rgba(5,20,70,.6);display:flex;align-items:center;justify-content:center;padding:20px;'
+    ov.innerHTML='<div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.25);"><div style="font-size:17px;font-weight:800;color:#0F2C4C;margin-bottom:4px;">🚩 Denunciar piscina</div><p style="font-size:12px;color:#7A8898;line-height:1.5;margin:8px 0 12px;">Use este canal para reportar piscinas irregulares. A Splitpool analisa e pode tomar providências.</p><select id="den-motivo" style="width:100%;padding:11px;border:1px solid #D4E0EC;border-radius:9px;font-size:14px;margin-bottom:10px;color:#0F2C4C;box-sizing:border-box;"><option value="">Selecione o motivo...</option><option>Acesso pirata ou irregular</option><option>Descrição não confere com o serviço</option><option>Viola os termos do serviço</option><option>Conteúdo impróprio</option><option>Outro</option></select><textarea id="den-desc" rows="3" placeholder="Detalhe o que aconteceu (opcional)" style="width:100%;padding:11px;border:1px solid #D4E0EC;border-radius:9px;font-size:14px;resize:vertical;font-family:inherit;color:#0F2C4C;box-sizing:border-box;"></textarea><button type="button" id="den-send" style="display:block;width:100%;margin-top:12px;background:#E24B4A;color:#fff;border:none;padding:12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;">Enviar denúncia</button><button type="button" onclick="fecharDenunciaModal()" style="display:block;width:100%;margin-top:8px;background:none;border:none;color:#94A3B8;font-size:13px;font-weight:600;cursor:pointer;">Cancelar</button></div>'
+    document.body.appendChild(ov)
+    ov.addEventListener('click',function(e){if(e.target===ov)fecharDenunciaModal()})
+  }
+  ov.querySelector('#den-motivo').value=''
+  ov.querySelector('#den-desc').value=''
+  const b=ov.querySelector('#den-send');b.disabled=false;b.textContent='Enviar denúncia';b.onclick=enviarDenunciaExplorar
+  ov.style.display='flex'
+}
+function fecharDenunciaModal(){const ov=document.getElementById('den-modal');if(ov)ov.style.display='none'}
+async function enviarDenunciaExplorar(){
+  if(!den_pid) return
+  const motivo=(document.getElementById('den-motivo')||{}).value||''
+  const desc=(document.getElementById('den-desc')||{}).value||''
+  if(!motivo){showToast('Selecione um motivo.');return}
+  const b=document.getElementById('den-send');if(b){b.disabled=true;b.textContent='Enviando...'}
+  try{
+    const {data,error}=await sb.rpc('denunciar_piscina',{p_piscina_id:Number(den_pid),p_motivo:motivo,p_descricao:desc})
+    fecharDenunciaModal()
+    if(error){showToast('Não foi possível enviar.')}
+    else if(data&&data.dup){showToast('Você já denunciou esta piscina.')}
+    else{showToast('Denúncia enviada. Obrigado!')}
+  }catch(e){fecharDenunciaModal();showToast('Não foi possível enviar.')}
 }
 
 function showToast(msg) {
