@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Splitpool — Criar conta</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=tsOnload" async defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -147,6 +148,8 @@ input::placeholder{color:#8BAAC8;}
 
     <div class="msg" id="msg"></div>
 
+    <div id="ts-holder" style="display:flex;justify-content:center;"></div>
+
     <div id="email-sent" style="display:none;text-align:center;padding:8px 0;">
       <div style="font-size:44px;margin-bottom:8px;">✉️</div>
       <div style="font-size:14px;color:#0A3080;line-height:1.6;margin-bottom:6px;">Enviamos um link de confirmação para<br><strong id="email-sent-addr"></strong></div>
@@ -214,6 +217,13 @@ input::placeholder{color:#8BAAC8;}
   const { createClient } = supabase
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
 
+// -- Turnstile (captcha) --
+var TS_SITEKEY='0x4AAAAAAE5Y75f2r1_6C2uV';
+var tsWidgetId=null, tsResolve=null, tsReject=null;
+window.tsOnload=function(){ try{ tsWidgetId=turnstile.render('#ts-holder',{sitekey:TS_SITEKEY,execution:'execute',callback:function(t){ if(tsResolve){tsResolve(t);} tsResolve=null; tsReject=null; },'error-callback':function(){ if(tsReject){tsReject(new Error('captcha'));} tsResolve=null; tsReject=null; }}); }catch(e){} };
+function getCaptchaToken(){ return new Promise(function(resolve,reject){ if(tsWidgetId===null||!window.turnstile){ reject(new Error('captcha indisponivel')); return; } tsResolve=resolve; tsReject=reject; try{ turnstile.reset(tsWidgetId); }catch(e){} try{ turnstile.execute(tsWidgetId); }catch(e){ reject(e); } }); }
+
+
   let isLogin = false
 
   function toggleMode() {
@@ -242,8 +252,11 @@ input::placeholder{color:#8BAAC8;}
   async function enviarReset() {
     const email = document.getElementById('forgot-email').value.trim()
     if (!email) { showMsg('Digite seu e-mail.', 'error'); return }
+    let captchaToken
+    try { captchaToken = await getCaptchaToken() } catch(e){ showMsg('Falha na verificação de segurança. Tente de novo.','error'); return }
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: new URL('cadastro.html?modo=redefinir', window.location.href).href
+      redirectTo: new URL('cadastro.html?modo=redefinir', window.location.href).href,
+      captchaToken
     })
     if (error) showMsg(error.message, 'error')
     else showMsg('✅ Link enviado! Verifique seu e-mail.', 'success')
@@ -269,8 +282,12 @@ input::placeholder{color:#8BAAC8;}
     btn.textContent = 'Carregando...'
     hideMsg()
 
+    let captchaToken
+    try { captchaToken = await getCaptchaToken() }
+    catch(e){ showMsg('Falha na verificação de segurança. Recarregue a página e tente de novo.','error'); btn.disabled=false; btn.textContent = isLogin?'Entrar':'Criar conta'; return }
+
     if (isLogin) {
-      const { error } = await sb.auth.signInWithPassword({ email, password })
+      const { error } = await sb.auth.signInWithPassword({ email, password, options: { captchaToken } })
       if (error) {
         if (error.message.includes('Invalid login credentials')) showMsg('E-mail ou senha incorretos.', 'error')
         else showMsg(error.message, 'error')
@@ -280,7 +297,7 @@ input::placeholder{color:#8BAAC8;}
       // E-mail já existe? Tenta logar direto com a senha informada
       const { data: existing } = await sb.from('profiles').select('id').eq('email', email).limit(1)
       if (existing && existing.length > 0) {
-        const { error: eLogin } = await sb.auth.signInWithPassword({ email, password })
+        const { error: eLogin } = await sb.auth.signInWithPassword({ email, password, options: { captchaToken } })
         if (!eLogin) { window.location.href = getNextUrl(); return }
         if (eLogin.message.includes('Invalid login credentials')) showMsg('Esta conta já existe, mas a senha não confere. Corrija a senha ou use "Esqueci a senha".', 'error')
         else showMsg(eLogin.message, 'error')
@@ -291,7 +308,7 @@ input::placeholder{color:#8BAAC8;}
       const { error } = await sb.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: new URL('bem-vindo.html', window.location.href).href }
+        options: { emailRedirectTo: new URL('bem-vindo.html', window.location.href).href, captchaToken }
       })
       if (error) {
         if (error.message.includes('already registered')) showMsg('Este e-mail já está cadastrado. Clique em "Entrar".', 'error')
@@ -322,10 +339,12 @@ input::placeholder{color:#8BAAC8;}
   async function reenviarConfirmacao() {
     if (!emailEnviadoPara) return
     var b = document.getElementById('btn-reenviar'); b.disabled = true; b.textContent = 'Reenviando...'
+    let captchaToken
+    try { captchaToken = await getCaptchaToken() } catch(e){ b.disabled=false; b.textContent='Reenviar e-mail'; showMsg('Falha na verificação de segurança. Tente de novo.','error'); return }
     const { error } = await sb.auth.resend({
       type: 'signup',
       email: emailEnviadoPara,
-      options: { emailRedirectTo: new URL('bem-vindo.html', window.location.href).href }
+      options: { emailRedirectTo: new URL('bem-vindo.html', window.location.href).href, captchaToken }
     })
     b.disabled = false; b.textContent = 'Reenviar e-mail'
     if (error) showMsg(error.message, 'error')
