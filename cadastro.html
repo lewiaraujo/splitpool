@@ -148,7 +148,7 @@ input::placeholder{color:#8BAAC8;}
 
     <div class="msg" id="msg"></div>
 
-    <div id="ts-holder" style="display:flex;justify-content:center;"></div>
+    <div id="ts-holder" style="display:none;"></div>
 
     <div id="email-sent" style="display:none;text-align:center;padding:8px 0;">
       <div style="font-size:44px;margin-bottom:8px;">✉️</div>
@@ -220,7 +220,7 @@ input::placeholder{color:#8BAAC8;}
 // -- Turnstile (captcha) --
 var TS_SITEKEY='0x4AAAAAAE5Y75f2r1_6C2uV';
 var tsWidgetId=null, tsResolve=null, tsReject=null;
-window.tsOnload=function(){ try{ tsWidgetId=turnstile.render('#ts-holder',{sitekey:TS_SITEKEY,execution:'execute',callback:function(t){ if(tsResolve){tsResolve(t);} tsResolve=null; tsReject=null; },'error-callback':function(){ if(tsReject){tsReject(new Error('captcha'));} tsResolve=null; tsReject=null; }}); }catch(e){} };
+window.tsOnload=function(){ try{ tsWidgetId=turnstile.render('#ts-holder',{sitekey:TS_SITEKEY,execution:'execute',size:'invisible',callback:function(t){ if(tsResolve){tsResolve(t);} tsResolve=null; tsReject=null; },'error-callback':function(){ if(tsReject){tsReject(new Error('captcha'));} tsResolve=null; tsReject=null; }}); }catch(e){} };
 function getCaptchaToken(){ return new Promise(function(resolve,reject){ if(tsWidgetId===null||!window.turnstile){ reject(new Error('captcha indisponivel')); return; } tsResolve=resolve; tsReject=reject; try{ turnstile.reset(tsWidgetId); }catch(e){} try{ turnstile.execute(tsWidgetId); }catch(e){ reject(e); } }); }
 
 
