@@ -47,7 +47,7 @@ body{font-family:'Inter',sans-serif;min-height:100vh;background:linear-gradient(
     <label>Senha</label>
     <input type="password" id="senha" placeholder="••••••••" autocomplete="off">
   </div>
-  <div id="ts-holder" style="display:flex;justify-content:center;margin-bottom:6px;"></div>
+  <div id="ts-holder" style="display:none;"></div>
   <button class="btn" id="btn-login" onclick="entrar()">Acessar painel →</button>
 </div>
 
@@ -61,7 +61,7 @@ const sb=supabase.createClient(SBU,SBK,{auth:{storageKey:'sp-admin-auth'}});
 // -- Turnstile (captcha) --
 var TS_SITEKEY='0x4AAAAAAE5Y75f2r1_6C2uV';
 var tsWidgetId=null, tsResolve=null, tsReject=null;
-window.tsOnload=function(){ try{ tsWidgetId=turnstile.render('#ts-holder',{sitekey:TS_SITEKEY,execution:'execute',callback:function(t){ if(tsResolve){tsResolve(t);} tsResolve=null; tsReject=null; },'error-callback':function(){ if(tsReject){tsReject(new Error('captcha'));} tsResolve=null; tsReject=null; }}); }catch(e){} };
+window.tsOnload=function(){ try{ tsWidgetId=turnstile.render('#ts-holder',{sitekey:TS_SITEKEY,execution:'execute',size:'invisible',callback:function(t){ if(tsResolve){tsResolve(t);} tsResolve=null; tsReject=null; },'error-callback':function(){ if(tsReject){tsReject(new Error('captcha'));} tsResolve=null; tsReject=null; }}); }catch(e){} };
 function getCaptchaToken(){ return new Promise(function(resolve,reject){ if(tsWidgetId===null||!window.turnstile){ reject(new Error('captcha indisponivel')); return; } tsResolve=resolve; tsReject=reject; try{ turnstile.reset(tsWidgetId); }catch(e){} try{ turnstile.execute(tsWidgetId); }catch(e){ reject(e); } }); }
 
 
