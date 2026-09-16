@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Splitpool — Acesso Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=tsOnload" async defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@700;800;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -46,6 +47,7 @@ body{font-family:'Inter',sans-serif;min-height:100vh;background:linear-gradient(
     <label>Senha</label>
     <input type="password" id="senha" placeholder="••••••••" autocomplete="off">
   </div>
+  <div id="ts-holder" style="display:flex;justify-content:center;margin-bottom:6px;"></div>
   <button class="btn" id="btn-login" onclick="entrar()">Acessar painel →</button>
 </div>
 
@@ -55,6 +57,13 @@ const SBK='sb_publishable_bqFMwjSFO3wczN7guuCx3w_UFKnF-gQ';
 // storageKey proprio: a sessao do painel admin fica ISOLADA da sessao do site.
 // Sem isso, logar no admin logava no site e sair do site derrubava o admin.
 const sb=supabase.createClient(SBU,SBK,{auth:{storageKey:'sp-admin-auth'}});
+
+// -- Turnstile (captcha) --
+var TS_SITEKEY='0x4AAAAAAE5Y75f2r1_6C2uV';
+var tsWidgetId=null, tsResolve=null, tsReject=null;
+window.tsOnload=function(){ try{ tsWidgetId=turnstile.render('#ts-holder',{sitekey:TS_SITEKEY,execution:'execute',callback:function(t){ if(tsResolve){tsResolve(t);} tsResolve=null; tsReject=null; },'error-callback':function(){ if(tsReject){tsReject(new Error('captcha'));} tsResolve=null; tsReject=null; }}); }catch(e){} };
+function getCaptchaToken(){ return new Promise(function(resolve,reject){ if(tsWidgetId===null||!window.turnstile){ reject(new Error('captcha indisponivel')); return; } tsResolve=resolve; tsReject=reject; try{ turnstile.reset(tsWidgetId); }catch(e){} try{ turnstile.execute(tsWidgetId); }catch(e){ reject(e); } }); }
+
 
 // Se ja houver sessao ADMIN valida, vai direto para o painel.
 // Checa a sessao real do Supabase (nao o localStorage) para nao criar loop.
@@ -95,8 +104,11 @@ async function entrar(){
 
   btn.disabled=true;btn.textContent='Verificando...';
 
+  var captchaToken;
+  try{ captchaToken=await getCaptchaToken(); }catch(e){ err.textContent='Falha na verificação de segurança. Recarregue a página.'; err.classList.add('show'); btn.disabled=false;btn.textContent='Acessar painel →'; return; }
+
   // Passo 1 - Autenticacao real via Supabase Auth (bcrypt + rate limit do proprio Supabase)
-  var {data:authData,error:authErr}=await sb.auth.signInWithPassword({email:email,password:senha});
+  var {data:authData,error:authErr}=await sb.auth.signInWithPassword({email:email,password:senha,options:{captchaToken:captchaToken}});
   if(authErr||!authData||!authData.session){
     err.textContent='Email ou senha incorretos.';
     err.classList.add('show');
