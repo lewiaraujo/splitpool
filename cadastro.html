@@ -162,7 +162,7 @@ input::placeholder{color:#8BAAC8;}
 
     <form class="form" id="form" onsubmit="handleAuth(event)">
       <input type="email" id="email" placeholder="seu@email.com" required autocomplete="off">
-      <input type="password" id="password" placeholder="Senha (mínimo 6 caracteres)" required minlength="6" autocomplete="new-password">
+      <input type="password" id="password" placeholder="Senha (mínimo 8 caracteres)" required autocomplete="new-password">
       <button type="submit" class="btn-primary" id="btn-submit">Criar conta</button>
     </form>
 
@@ -294,33 +294,32 @@ function getCaptchaToken(){ return new Promise(function(resolve,reject){ if(tsWi
       }
       else window.location.href = getNextUrl()
     } else {
-      // Cadastro. O Supabase nao permite enumerar e-mails, entao detectamos
-      // "conta ja existe" pelo sinal do proprio signUp:
-      //  - erro "already registered" (com confirmacao de e-mail desligada), OU
-      //  - sucesso com identities vazio (com confirmacao ligada).
+      // Modo "Criar conta", mas a pessoa pode ja ter conta e so ter caido aqui.
+      // Nao da pra checar existencia de e-mail sem enumerar, entao:
+      // 1) tenta LOGAR primeiro (se a senha estiver certa, entra direto);
+      // 2) so se as credenciais falharem, tenta CRIAR a conta.
+      const { error: eLoginTry } = await sb.auth.signInWithPassword({ email, password, options: { captchaToken } })
+      if (!eLoginTry) { window.location.href = getNextUrl(); return }
+      if (!eLoginTry.message.includes('Invalid login credentials')) {
+        showMsg(eLoginTry.message, 'error'); btn.disabled = false; btn.textContent = 'Criar conta'; return
+      }
+
+      // Credenciais invalidas = e-mail novo OU senha errada de conta existente. Token novo p/ o signUp.
+      let t2
+      try { t2 = await getCaptchaToken() } catch(err){ showMsg('Falha na verificação de segurança. Tente de novo.','error'); btn.disabled=false; btn.textContent='Criar conta'; return }
       const { data: dataSignup, error } = await sb.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: new URL('bem-vindo.html', window.location.href).href, captchaToken }
+        options: { emailRedirectTo: new URL('bem-vindo.html', window.location.href).href, captchaToken: t2 }
       })
 
       const jaExiste = (error && error.message.includes('already registered'))
         || (!error && dataSignup && dataSignup.user && Array.isArray(dataSignup.user.identities) && dataSignup.user.identities.length === 0)
 
       if (jaExiste) {
-        // Conta ja existe -> tenta entrar com a senha digitada (token novo; o anterior foi consumido no signUp)
-        let t2
-        try { t2 = await getCaptchaToken() } catch(err){ showMsg('Falha na verificação de segurança. Tente de novo.','error'); btn.disabled=false; btn.textContent='Criar conta'; return }
-        const { error: eLogin } = await sb.auth.signInWithPassword({ email, password, options: { captchaToken: t2 } })
-        if (!eLogin) { window.location.href = getNextUrl(); return }
-        if (eLogin.message.includes('Invalid login credentials'))
-          showMsg('Esta conta já existe. Se a senha estiver certa você entra direto; senão, clique em "Esqueci minha senha".', 'error')
-        else showMsg(eLogin.message, 'error')
-        btn.disabled = false
-        btn.textContent = 'Criar conta'
-        return
+        showMsg('Esta conta já existe, mas a senha não confere. Corrija a senha ou clique em "Esqueci minha senha".', 'error')
+        btn.disabled = false; btn.textContent = 'Criar conta'; return
       }
-
       if (error) { showMsg(error.message, 'error'); btn.disabled = false; btn.textContent = 'Criar conta'; return }
       mostrarEmailEnviado(email)
     }
@@ -439,8 +438,8 @@ function getCaptchaToken(){ return new Promise(function(resolve,reject){ if(tsWi
     document.getElementById('card-sub').textContent = 'Escolha sua nova senha'
     var f = document.getElementById('form')
     f.innerHTML = `
-      <input type="password" id="new-password" placeholder="Nova senha (mínimo 6 caracteres)" required minlength="6" autocomplete="new-password">
-      <input type="password" id="new-password2" placeholder="Confirme a nova senha" required minlength="6" autocomplete="new-password">
+      <input type="password" id="new-password" placeholder="Nova senha (mínimo 8 caracteres)" required minlength="8" autocomplete="new-password">
+      <input type="password" id="new-password2" placeholder="Confirme a nova senha" required minlength="8" autocomplete="new-password">
       <button type="submit" class="btn-primary" id="btn-salvar-senha">Salvar nova senha</button>
     `
     f.style.display = 'flex'
