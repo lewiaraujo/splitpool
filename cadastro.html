@@ -294,27 +294,35 @@ function getCaptchaToken(){ return new Promise(function(resolve,reject){ if(tsWi
       }
       else window.location.href = getNextUrl()
     } else {
-      // E-mail já existe? Tenta logar direto com a senha informada
-      const { data: existing } = await sb.from('profiles').select('id').eq('email', email).limit(1)
-      if (existing && existing.length > 0) {
-        const { error: eLogin } = await sb.auth.signInWithPassword({ email, password, options: { captchaToken } })
+      // Cadastro. O Supabase nao permite enumerar e-mails, entao detectamos
+      // "conta ja existe" pelo sinal do proprio signUp:
+      //  - erro "already registered" (com confirmacao de e-mail desligada), OU
+      //  - sucesso com identities vazio (com confirmacao ligada).
+      const { data: dataSignup, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: new URL('bem-vindo.html', window.location.href).href, captchaToken }
+      })
+
+      const jaExiste = (error && error.message.includes('already registered'))
+        || (!error && dataSignup && dataSignup.user && Array.isArray(dataSignup.user.identities) && dataSignup.user.identities.length === 0)
+
+      if (jaExiste) {
+        // Conta ja existe -> tenta entrar com a senha digitada (token novo; o anterior foi consumido no signUp)
+        let t2
+        try { t2 = await getCaptchaToken() } catch(err){ showMsg('Falha na verificação de segurança. Tente de novo.','error'); btn.disabled=false; btn.textContent='Criar conta'; return }
+        const { error: eLogin } = await sb.auth.signInWithPassword({ email, password, options: { captchaToken: t2 } })
         if (!eLogin) { window.location.href = getNextUrl(); return }
-        if (eLogin.message.includes('Invalid login credentials')) showMsg('Esta conta já existe, mas a senha não confere. Corrija a senha ou use "Esqueci a senha".', 'error')
+        if (eLogin.message.includes('Invalid login credentials'))
+          showMsg('Esta conta já existe. Se a senha estiver certa você entra direto; senão, clique em "Esqueci minha senha".', 'error')
         else showMsg(eLogin.message, 'error')
         btn.disabled = false
         btn.textContent = 'Criar conta'
         return
       }
-      const { error } = await sb.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: new URL('bem-vindo.html', window.location.href).href, captchaToken }
-      })
-      if (error) {
-        if (error.message.includes('already registered')) showMsg('Este e-mail já está cadastrado. Clique em "Entrar".', 'error')
-        else showMsg(error.message, 'error')
-      }
-      else mostrarEmailEnviado(email)
+
+      if (error) { showMsg(error.message, 'error'); btn.disabled = false; btn.textContent = 'Criar conta'; return }
+      mostrarEmailEnviado(email)
     }
 
     btn.disabled = false
